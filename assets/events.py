@@ -10,7 +10,7 @@ prompt = initial_prompt
 async def reset_prompt(interaction:discord.Interaction):
 	global prompt
 	prompt = initial_prompt
-	await interaction.followup.send(f"Prompt reset to '{prompt}'")
+	await interaction.followup.send("Prompt reset")
 
 async def set_prompt(interaction:discord.Interaction, new_prompt):
 	global prompt

@@ -2,9 +2,9 @@ import os
 import sys
 import asyncio
 import discord
-from discord import app_commands
+import threading
 
-from assets.core_utils import discord_bot, token, stdout_channel
+from assets.core_utils import discord_bot, token, stdout_channel, connect_rich_presence
 import assets.events as events
 from assets.cmds import cmd_misc, cmd_owner
 
@@ -45,9 +45,9 @@ async def ping(interaction:discord.Interaction):
 async def train_game(
 	interaction:discord.Interaction,
 	number:int,  # The starting number for the game - four digits
-    target:int = 10,  # The target number to reach - default 10
-    use_power:str = "True",  # Allow usage of the power (^) operation - default True
-    use_modulo:str = "True",  # Allow usage of the modulo (%) operation - default True
+	target:int = 10,  # The target number to reach - default 10
+	use_power:str = "True",  # Allow usage of the power (^) operation - default True
+	use_modulo:str = "True",  # Allow usage of the modulo (%) operation - default True
 ):
 	use_power_bool = "true" in use_power.lower()
 	use_modulo_bool = "true" in use_modulo.lower()
@@ -86,7 +86,14 @@ def send_output_to_discord(message):
 			else:
 				asyncio.ensure_future(channel.send(message))
 
-sys.stdout.write = send_output_to_discord
-sys.stderr.write = send_output_to_discord
+async def run_bot():
+	sys.stdout.write = send_output_to_discord
+	sys.stderr.write = send_output_to_discord
 
-discord_bot.run(token)
+	try:
+		await connect_rich_presence()
+		await discord_bot.start(token)
+	except KeyboardInterrupt:
+		pass
+
+asyncio.run(run_bot())

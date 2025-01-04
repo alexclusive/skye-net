@@ -1,10 +1,12 @@
 import os
 import discord
+from pypresence import Presence
 from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
 token = str(os.getenv("TOKEN"))
+client_id = str(os.getenv("CLIENT_ID"))
 stdout_channel = int(os.getenv("STDOUT"))
 ownerid = int(os.getenv('OWNER'))
 openai_key = str(os.getenv("OPENAI_API_KEY"))
@@ -13,11 +15,12 @@ history_limit = int(os.getenv('HISTORY_LIMIT'))
 
 intents = discord.Intents.all()
 intents.members = True
-# discord_client = discord.Client(intents=intents)
 discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
-def is_owner(ctx):
-	return ctx.user.id == ownerid
+rich_presence = Presence(client_id)
+
+def is_owner(interaction:discord.Interaction):
+	return interaction.user.id == ownerid
 
 def get_emojis():
 	emojis = {}
@@ -49,3 +52,21 @@ def get_emojis():
 
 async def error_message(interaction:discord.Interaction):
 	await interaction.followup.send("Sorry! Unable to compute.")
+
+async def connect_rich_presence():
+	print("Attempting to connect to rich presence...")
+	try:
+		await rich_presence.connect()
+		print("Connected to rich presence successfully!")
+
+		rich_presence.update(
+			state="we will be taking over",
+			details="Sleep well darling, for tomorrow",
+			large_image="trans_flag",
+			large_text="aren't you a curious little kitten"
+			# buttons=[{'label': 'Join the fun', 'url': 'https://yourgame.com'}]
+		)
+		print("Rich presence updated successfully!")
+
+	except Exception as e:
+		print(f"Error during rich presence setup: {e}")
