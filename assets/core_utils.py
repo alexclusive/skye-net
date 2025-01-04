@@ -1,5 +1,6 @@
 import os
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,7 +13,8 @@ history_limit = int(os.getenv('HISTORY_LIMIT'))
 
 intents = discord.Intents.all()
 intents.members = True
-discord_client = discord.Bot(intents=intents)
+# discord_client = discord.Client(intents=intents)
+discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
 def is_owner(ctx):
 	return ctx.user.id == ownerid
@@ -45,5 +47,5 @@ def get_emojis():
 	emojis["WAGGING_FINGER"] = int(os.getenv('WAGGING_FINGER'))
 	return emojis
 
-async def error_message(ctx):
-	await ctx.respond("Sorry! Unable to compute.")
+async def error_message(interaction:discord.Interaction):
+	await interaction.followup.send("Sorry! Unable to compute.")

@@ -1,62 +1,73 @@
 import os
 import sys
 import asyncio
-from discord.commands import Option
+import discord
+from discord import app_commands
 
-from assets.core_utils import discord_client, token, stdout_channel
+from assets.core_utils import discord_bot, token, stdout_channel
 import assets.events as events
 from assets.cmds import cmd_misc, cmd_owner
 
-@discord_client.event
+@discord_bot.event
 async def on_ready():
-	print(f"{discord_client.user} is ready and online!")
+	await discord_bot.tree.sync()
+	print(f"{discord_bot.user} is ready and online!")
 
 '''
 	Slash commands that can be used by the owner
 '''
-@discord_client.slash_command(description="[Owner] Restart the bot")
-async def restart(ctx):
-	await ctx.defer(ephemeral=True)
-	await cmd_owner.restart(ctx)
+@discord_bot.tree.command(description="[Owner] Shutdown the bot")
+async def kill(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await cmd_owner.die(interaction)
+	
+@discord_bot.tree.command(name="restart", description="[Owner] Restart the bot")
+async def restart(interaction:discord.Interaction):
+	await interaction.response.defer(ephemeral=True)
+	await cmd_owner.restart(interaction)
 
-@discord_client.slash_command(description="[Owner] Delete a message by ID")
-async def delete_message_by_id(ctx, id):
-	await ctx.defer(ephemeral=True)
-	await cmd_owner.delete_message_by_id(ctx, id)
+@discord_bot.tree.command(description="[Owner] Delete a message by ID")
+async def delete_message_by_id(interaction:discord.Interaction, id:str):
+	await interaction.response.defer(ephemeral=True)  # Defer the response
+	await cmd_owner.delete_message_by_id(interaction, id)  # Call the handler for the actual deletion
 
 '''
 	Slash commands that can be used by anyone
 '''
-@discord_client.slash_command(description="Check the bot's ping")
-async def ping(ctx):
-	await ctx.defer()
-	await cmd_misc.ping(ctx)
+@discord_bot.tree.command(description="Check the bot's ping")
+async def ping(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await cmd_misc.ping(interaction)
 
-@discord_client.slash_command(description="Train game - get to [target] using (+-*/) and optionally (^%)")
+# explain train game
+
+@discord_bot.tree.command(description="Train game - get to [target] using (+-*/) and optionally (^%)")
 async def train_game(
-	ctx,
-	number: Option(int, "The starting number for the game - four digits"), # type: ignore
-	target: Option(int, "The target number to reach - integer - default 10", default=10), # type: ignore
-	use_power: Option(bool, "Allow usage of the power (^) operation - True/False - default True", default=True), # type: ignore
-	use_modulo: Option(bool, "Allow usage of the modulo (%) operation - True/False - default True", default=True), # type: ignore
+	interaction:discord.Interaction,
+	number:int,  # The starting number for the game - four digits
+    target:int = 10,  # The target number to reach - default 10
+    use_power:str = "True",  # Allow usage of the power (^) operation - default True
+    use_modulo:str = "True",  # Allow usage of the modulo (%) operation - default True
 ):
-	await ctx.defer()
-	await cmd_misc.train_game(ctx, number, target, use_power, use_modulo)
+	use_power_bool = "true" in use_power.lower()
+	use_modulo_bool = "true" in use_modulo.lower()
+	await interaction.response.defer()
+	await cmd_misc.train_game(interaction, number, target, use_power_bool, use_modulo_bool)
 
-@discord_client.slash_command(description="Reset the bot's prompt")
-async def reset_prompt(ctx):
-	await ctx.defer()
-	await events.reset_prompt(ctx)
+@discord_bot.tree.command(description="Reset the bot's prompt")
+async def reset_prompt(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await events.reset_prompt(interaction)
 
-@discord_client.slash_command(description="Set the bot's prompt")
-async def set_prompt(ctx, prompt):
-	await ctx.defer()
-	await events.set_prompt(ctx, prompt)
+@discord_bot.tree.command(description="Set the bot's prompt")
+async def set_prompt(interaction:discord.Interaction, prompt:str):
+	await interaction.response.defer()
+	await events.set_prompt(interaction, prompt)
 
 '''
 	Discord events
 '''
-@discord_client.event
+@discord_bot.event
 async def on_message(message):
 	await events.message(message)
 
@@ -66,7 +77,7 @@ async def on_message(message):
 def send_output_to_discord(message):
 	message = message.strip()
 	if message:
-		channel = discord_client.get_channel(stdout_channel)
+		channel = discord_bot.get_channel(stdout_channel)
 		if channel: # write to stdout_channel
 			if len(message) > 2000: # discord won't allow longer than 2000 characters, so split it up
 				for i in range(0, len(message), 2000):
@@ -78,4 +89,4 @@ def send_output_to_discord(message):
 sys.stdout.write = send_output_to_discord
 sys.stderr.write = send_output_to_discord
 
-discord_client.run(token)
+discord_bot.run(token)

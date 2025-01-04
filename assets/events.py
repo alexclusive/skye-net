@@ -1,27 +1,29 @@
 import re
+import discord
+from copy import deepcopy
 
-import assets.api.openai as openai
-from assets.core_utils import discord_client, initial_prompt, history_limit, get_emojis
+from assets.api.openai import openai_chat
+from assets.core_utils import discord_bot, initial_prompt, history_limit, get_emojis
 
 prompt = initial_prompt
 
-async def reset_prompt(ctx):
+async def reset_prompt(interaction:discord.Interaction):
 	global prompt
 	prompt = initial_prompt
-	await ctx.respond(f"Prompt reset to '{prompt}'")
+	await interaction.followup.send(f"Prompt reset to '{prompt}'")
 
-async def set_prompt(ctx, new_prompt):
+async def set_prompt(interaction:discord.Interaction, new_prompt):
 	global prompt
 	prompt = new_prompt
-	await ctx.respond(f"Prompt set to '{prompt}'")
+	await interaction.followup.send(f"Prompt set to '{prompt}'")
 
 async def message(message):
 	try:
-		if message.author == discord_client.user:
+		if message.author == discord_bot.user:
 			return
 
 		message_sent = False
-		if discord_client.user in message.mentions: # pings the bot
+		if discord_bot.user in message.mentions: # pings the bot
 			await bot_ping_message(message)
 			message_sent = True
 	except Exception as e:
@@ -43,31 +45,29 @@ async def bot_ping_message(message):
 		await message.reply("Nice try bozo, you ain't gonna reset me like that!", mention_author=False)
 		return
 	
+	contents = [{"role": "system", "content": prompt}]
+	messages = [message]
+
+	if message.reference:
+		referenced = await message.channel.fetch_message(message.reference.message_id)
+		messages.append(referenced)
+
+	if not message.reference:
+		async for msg in message.channel.history(limit=history_limit):
+			messages.append(msg)
+
+	if not messages:
+		print("bot_ping_message: no messages found :(")
+		
+	messages.reverse()
+
+	for msg in messages:
+		user = "assistant" if msg.author == discord_bot.user else "user"
+		contents.append({"role": user, "content": msg.content})
+
 	async with message.channel.typing():
-		contents = []
-		initial_message = {
-			"role": "system",
-			"content": prompt
-		}
-		contents.append(initial_message)
-		
-		if message.reference: # check any replied to messages
-			referenced = await message.channel.fetch_message(message.reference.message_id)
-			messages = [message, referenced]
-		else:
-			messages = await message.channel.history(limit=history_limit).flatten()
-
-		if not messages:
-			print("bot_ping_message: no messages found :(")
-		
-		messages.reverse()
-		for msg in messages:
-			user = "assistant"
-			if msg.author != discord_client.user:
-				user = "user"
-
-			contents.append({"role": user, "content": msg.content})
-		await message.reply(openai.openai_chat(contents), mention_author=False)
+		response_content = openai_chat(contents)
+		await message.reply(response_content, mention_author=False)
 
 def attempting_reset_instructions(message):
 	content = message.content.lower()
@@ -117,64 +117,64 @@ async def handle_reactions(message, emojis):
 
 	# vtm reactions
 	if "anarch" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_ANARCH"])
+		emoji = discord_bot.get_emoji(emojis["VTM_ANARCH"])
 		await message.add_reaction(emoji)
 	if "banu haqim" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_BANU_HAQIM"])
+		emoji = discord_bot.get_emoji(emojis["VTM_BANU_HAQIM"])
 		await message.add_reaction(emoji)
 	if "book of nod" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_BOOK_OF_NOD"])
+		emoji = discord_bot.get_emoji(emojis["VTM_BOOK_OF_NOD"])
 		await message.add_reaction(emoji)
 	if "brujah" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_BRUJAH"])
+		emoji = discord_bot.get_emoji(emojis["VTM_BRUJAH"])
 		await message.add_reaction(emoji)
 	if "camarilla" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_CAMARILLA"])
+		emoji = discord_bot.get_emoji(emojis["VTM_CAMARILLA"])
 		await message.add_reaction(emoji)
 	if "coterie" in content:
-		emoji = discord_client.get_emoji(emojis["VTM"])
+		emoji = discord_bot.get_emoji(emojis["VTM"])
 		await message.add_reaction(emoji)
 	if "gangrel" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_GANGREL"])
+		emoji = discord_bot.get_emoji(emojis["VTM_GANGREL"])
 		await message.add_reaction(emoji)
 	if "hecata" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_HECATA"])
+		emoji = discord_bot.get_emoji(emojis["VTM_HECATA"])
 		await message.add_reaction(emoji)
 	if "kindred" in content:
-		emoji = discord_client.get_emoji(emojis["VTM"])
+		emoji = discord_bot.get_emoji(emojis["VTM"])
 		await message.add_reaction(emoji)
 	if "lasombra" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_LASOMBRA"])
+		emoji = discord_bot.get_emoji(emojis["VTM_LASOMBRA"])
 		await message.add_reaction(emoji)
 	if "malkavian" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_MALKAVIAN"])
+		emoji = discord_bot.get_emoji(emojis["VTM_MALKAVIAN"])
 		await message.add_reaction(emoji)
 	if "ministry" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_MINISTRY"])
+		emoji = discord_bot.get_emoji(emojis["VTM_MINISTRY"])
 		await message.add_reaction(emoji)
 	if "nosferatu" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_NOSFERATU"])
+		emoji = discord_bot.get_emoji(emojis["VTM_NOSFERATU"])
 		await message.add_reaction(emoji)
 	if "ravnos" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_RAVNOS"])
+		emoji = discord_bot.get_emoji(emojis["VTM_RAVNOS"])
 		await message.add_reaction(emoji)
 	if "toreador" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_TOREADOR"])
+		emoji = discord_bot.get_emoji(emojis["VTM_TOREADOR"])
 		await message.add_reaction(emoji)
 	if "tremere" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_TREMERE"])
+		emoji = discord_bot.get_emoji(emojis["VTM_TREMERE"])
 		await message.add_reaction(emoji)
 	if "tzimisce" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_TZIMISCE"])
+		emoji = discord_bot.get_emoji(emojis["VTM_TZIMISCE"])
 		await message.add_reaction(emoji)
 	if "vampire" in content:
 		await message.add_reaction("🧛")
 	if "ventrue" in content:
-		emoji = discord_client.get_emoji(emojis["VTM_VENTRUE"])
+		emoji = discord_bot.get_emoji(emojis["VTM_VENTRUE"])
 		await message.add_reaction(emoji)
 	if "vtm" in content:
 		await message.add_reaction("🧛")
-		emoji = discord_client.get_emoji(emojis["VTM"])
+		emoji = discord_bot.get_emoji(emojis["VTM"])
 		await message.add_reaction(emoji)
 
 	# other reactions
@@ -189,7 +189,7 @@ async def handle_reactions(message, emojis):
 	if "mwah" in content:
 		await message.add_reaction("💋")
 	if "not far" in content:
-		emoji = discord_client.get_emoji(emojis["NOT_FAR"])
+		emoji = discord_bot.get_emoji(emojis["NOT_FAR"])
 		await message.add_reaction(emoji)
 	if 'perchance' in message.content.lower():
 		await message.add_reaction("🦀")
@@ -209,7 +209,7 @@ async def handle_reactions(message, emojis):
 	if "what!" in content:
 		await message.add_reaction("‼️")
 	if "yippee" in content:
-		emoji = discord_client.get_emoji(emojis["AUTISM_CREATURE"])
+		emoji = discord_bot.get_emoji(emojis["AUTISM_CREATURE"])
 		print(emoji)
 		await message.add_reaction(emoji)
 
@@ -227,13 +227,13 @@ async def handle_triggers(message, emojis):
 		contents = "5️⃣0️⃣0️⃣🚬"
 		await message.reply(contents, mention_author=False)
 	if "i know what you are" in content:
-		emoji = discord_client.get_emoji(emojis["POINT"])
+		emoji = discord_bot.get_emoji(emojis["POINT"])
 		point = format_emoji(emoji)
 		await message.reply(point, mention_author=False)
 	if "nuh uh" in content:
-		emoji = discord_client.get_emoji(emojis["NUH_UH"])
+		emoji = discord_bot.get_emoji(emojis["NUH_UH"])
 		nuhuh = format_emoji(emoji)
-		emoji = discord_client.get_emoji(emojis["WAGGING_FINGER"])
+		emoji = discord_bot.get_emoji(emojis["WAGGING_FINGER"])
 		wagging = format_emoji(emoji)
 
 		contents = nuhuh + wagging

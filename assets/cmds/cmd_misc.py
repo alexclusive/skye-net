@@ -1,21 +1,21 @@
 import itertools
 import copy
 import discord
-from discord.ext.pages import Paginator, Page
 
-from assets.core_utils import discord_client, error_message
+from assets.core_utils import discord_bot, error_message
 
-async def ping(ctx):
-	await ctx.respond("Ponged your ping in " + str(round(discord_client.latency * 1000)) + "ms")
+async def ping(interaction:discord.Interaction):
+	latency = round(discord_bot.latency * 1000)
+	await interaction.followup.send(f"Ponged your ping in {latency}ms")
 
-async def train_game(ctx, number, target, use_power, use_modulo):
+async def train_game(interaction:discord.Interaction, number, target, use_power, use_modulo):
 	errored = False
 
 	try:
 		target = int(target)
 		number_str = str(number)
 		if len(number_str) != 4:
-			await ctx.respond("`" + number_str + "` is not valid for the train game. Please give a four digit number (0000-9999).")
+			await interaction.followup.send("`" + number_str + "` is not valid for the train game. Please give a four digit number (0000-9999).")
 			return
 		a = int(number_str[0]) # these will raise an exception if they can't convert
 		b = int(number_str[1])
@@ -26,46 +26,85 @@ async def train_game(ctx, number, target, use_power, use_modulo):
 		errored = True
 
 	if errored:
-		await error_message(ctx)
+		await error_message(interaction)
 		return
 
 	try:
 		response = get_to_x(target, a, b, c, d, use_power, use_modulo)
 		num_of_solutions = len(response)
 		if num_of_solutions == 0:
-			await ctx.respond("There are no solutions for `" + str(number) + "` to get to target " + str(target))
+			await interaction.followup.send("There are no solutions for `" + str(number) + "` to get to target " + str(target))
 			return
 	except Exception as e:
 		print(f"Train game: error in get_to_x. {e}")
 		errored = True
 
 	if errored:
-		await error_message(ctx)
+		await error_message(interaction)
 		return
 
 	try:
-		pages = []
-		response_start = get_response_start(num_of_solutions, use_power, use_modulo)
+		response_start = get_response_start(number, target, num_of_solutions, use_power, use_modulo)
 		formatted = format_and_paginate_all_solutions(response, target)
-		for result_list in formatted:
-			embed = discord.Embed(title="Results for train game with number " + str(number) + " and target " + str(target))
-			embed.add_field(name=response_start, value='\n'.join(result_list))
-			pages.append(Page(embeds=[embed]))
-		paginator = Paginator(pages=pages)
-		await paginator.respond(ctx.interaction)
+	except Exception as e:
+		print(f"Train game: error in solving and forming pagination. {e}")
+		errored = True
+
+	if errored:
+		await error_message(interaction)
+		return
+	
+	try:
+		if len(formatted) == 1:
+			interaction.followup.send(response_start + "\n" + formatted[0])
+			return
+	except Exception as e:
+		print(f"Train game: error in printing single page solutions. {e}")
+		errored = True
+
+	if errored:
+		await error_message(interaction)
+		return
+
+	try:
+		# more than one page
+		pages = []
+		for grouping in formatted:
+			page = response_start + "\n" + grouping
+			pages.append(page)
+
+		current_page = 0
+		page_message = await interaction.followup.send(pages[current_page])
+		await page_message.add_reaction('◀️')
+		await page_message.add_reaction('▶️')
+
+		def check_reaction(reaction, user):
+			return user != discord_bot.user and reaction.message.id == page_message.id
+		
+		while True:
+			reaction, user = await discord_bot.wait_for('reaction_add', check=check_reaction)
+			if reaction.emoji == '◀️' and current_page > 0:
+				current_page -= 1
+				await page_message.edit(content=pages[current_page])
+			elif reaction.emoji == '▶️' and current_page < len(pages) - 1:
+				current_page += 1
+				await page_message.edit(content=pages[current_page])
+
+			await page_message.remove_reaction(reaction.emoji, user)
 	except Exception as e:
 		print(f"Train game: error in pagination. {e}")
 		errored = True
 
 	if errored:
-		await error_message(ctx)
+		await error_message(interaction)
 
 '''
 	Helpers
 '''
 
-def get_response_start(num_of_solutions, use_power, use_modulo):
-	response_start = "All " + str(num_of_solutions) + " solutions"
+def get_response_start(number, target, num_of_solutions, use_power, use_modulo):
+	response_start = f"**Results for train game with number {number} and target {target}**"
+	response_start += "\n_All " + str(num_of_solutions) + " solutions"
 	if num_of_solutions == 1:
 		response_start = "The only solution"
 	elif num_of_solutions == 2:
@@ -77,7 +116,7 @@ def get_response_start(num_of_solutions, use_power, use_modulo):
 	if use_modulo:
 		response_start += "%"
 
-	return response_start
+	return response_start + "_"
 
 def attempt_get_x(x, nums, current_total, current_operations:list[str], use_power, use_modulo):
 	successions = []
@@ -290,21 +329,29 @@ def solve_and_format_solutions(solutions:str, target):
 def format_and_paginate_all_solutions(solutions, target):
 	formatted_list = solve_and_format_solutions(solutions, target)
 	total_length = sum(len(solution) for solution in formatted_list)
+
 	if total_length > 1000:
 		current_length = 0
-		current_list = []
-		result_lists = []
+		current_page = ""
+		result_pages = []
+
 		for solution in formatted_list:
 			solution_length = len(solution)
+			
 			if current_length + solution_length <= 1000:
-				current_list.append(solution)
-				current_length += solution_length
+				# add to current page
+				current_page += solution + "\n"
+				current_length += solution_length + len("\n")
 			else:
-				result_lists.append(current_list)
-				current_list = [solution]
-				current_length = solution_length
-		if current_list:
-			result_lists.append(current_list)
-		return result_lists
+				# add to next page
+				result_pages.append(current_page.strip())
+				current_page = solution + "\n"
+				current_length = solution_length + len("\n")
+
+		last_page = current_page.strip()
+		if last_page:
+			result_pages.append(last_page)
+
+		return result_pages
 	else:
-		return [formatted_list]
+		return ["\n".join(formatted_list)] # emough to fit in one page

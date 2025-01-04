@@ -1,33 +1,46 @@
 import os
 import sys
-from discord.ext import commands
+import platform
+import signal
+import discord
 
 from assets import core_utils
+from assets.core_utils import is_owner, discord_bot
 
-bot = commands.Bot()
+nice_try = "Guess you're not cool enough for this one �"
 
-nice_try = "Nice try bozo :)"
-
-async def restart(ctx):
-	if not core_utils.is_owner(ctx):
-		await ctx.respond(nice_try)
+async def die(interaction:discord.Interaction):
+	if not is_owner(interaction):
+		await interaction.followup.send(nice_try)
 		return
-	await ctx.respond("Restarting the bot...", ephemeral=True)
+	await interaction.followup.send("Going to sleep... Goodnight!")
+	await discord_bot.close()
+	
+	if platform.system() == "Windows":
+		os.kill(os.getpid(), signal.SIGTERM)
+	else:
+		os.kill(os.getpid(), signal.SIGKILL)
+
+async def restart(interaction:discord.Interaction):
+	if not core_utils.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	await interaction.followup.send("Restarting the bot...", ephemeral=True)
 
 	try:
-		await bot.close()
+		await discord_bot.close()
 		os.execl(sys.executable, sys.executable, *sys.argv)
 	except Exception as e:
-		await ctx.followup.send(f"Failed to restart: {e}")
+		await interaction.followup.send(f"Failed to restart: {e}")
 
-async def delete_message_by_id(ctx, id):
-	if not core_utils.is_owner(ctx):
-		await ctx.respond(nice_try)
+async def delete_message_by_id(interaction:discord.Interaction, id):
+	if not core_utils.is_owner(interaction):
+		await interaction.followup.send(nice_try)
 		return
 	try:
-		channel = ctx.channel
+		channel = interaction.channel
 		message = await channel.fetch_message(id)
 		await message.delete()
-		await ctx.respond("Deleted", ephemeral=True)
+		await interaction.followup.send("Deleted", ephemeral=True)
 	except Exception as e:
-		await ctx.respond(e)
+		await interaction.followup.send(e)
