@@ -24,9 +24,9 @@ async def message(message):
 
 		message_sent = False
 		if discord_bot.user in message.mentions: # pings the bot
-    	if message.author.id in all_banned_users:
-        await interaction.followup.send(f"You have lost access to this feature.")
-        return
+			if message.author.id in all_banned_users:
+				await message.reply("You have lost access to this feature.", mention_author=False)
+				return
 			await bot_ping_message(message)
 			message_sent = True
 	except Exception as e:

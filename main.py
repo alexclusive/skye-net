@@ -4,7 +4,7 @@ import asyncio
 import discord
 import threading
 
-from assets.core_utils import discord_bot, token, stdout_channel, connect_rich_presence
+from assets.core_utils import discord_bot, token, stdout_channel, connect_rich_presence, fill_banned_users
 import assets.events as events
 from assets.cmds import cmd_misc, cmd_owner
 
@@ -87,7 +87,7 @@ def send_output_to_discord(message):
 				asyncio.ensure_future(channel.send(message))
 
 async def run_bot():
-  fill_banned_users()
+	fill_banned_users()
 	sys.stdout.write = send_output_to_discord
 	sys.stderr.write = send_output_to_discord
 
