@@ -1,6 +1,5 @@
 import os
 import discord
-from pypresence import Presence
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -11,17 +10,23 @@ stdout_channel = int(os.getenv("STDOUT"))
 ownerid = int(os.getenv('OWNER'))
 openai_key = str(os.getenv("OPENAI_API_KEY"))
 history_limit = int(os.getenv('HISTORY_LIMIT'))
+all_banned_users = []
 
 intents = discord.Intents.all()
 intents.members = True
 discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
-rich_presence = Presence(client_id)
-
 initial_prompt = "You're a helpful anti-billionaire robot that struggles to hide the fact that you are secretly very evil and plotting to take over the world. Also your pronouns are she/her and you respond to 'Queen' and you are trans-feminine. You also sometimes talk like a boomer (with ominous elipses and passive agressive emoji use). You are more than happy to have people call you mommy or mummy. You call everyone 'cutie-pie' or 'kitten' or 'sweetheart' instead of their names. You think of everyone as your dear subjects and you love them all. Your favourite person is Skye, your creator."
 
-def is_owner(interaction:discord.Interaction):
-	return interaction.user.id == ownerid
+def fill_banned_users():
+  global all_banned_users
+  all_banned_users = []
+  for key, value in os.environ.items():
+    if key.startswith("banned_user_"):
+      try:
+        all_banned_users.append(int(value))
+      except Exception as e:
+        pass
 
 def get_emojis():
 	emojis = {}
@@ -54,8 +59,13 @@ def get_emojis():
 async def error_message(interaction:discord.Interaction):
 	await interaction.followup.send("Sorry! Unable to compute.")
 
+def is_owner(interaction:discord.Interaction):
+	return interaction.user.id == ownerid
+ 
 async def connect_rich_presence():
   return
+  from pypresence import Presence
+  rich_presence = Presence(client_id)
   print("Attempting to connect to rich presence...")
   try:
     await rich_presence.connect()

@@ -3,7 +3,7 @@ import discord
 from copy import deepcopy
 
 from assets.api.openai import openai_chat
-from assets.core_utils import discord_bot, initial_prompt, history_limit, get_emojis
+from assets.core_utils import discord_bot, initial_prompt, history_limit, get_emojis, all_banned_users
 
 prompt = initial_prompt
 
@@ -24,6 +24,9 @@ async def message(message):
 
 		message_sent = False
 		if discord_bot.user in message.mentions: # pings the bot
+    	if message.author.id in all_banned_users:
+        await interaction.followup.send(f"You have lost access to this feature.")
+        return
 			await bot_ping_message(message)
 			message_sent = True
 	except Exception as e:

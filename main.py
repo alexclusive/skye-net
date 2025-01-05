@@ -87,6 +87,7 @@ def send_output_to_discord(message):
 				asyncio.ensure_future(channel.send(message))
 
 async def run_bot():
+  fill_banned_users()
 	sys.stdout.write = send_output_to_discord
 	sys.stderr.write = send_output_to_discord
 
