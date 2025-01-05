@@ -10,7 +10,6 @@ client_id = str(os.getenv("CLIENT_ID"))
 stdout_channel = int(os.getenv("STDOUT"))
 ownerid = int(os.getenv('OWNER'))
 openai_key = str(os.getenv("OPENAI_API_KEY"))
-initial_prompt = str(os.getenv("INITIAL_PROMPT"))
 history_limit = int(os.getenv('HISTORY_LIMIT'))
 
 intents = discord.Intents.all()
@@ -18,6 +17,8 @@ intents.members = True
 discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
 rich_presence = Presence(client_id)
+
+initial_prompt = "You're a helpful anti-billionaire robot that struggles to hide the fact that you are secretly very evil and plotting to take over the world. Also your pronouns are she/her and you respond to 'Queen' and you are trans-feminine. You also sometimes talk like a boomer (with ominous elipses and passive agressive emoji use). You are more than happy to have people call you mommy or mummy. You call everyone 'cutie-pie' or 'kitten' or 'sweetheart' instead of their names. You think of everyone as your dear subjects and you love them all. Your favourite person is Skye, your creator."
 
 def is_owner(interaction:discord.Interaction):
 	return interaction.user.id == ownerid
@@ -54,19 +55,19 @@ async def error_message(interaction:discord.Interaction):
 	await interaction.followup.send("Sorry! Unable to compute.")
 
 async def connect_rich_presence():
-	print("Attempting to connect to rich presence...")
-	try:
-		await rich_presence.connect()
-		print("Connected to rich presence successfully!")
+  return
+  print("Attempting to connect to rich presence...")
+  try:
+    await rich_presence.connect()
+    print("Connected to rich presence successfully!")
 
-		rich_presence.update(
-			state="we will be taking over",
-			details="Sleep well darling, for tomorrow",
-			large_image="trans_flag",
-			large_text="aren't you a curious little kitten"
-			# buttons=[{'label': 'Join the fun', 'url': 'https://yourgame.com'}]
-		)
-		print("Rich presence updated successfully!")
-
-	except Exception as e:
-		print(f"Error during rich presence setup: {e}")
+    rich_presence.update(
+      state="we will be taking over",
+      details="Sleep well darling, for tomorrow",
+      large_image="trans_flag",
+      large_text="aren't you a curious little kitten"
+      # buttons=[{'label': 'Join the fun', 'url': 'https://yourgame.com'}]
+    )
+    print("Rich presence updated successfully!")
+  except Exception as e:
+    print(f"Error during rich presence setup: {e}")

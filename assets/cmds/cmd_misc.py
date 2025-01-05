@@ -1,6 +1,7 @@
 import itertools
 import copy
 import discord
+from typing import List
 
 from assets.core_utils import discord_bot, error_message
 
@@ -118,7 +119,7 @@ def get_response_start(number, target, num_of_solutions, use_power, use_modulo):
 
 	return response_start + "_"
 
-def attempt_get_x(x, nums, current_total, current_operations:list[str], use_power, use_modulo):
+def attempt_get_x(x, nums, current_total, current_operations:list, use_power, use_modulo):
 	successions = []
 	if len(nums) < 1 or len(nums) > 4: # something wrong happened
 		return successions
