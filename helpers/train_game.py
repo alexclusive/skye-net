@@ -1,35 +1,11 @@
 import itertools
 import copy
 import discord
-from typing import List
 
-from assets.core_utils import discord_bot, error_message
+from handlers.utils import discord_bot, error_message
 
-async def ping(interaction:discord.Interaction):
-	latency = round(discord_bot.latency * 1000)
-	await interaction.followup.send(f"Ponged your ping in {latency}ms")
-
-async def train_game(interaction:discord.Interaction, number, target, use_power, use_modulo):
+async def attempt_train_game(interaction:discord.Interaction, number, a, b, c, d, target, use_power, use_modulo):
 	errored = False
-
-	try:
-		target = int(target)
-		number_str = str(number)
-		if len(number_str) != 4:
-			await interaction.followup.send("`" + number_str + "` is not valid for the train game. Please give a four digit number (0000-9999).")
-			return
-		a = int(number_str[0]) # these will raise an exception if they can't convert
-		b = int(number_str[1])
-		c = int(number_str[2])
-		d = int(number_str[3])
-	except Exception as e:
-		print(f"Train game: error converting. {e}")
-		errored = True
-
-	if errored:
-		await error_message(interaction)
-		return
-
 	try:
 		response = get_to_x(target, a, b, c, d, use_power, use_modulo)
 		num_of_solutions = len(response)
@@ -98,10 +74,6 @@ async def train_game(interaction:discord.Interaction, number, target, use_power,
 
 	if errored:
 		await error_message(interaction)
-
-'''
-	Helpers
-'''
 
 def get_response_start(number, target, num_of_solutions, use_power, use_modulo):
 	response_start = f"**Results for train game with number {number} and target {target}**"
