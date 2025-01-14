@@ -49,6 +49,11 @@ async def train_game_rules(interaction:discord.Interaction):
 	await interaction.response.defer()
 	await commands_module.train_game_rules(interaction)
 
+@utils_module.discord_bot.tree.command(description="Train fun-fact")
+async def train_fact(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.train_fact(interaction)
+
 @utils_module.discord_bot.tree.command(description="Reset the bot's prompt")
 async def reset_prompt(interaction:discord.Interaction):
 	await interaction.response.defer()

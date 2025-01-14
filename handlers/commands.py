@@ -76,8 +76,11 @@ async def train_game_rules(interaction:discord.Interaction):
 	rules += "In general, the target number is 10 (but you can also use any other positive integer).\n"
 	rules += "By default, the operations are: addition (+), subtraction (-), multiplication (*), and division (/).\n"
 	rules += "Optionally, you can also use power/exponentiation (^), and modulo (%).\n"
-	
+
 	await interaction.followup.send(rules)
+
+async def train_fact(interaction:discord.Interaction):
+	await interaction.followup.send("TODO, sorry!")
 
 async def reset_prompt(interaction:discord.Interaction):
 	utils_module.current_prompt = utils_module.initial_prompt
