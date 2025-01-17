@@ -67,7 +67,7 @@ async def train_game(interaction:discord.Interaction, number, target, use_power,
 		print(f"Train game: error converting. {e}")
 		await utils_module.error_message(interaction)
 		return
-	train_game_module.attempt_train_game(interaction, number, a, b, c, d, target, use_power, use_modulo)
+	await train_game_module.attempt_train_game(interaction, number, a, b, c, d, target, use_power, use_modulo)
 
 async def train_game_rules(interaction:discord.Interaction):
 	rules = "Train game rules:\n"
