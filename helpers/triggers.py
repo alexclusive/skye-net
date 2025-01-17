@@ -4,6 +4,71 @@ async def handle_reactions(message, emojis):
 	'''
 		React to message when certain content is found
 	'''
+	# birth in vc	🤰
+	# bouldering	🧗‍♀️
+	# headpat		<:Headpat:1309732487412580392>
+	# lesbian		<:LesbianBrick:1329672980443435070>
+	# mwah			💋
+	# nomnom		<:Chomp:1309732491862609930>
+	# not far		<:NotFar:1300683648650973306>
+	# perchance		🦀
+	# perhaps		🦀
+	# hear no evil	🙉
+	# see no evil	🙈
+	# skye net		🤖
+	# skyenet		🤖
+	# skynet		🤖
+	# speak no evil	🙊
+	# um actually	☝️ 🤓
+	# what!			‼️
+	# yippee		<:AutismCreature:1235124052813807658>
+	content = message.content.lower()
+	await handle_reactions_vtm(message, emojis, content)	
+
+	# other reactions
+	if "birth in vc" in content:
+		await message.add_reaction("🤰")
+	if "boulder" in content:
+		await message.add_reaction("🧗‍♀️")
+	if "headpat" in content:
+		emoji = utils_module.discord_bot.get_emoji(emojis["HEADPAT"])
+		await message.add_reaction(emoji)
+	if "hear no evil" in content:
+		await message.add_reaction("🙉")
+	if "lesbian" in content:
+		emoji = utils_module.discord_bot.get_emoji(emojis["LESBIAN_BRICK"])
+		await message.add_reaction(emoji)
+	if "mwah" in content:
+		await message.add_reaction("💋")
+	if "nomnom" in content:
+		emoji = utils_module.discord_bot.get_emoji(emojis["CHOMP"])
+		await message.add_reaction(emoji)
+	if "not far" in content:
+		emoji = utils_module.discord_bot.get_emoji(emojis["NOT_FAR"])
+		await message.add_reaction(emoji)
+	if 'perchance' in message.content.lower():
+		await message.add_reaction("🦀")
+	if 'perhaps' in message.content.lower():
+		await message.add_reaction("🦀")
+	if "see no evil" in content:
+		await message.add_reaction("🙈")
+	if "skye net" in content\
+		or "skyenet" in content\
+		or "skynet" in content:
+		await message.add_reaction("🤖")
+	if "speak no evil" in content:
+		await message.add_reaction("🙊")
+	if "um actually" in content:
+		await message.add_reaction("☝️")
+		await message.add_reaction("🤓")
+	if "what!" in content:
+		await message.add_reaction("‼️")
+	if "yippee" in content:
+		emoji = utils_module.discord_bot.get_emoji(emojis["AUTISM_CREATURE"])
+		print(emoji)
+		await message.add_reaction(emoji)
+
+async def handle_reactions_vtm(message, emojis, content):
 	# anarch		<:VTM_Anarch:1297549861750571078>
 	# banu haqim	<:VTM_BanuHaqim:1297549896080953454>
 	# book of nod	<:VTM_BookOfNod:1297549855576817756>
@@ -25,24 +90,7 @@ async def handle_reactions(message, emojis):
 	# vampire		🧛
 	# ventrue		<:VTM_Ventrue:1297549883930054676>
 	# vtm			🧛 <:VTM:1297549858139410483>
-	# 
-	# birth in vc	🤰
-	# bouldering	🧗‍♀️
-	# lesbian		✂️
-	# mwah			💋
-	# not far		<:NotFar:1300683648650973306>
-	# hear no evil	🙉
-	# see no evil	🙈
-	# skye net		🤖
-	# skyenet		🤖
-	# skynet		🤖
-	# speak no evil	🙊
-	# um actually	☝️ 🤓
-	# what!			‼️
-	# yippee		<:AutismCreature:1235124052813807658>
-	content = message.content.lower()
 
-	# vtm reactions
 	if "anarch" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM_ANARCH"])
 		await message.add_reaction(emoji)
@@ -105,42 +153,6 @@ async def handle_reactions(message, emojis):
 	if "vtm" in content:
 		await message.add_reaction("🧛")
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM"])
-		await message.add_reaction(emoji)
-
-	# other reactions
-	if "birth in vc" in content:
-		await message.add_reaction("🤰")
-	if "boulder" in content:
-		await message.add_reaction("🧗‍♀️")
-	if "hear no evil" in content:
-		await message.add_reaction("🙉")
-	if "lesbian" in content:
-		await message.add_reaction("✂️")
-	if "mwah" in content:
-		await message.add_reaction("💋")
-	if "not far" in content:
-		emoji = utils_module.discord_bot.get_emoji(emojis["NOT_FAR"])
-		await message.add_reaction(emoji)
-	if 'perchance' in message.content.lower():
-		await message.add_reaction("🦀")
-	if 'perhaps' in message.content.lower():
-		await message.add_reaction("🦀")
-	if "see no evil" in content:
-		await message.add_reaction("🙈")
-	if "skye net" in content\
-		or "skyenet" in content\
-		or "skynet" in content:
-		await message.add_reaction("🤖")
-	if "speak no evil" in content:
-		await message.add_reaction("🙊")
-	if "um actually" in content:
-		await message.add_reaction("☝️")
-		await message.add_reaction("🤓")
-	if "what!" in content:
-		await message.add_reaction("‼️")
-	if "yippee" in content:
-		emoji = utils_module.discord_bot.get_emoji(emojis["AUTISM_CREATURE"])
-		print(emoji)
 		await message.add_reaction(emoji)
 
 async def handle_triggers(message, emojis):

@@ -72,9 +72,6 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(activity=discord.Game(name="!help"))
 	await utils_module.discord_bot.tree.sync()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
-	# list all command names
-	for command in utils_module.discord_bot.tree.get_commands():
-		print(command.name)
 
 @utils_module.discord_bot.event
 async def on_message(message):

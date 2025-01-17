@@ -11,7 +11,7 @@ ownerid = int(os.getenv('OWNER'))
 openai_key = str(os.getenv("OPENAI_API_KEY"))
 history_limit = int(os.getenv('HISTORY_LIMIT'))
 all_banned_users = []
-all_emojis = []
+all_emojis = {}
 
 intents = discord.Intents.all()
 intents.members = True
@@ -21,17 +21,16 @@ initial_prompt = "You're a helpful anti-billionaire person that struggles to hid
 current_prompt = initial_prompt
 
 def fill_banned_users():
-  global all_banned_users
-  all_banned_users = []
-  for key, value in os.environ.items():
-    if key.startswith("banned_user_"):
-      try:
-        all_banned_users.append(int(value))
-      except Exception as _:
-        pass
+	global all_banned_users
+	all_banned_users = []
+	for key, value in os.environ.items():
+		if key.startswith("banned_user_"):
+			try:
+				all_banned_users.append(int(value))
+			except Exception as _:
+				pass
 
 def fill_emojis():
-	all_emojis = {}
 	all_emojis["NOT_FAR"] = int(os.getenv('NOT_FAR'))
 	all_emojis["AUTISM_CREATURE"] = int(os.getenv('AUTISM_CREATURE'))
 	
@@ -57,6 +56,9 @@ def fill_emojis():
 	all_emojis["POINT"] = int(os.getenv('POINT'))
 	all_emojis["NUH_UH"] = int(os.getenv('NUH_UH'))
 	all_emojis["WAGGING_FINGER"] = int(os.getenv('WAGGING_FINGER'))
+	all_emojis["LESBIAN_BRICK"] = int(os.getenv('LESBIAN_BRICK'))
+	all_emojis["CHOMP"] = int(os.getenv('CHOMP'))
+	all_emojis["HEADPAT"] = int(os.getenv('HEADPAT'))
 
 async def error_message(interaction:discord.Interaction):
 	await interaction.followup.send("Sorry! Unable to compute.")
