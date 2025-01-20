@@ -20,6 +20,7 @@ async def handle_reactions(message, emojis):
 	# skynet		🤖
 	# speak no evil	🙊
 	# um actually	☝️ 🤓
+	# witch			🧙‍♀️
 	# what!			‼️
 	# yippee		<:AutismCreature:1235124052813807658>
 	content = message.content.lower()
@@ -61,11 +62,12 @@ async def handle_reactions(message, emojis):
 	if "um actually" in content:
 		await message.add_reaction("☝️")
 		await message.add_reaction("🤓")
+	if "witch" in content:
+		await message.add_reaction("🧙‍♀️")
 	if "what!" in content:
 		await message.add_reaction("‼️")
 	if "yippee" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["AUTISM_CREATURE"])
-		print(emoji)
 		await message.add_reaction(emoji)
 
 async def handle_reactions_vtm(message, emojis, content):
@@ -87,9 +89,9 @@ async def handle_reactions_vtm(message, emojis, content):
 	# toreador		<:VTM_Toreador:1297549886631182437>
 	# tremere		<:VTM_Tremere:1297549908634767515>
 	# tzimisce		<:VTM_Tzimisce:1297549903873970278>
-	# vampire		🧛
+	# vampire		🧛‍♀️
 	# ventrue		<:VTM_Ventrue:1297549883930054676>
-	# vtm			🧛 <:VTM:1297549858139410483>
+	# vtm			🧛‍♀️ <:VTM:1297549858139410483>
 
 	if "anarch" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM_ANARCH"])
@@ -146,12 +148,12 @@ async def handle_reactions_vtm(message, emojis, content):
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM_TZIMISCE"])
 		await message.add_reaction(emoji)
 	if "vampire" in content:
-		await message.add_reaction("🧛")
+		await message.add_reaction("🧛‍♀️")
 	if "ventrue" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM_VENTRUE"])
 		await message.add_reaction(emoji)
 	if "vtm" in content:
-		await message.add_reaction("🧛")
+		await message.add_reaction("🧛‍♀️")
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM"])
 		await message.add_reaction(emoji)
 
