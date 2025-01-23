@@ -22,10 +22,10 @@ async def restart(interaction:discord.Interaction):
 	await commands_module.restart(interaction)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Get the audit log as JSON")
-async def get_audit_log_json(interaction:discord.Interaction):
+async def get_audit_log_json(interaction:discord.Interaction, limit:int=None):
 	await interaction.response.defer(ephemeral=True)
 	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
-	await commands_module.get_audit_log_json(interaction, guild)
+	await commands_module.get_audit_log_json(interaction, guild, limit)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Delete a message by ID")
 async def delete_message_by_id(interaction:discord.Interaction, id:str):

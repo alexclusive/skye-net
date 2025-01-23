@@ -36,13 +36,13 @@ async def restart(interaction:discord.Interaction):
 		await interaction.followup.send(f"Failed to restart: {e}")
 
 # Admin
-async def get_audit_log_json(interaction:discord.Interaction, guild:discord.Guild):
+async def get_audit_log_json(interaction:discord.Interaction, guild:discord.Guild, limit:int):
 	if not utils_module.is_admin(interaction):
 		await interaction.followup.send(nice_try)
 		return	
 	if guild:
 		logs = []
-		async for entry in guild.audit_logs(limit=None):
+		async for entry in guild.audit_logs(limit=limit):
 			logs.append({
 				"action": str(entry.action),
             	"user": str(entry.user),
