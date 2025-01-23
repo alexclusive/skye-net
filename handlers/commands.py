@@ -36,6 +36,30 @@ async def restart(interaction:discord.Interaction):
 		await interaction.followup.send(f"Failed to restart: {e}")
 
 # Admin
+async def get_audit_log_json(interaction:discord.Interaction, guild:discord.Guild):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return	
+	if guild:
+		logs = []
+		async for entry in guild.audit_logs(limit=None):
+			logs.append({
+				"action": str(entry.action),
+            	"user": str(entry.user),
+            	"target": str(entry.target),
+				"channel": str(entry.extra.channel),
+            	"reason": entry.reason,
+				"changes": entry.changes,
+				"before": entry.before,
+				"after": entry.after,
+            	"timestamp": entry.created_at.isoformat()
+			})
+		import json
+		with open("audit_logs.json", "w") as f:
+			json.dump(logs, f, indent=4)
+		await interaction.followup.send(file=discord.File("audit_logs.json"), ephemeral=True)
+
+# Admin
 async def delete_message_by_id(interaction:discord.Interaction, id):
 	if not utils_module.is_admin(interaction):
 		await interaction.followup.send(nice_try)

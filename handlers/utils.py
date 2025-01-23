@@ -10,6 +10,7 @@ stdout_channel = int(os.getenv("STDOUT"))
 ownerid = int(os.getenv('OWNER'))
 openai_key = str(os.getenv("OPENAI_API_KEY"))
 history_limit = int(os.getenv('HISTORY_LIMIT'))
+guild_id = int(os.getenv('GUILD_ID'))
 all_banned_users = []
 all_emojis = {}
 
