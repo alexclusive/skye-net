@@ -21,7 +21,7 @@ async def restart(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.restart(interaction)
 
-@utils_module.discord_bot.tree.command(description="[Admin] Get the audit log as JSON")
+@utils_module.discord_bot.tree.command(description="[Admin] Get the audit log as JSON (might timeout if limit too high)")
 async def get_audit_log_json(interaction:discord.Interaction, limit:int=None):
 	await interaction.response.defer(ephemeral=True)
 	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
@@ -78,6 +78,8 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(activity=discord.Game(name="!help"))
 	await utils_module.discord_bot.tree.sync()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
+	
+	# await utils_module.get_audit_log_json()
 
 @utils_module.discord_bot.event
 async def on_message(message):

@@ -1,5 +1,7 @@
 import os
 import discord
+import asyncio
+
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -69,3 +71,51 @@ def is_owner(interaction:discord.Interaction):
 
 def is_admin(interaction:discord.Interaction):
 	return interaction.user.guild_permissions.administrator
+
+async def get_audit_log_json():
+	# Terrible, only actually gets 1 log and then gives up and doesn't even print anything after the loop???????
+	guild = discord_bot.get_guild(guild_id)
+	if not guild:
+		print("Guild not found.")
+		return
+
+	logs = []
+	total_logs = 0
+	last_entry = None  # Track the last processed entry ID
+
+	print("Processing audit logs...")
+
+	while True:
+		batch = []
+		print(f"Fetching logs after ID: {last_entry}")  # Debugging pagination
+
+		async for entry in guild.audit_logs(limit=100, after=discord.Object(id=last_entry) if last_entry else None):
+			print(f"Fetched log: ID {entry.id}, Action: {entry.action}")  # More verbose logging
+
+			batch.append({
+				"action": str(entry.action),
+				"user": str(entry.user),
+				"target": str(entry.target),
+				"channel": str(entry.extra.channel) if entry.extra.channel else None,
+				"reason": entry.reason,
+				"changes": entry.changes,
+				"before": entry.before,
+				"after": entry.after,
+				"timestamp": entry.created_at.isoformat()
+			})
+			last_entry = entry.id  # Store last entry ID for pagination
+		
+		if not batch:
+			break  # No more logs to process
+		
+		logs.extend(batch)
+		total_logs += len(batch)
+
+		print(f"Processed {total_logs} logs so far...")
+		await asyncio.sleep(1)  # Sleep to avoid rate limits
+
+	import json
+	with open("audit_logs.json", "w") as f:
+		json.dump(logs, f, indent=4)
+
+	print("Audit log download has finished processing")
