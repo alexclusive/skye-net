@@ -6,6 +6,7 @@ import discord
 
 import handlers.utils as utils_module
 import helpers.train_game as train_game_module
+import helpers.etymology as etymology_module
 
 nice_try = "Guess you're not cool enough for this one :)"
 
@@ -89,3 +90,6 @@ async def reset_prompt(interaction:discord.Interaction):
 async def set_prompt(interaction:discord.Interaction, new_prompt):
 	utils_module.current_prompt = new_prompt
 	await interaction.followup.send(f"Prompt set to '{new_prompt}'")
+
+async def etymology(interaction:discord.Interaction, argument):
+	await interaction.followup.send(etymology_module.get_etymology(argument))

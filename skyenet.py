@@ -70,6 +70,12 @@ async def set_prompt(interaction:discord.Interaction, prompt:str):
 	await interaction.response.defer()
 	await commands_module.set_prompt(interaction, prompt)
 
+# etymology: argument is the word to get etymology for, plus an optional 'tree' argument to print the tree
+@utils_module.discord_bot.tree.command(description="Get the etymology of a word")
+async def etymology(interaction:discord.Interaction, argument:str):
+	await interaction.response.defer()
+	await commands_module.etymology(interaction, argument)
+
 '''
 	Discord events
 '''
