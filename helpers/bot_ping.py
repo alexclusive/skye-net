@@ -21,7 +21,7 @@ async def bot_ping_message(message):
 		await message.reply("Nice try bozo, you ain't gonna reset me like that!", mention_author=False)
 		return
 	
-	contents = [{"role": "system", "content": utils_module.prompt}]
+	contents = [{"role": "system", "content": utils_module.current_prompt}]
 	messages = [message]
 
 	if message.reference:

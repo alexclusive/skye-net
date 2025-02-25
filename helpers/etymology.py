@@ -15,4 +15,4 @@ def get_etymology(word):
 		formatted = f"Etymology for '{word}'\n\nEtymonline:\nSearch: <{etymonline_search}>\nResult: {etymonline_result}\n\nEty tree:\n{ety_result}"
 		return formatted
 	except Exception as e:
-		return f"Error occured while fetching etymology for {word}.\nState: {state}.\nError: {e}"
+		return f"Error occured while fetching etymology for {word}.\nError: {e}"
