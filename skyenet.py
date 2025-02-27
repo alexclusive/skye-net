@@ -1,10 +1,12 @@
 import sys
 import asyncio
+import aiocron
 import discord
 
 import handlers.utils as utils_module
 import handlers.commands as commands_module
 import handlers.messages as messages_module
+import handlers.tasks as tasks_module
 
 '''
 	Commands
@@ -77,8 +79,12 @@ async def etymology(interaction:discord.Interaction, argument:str):
 	await commands_module.etymology(interaction, argument)
 
 '''
-	Discord events
+	Events
 '''
+async def once_per_day():
+	# This is run midnight every day
+	await tasks_module.daily_tasks()
+
 @utils_module.discord_bot.event
 async def on_ready():
 	await utils_module.discord_bot.change_presence(activity=discord.Game(name="!help"))
@@ -118,4 +124,5 @@ async def run_bot():
 	except KeyboardInterrupt:
 		pass
 
+aiocron.crontab('0 0 * * *', func=once_per_day, start=True) # somehow this means midnight every day
 asyncio.run(run_bot())

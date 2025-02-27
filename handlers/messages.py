@@ -1,8 +1,8 @@
 from discord.errors import Forbidden
 
 import handlers.utils as utils_module
-import helpers.bot_ping as bot_ping_module
-import helpers.triggers as triggers_module
+import handlers.helpers.bot_ping as bot_ping_module
+import handlers.helpers.triggers as triggers_module
 
 async def message(message):
 	try:

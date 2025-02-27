@@ -5,8 +5,8 @@ import signal
 import discord
 
 import handlers.utils as utils_module
-import helpers.train_game as train_game_module
-import helpers.etymology as etymology_module
+import handlers.helpers.train_game as train_game_module
+import handlers.helpers.etymology as etymology_module
 
 nice_try = "Guess you're not cool enough for this one :)"
 
