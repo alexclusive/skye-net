@@ -7,6 +7,7 @@ async def daily_tasks():
 		Go through list of all users in the server and if they have been in the server for over one month,
 		give them a role (utils_module.trusted_role) if they have the welcomed_role.
 	'''
+	return
 	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
 	if not utils_module.guild_id:
 		print("daily_tasks: Guild not found.")

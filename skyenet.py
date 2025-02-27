@@ -5,6 +5,7 @@ import discord
 
 import handlers.utils as utils_module
 import handlers.commands as commands_module
+import handlers.database as database_module
 import handlers.messages as messages_module
 import handlers.tasks as tasks_module
 
@@ -33,6 +34,11 @@ async def get_audit_log_json(interaction:discord.Interaction, limit:int=None):
 async def delete_message_by_id(interaction:discord.Interaction, id:str):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.delete_message_by_id(interaction, id)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Get list of user IDs that have opted out of reactions")
+async def get_opt_out_users(interaction:discord.Interaction):
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.get_opt_out_users(interaction)
 
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):
@@ -78,6 +84,16 @@ async def etymology(interaction:discord.Interaction, argument:str):
 	await interaction.response.defer()
 	await commands_module.etymology(interaction, argument)
 
+@utils_module.discord_bot.tree.command(description="Opt out of the bot's reactions")
+async def opt_out(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.opt_out_reactions(interaction)
+
+@utils_module.discord_bot.tree.command(description="Opt in to the bot's reactions")
+async def opt_in(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.opt_in_reactions(interaction)
+
 '''
 	Events
 '''
@@ -90,8 +106,6 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(activity=discord.Game(name="!help"))
 	await utils_module.discord_bot.tree.sync()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
-	
-	# await utils_module.get_audit_log_json()
 
 @utils_module.discord_bot.event
 async def on_message(message):
@@ -115,6 +129,8 @@ def send_output_to_discord(message):
 async def run_bot():
 	utils_module.fill_banned_users()
 	utils_module.fill_emojis()
+	database_module.init_db()
+	utils_module.current_prompt = database_module.get_most_recent_prompt()
 
 	sys.stdout.write = send_output_to_discord
 	sys.stderr.write = send_output_to_discord

@@ -5,6 +5,7 @@ import signal
 import discord
 
 import handlers.utils as utils_module
+import handlers.database as database_module
 import handlers.helpers.train_game as train_game_module
 import handlers.helpers.etymology as etymology_module
 
@@ -49,6 +50,14 @@ async def delete_message_by_id(interaction:discord.Interaction, id):
 	except Exception as e:
 		await interaction.followup.send(e)
 
+# Admin
+async def get_opt_out_users(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	opted_out_users = database_module.get_all_opt_out_users()
+	await interaction.followup.send(f"Opted out users: {opted_out_users}")
+
 async def ping(interaction:discord.Interaction):
 	latency = round(utils_module.discord_bot.latency * 1000)
 	await interaction.followup.send(f"Ponged your ping in {latency}ms")
@@ -89,7 +98,16 @@ async def reset_prompt(interaction:discord.Interaction):
 
 async def set_prompt(interaction:discord.Interaction, new_prompt):
 	utils_module.current_prompt = new_prompt
+	database_module.insert_prompt(new_prompt, interaction.user.id)
 	await interaction.followup.send(f"Prompt set to '{new_prompt}'")
 
 async def etymology(interaction:discord.Interaction, argument):
 	await interaction.followup.send(etymology_module.get_etymology(argument))
+
+async def opt_out_reactions(interaction:discord.Interaction):
+	database_module.opt_out(interaction.user.id)
+	await interaction.followup.send("You have opted out of reactions")
+
+async def opt_in_reactions(interaction:discord.Interaction):
+	database_module.opt_in(interaction.user.id)
+	await interaction.followup.send("You have opted in to reactions")
