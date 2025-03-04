@@ -1,3 +1,4 @@
 *.env
 *pycache*
 nohup.out
+*.db
