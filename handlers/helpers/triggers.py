@@ -1,3 +1,5 @@
+import re
+
 import handlers.utils as utils_module
 
 async def handle_reactions(message, emojis):
@@ -13,6 +15,7 @@ async def handle_reactions(message, emojis):
 	# not far		<:NotFar:1300683648650973306>
 	# perchance		🦀
 	# perhaps		🦀
+	# prey animal	🐰
 	# hear no evil	🙉
 	# see no evil	🙈
 	# skye net		🤖
@@ -51,6 +54,8 @@ async def handle_reactions(message, emojis):
 		await message.add_reaction("🦀")
 	if 'perhaps' in message.content.lower():
 		await message.add_reaction("🦀")
+	if 'prey animal' in message.content.lower():
+		await message.add_reaction("🐰")
 	if "see no evil" in content:
 		await message.add_reaction("🙈")
 	if "skye net" in content\
@@ -62,7 +67,7 @@ async def handle_reactions(message, emojis):
 	if "um actually" in content:
 		await message.add_reaction("☝️")
 		await message.add_reaction("🤓")
-	if "witch" in content:
+	if re.search(r'\bwitch\b', content): # don't match 'switch'
 		await message.add_reaction("🧙‍♀️")
 	if "what!" in content:
 		await message.add_reaction("‼️")
