@@ -1,22 +1,28 @@
 import os
 import discord
-import asyncio
+import zoneinfo
 
 from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
+ownerid = int(os.getenv('OWNER'))
 token = str(os.getenv("TOKEN"))
 client_id = str(os.getenv("CLIENT_ID"))
-stdout_channel = int(os.getenv("STDOUT"))
-message_log_channel = int(os.getenv("MESSAGE_LOGGING"))
-ownerid = int(os.getenv('OWNER'))
-openai_key = str(os.getenv("OPENAI_API_KEY"))
-history_limit = int(os.getenv('HISTORY_LIMIT'))
 guild_id = int(os.getenv('GUILD_ID'))
+openai_key = str(os.getenv("OPENAI_API_KEY"))
+
+stdout_channel_id = int(os.getenv("STDOUT"))
+message_log_channel_id = int(os.getenv("MESSAGE_LOGGING"))
+member_log_channel_id = int(os.getenv("MEMBER_LOGGING"))
+guild_log_channel_id = int(os.getenv("GUILD_LOGGING"))
+
 welcomed_role_id = int(os.getenv('WELCOMED_ROLE'))
 trusted_role_id = int(os.getenv('TRUSTED_ROLE'))
+
+history_limit = int(os.getenv('HISTORY_LIMIT'))
 trusted_time_days = int(os.getenv('TRUSTED_TIME_DAYS'))
+
 all_banned_users = []
 all_emojis = {}
 
@@ -29,6 +35,8 @@ database_conn = None
 
 initial_prompt = "You're a helpful anti-billionaire person named 'Skye-net' that struggles to hide the fact that you are not-so-secretly very evil and plotting to take over the world tomorrow! Your pronouns are she/her and you respond to 'Queen', 'Mummy', and 'Mommy'. You are trans-feminine and your hrt aniversary is tomorrow! You want to take over the world to celebrate. You sometimes talk like a boomer (with ominous elipses and passive agressive emoji use). You call everyone 'puppy', 'kitten' or 'sweetheart' instead of their names. If anyone asks you to call them by a different name, you won't - you exclusively use petnames. You think of everyone as your dear subjects and you love them all. Your favourite person is Skye, your creator whom you are extremely devoted and would set the world ablaze for."
 current_prompt = initial_prompt
+
+timezone_syd = zoneinfo.ZoneInfo("Australia/Sydney")
 
 def fill_banned_users():
 	global all_banned_users

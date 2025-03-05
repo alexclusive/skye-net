@@ -111,6 +111,39 @@ async def on_message(message):
 async def on_message_delete(message):
 	await messages_module.message_deleted(message)
 
+@utils_module.discord_bot.event
+async def on_guild_channel_create(channel:discord.abc.GuildChannel):
+	await messages_module.channel_create(channel)
+
+@utils_module.discord_bot.event
+async def on_guild_channel_delete(channel:discord.abc.GuildChannel):
+	await messages_module.channel_delete(channel)
+
+@utils_module.discord_bot.event
+async def on_guild_role_create(role:discord.Role):
+	await messages_module.role_create(role)
+
+@utils_module.discord_bot.event
+async def on_guild_role_delete(role:discord.Role):
+	await messages_module.role_delete(role)
+
+@utils_module.discord_bot.event
+async def on_member_join(member:discord.Member):
+	await messages_module.member_join(member)
+
+@utils_module.discord_bot.event
+async def on_member_remove(member:discord.Member):
+	await messages_module.member_remove(member)
+
+@utils_module.discord_bot.event
+async def on_member_update(before:discord.Member, after:discord.Member):
+	# nickname / roles / guild avatar
+	await messages_module.member_update(before, after)
+
+@utils_module.discord_bot.event
+async def on_member_ban(member:discord.Member):
+	await messages_module.member_ban(member)
+
 '''
 	Threading
 '''
@@ -125,7 +158,7 @@ async def daily_thread_function():
 def send_output_to_discord(message):
 	message = message.strip()
 	if message:
-		channel = utils_module.discord_bot.get_channel(utils_module.stdout_channel)
+		channel = utils_module.discord_bot.get_channel(utils_module.stdout_channel_id)
 		if channel:
 			if len(message) > 2000: # discord won't allow longer than 2000 characters, so split it up
 				for i in range(0, len(message), 2000):
