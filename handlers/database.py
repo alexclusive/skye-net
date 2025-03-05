@@ -80,5 +80,5 @@ def insert_daily_task_time():
 		Insert the current datetime into the daily_tasks table
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
-	utils_module.database_conn.execute("INSERT INTO daily_tasks VALUES (?)", (datetime.now()))
+	utils_module.database_conn.execute("INSERT INTO daily_tasks VALUES (?)", (datetime.now(),))
 	utils_module.database_conn.close()

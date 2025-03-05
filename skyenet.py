@@ -36,7 +36,7 @@ async def get_opt_out_users(interaction:discord.Interaction):
 
 @utils_module.discord_bot.tree.command(description="[Admin] Force daily tasks")
 async def force_daily_tasks(interaction:discord.Interaction):
-	await interaction.response.defer(ephemeral=True)
+	await interaction.response.defer()
 	await commands_module.force_daily_tasks(interaction)
 
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
@@ -101,6 +101,7 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(activity=discord.Game(name="!help"))
 	await utils_module.discord_bot.tree.sync()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
+	asyncio.create_task(daily_thread_function())
 
 @utils_module.discord_bot.event
 async def on_message(message):
@@ -110,10 +111,9 @@ async def on_message(message):
 	Threading
 '''
 async def daily_thread_function():
-	import time
 	while True:
 		await tasks_module.daily_tasks()
-		time.sleep(60*60) # 1 hour
+		await asyncio.sleep(60*60*24) # 1 day
 
 '''
 	Discord handling
@@ -139,12 +139,9 @@ async def run_bot():
 	database_module.init_db()
 	utils_module.current_prompt = database_module.get_most_recent_prompt()
 
-	daily_thread.start()
-
 	try:
 		await utils_module.discord_bot.start(utils_module.token)
 	except KeyboardInterrupt:
 		pass
 
-daily_thread = threading.Thread(target=daily_thread_function, daemon=True) # daemon means it can be shut off when the main thread ends
 asyncio.run(run_bot())
