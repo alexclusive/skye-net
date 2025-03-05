@@ -107,6 +107,10 @@ async def on_ready():
 async def on_message(message):
 	await messages_module.message(message)
 
+@utils_module.discord_bot.event
+async def on_message_delete(message):
+	await messages_module.message_deleted(message)
+
 '''
 	Threading
 '''

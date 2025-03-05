@@ -25,7 +25,7 @@ async def daily_tasks(force=False):
 		if time_diff.days >= 1:
 			run_task = True
 
-	print(f"daily_tasks: Last run {last_daily_task_time}")
+	print(f"Last ran daily tasks at {last_daily_task_time}")
 	if run_task or force:
 		print("daily_tasks: Running now")
 		guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
