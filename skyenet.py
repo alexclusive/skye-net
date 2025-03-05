@@ -1,6 +1,6 @@
 import sys
 import asyncio
-import aiocron
+import threading
 import discord
 
 import handlers.utils as utils_module
@@ -23,12 +23,6 @@ async def kill(interaction:discord.Interaction):
 async def restart(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.restart(interaction)
-
-@utils_module.discord_bot.tree.command(description="[Admin] Get the audit log as JSON (might timeout if limit too high)")
-async def get_audit_log_json(interaction:discord.Interaction, limit:int=None):
-	await interaction.response.defer(ephemeral=True)
-	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
-	await commands_module.get_audit_log_json(interaction, guild, limit)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Delete a message by ID")
 async def delete_message_by_id(interaction:discord.Interaction, id:str):
@@ -97,10 +91,6 @@ async def opt_in(interaction:discord.Interaction):
 '''
 	Events
 '''
-async def once_per_day():
-	# This is run midnight every day
-	await tasks_module.daily_tasks()
-
 @utils_module.discord_bot.event
 async def on_ready():
 	await utils_module.discord_bot.change_presence(activity=discord.Game(name="!help"))
@@ -110,6 +100,15 @@ async def on_ready():
 @utils_module.discord_bot.event
 async def on_message(message):
 	await messages_module.message(message)
+
+'''
+	Threading
+'''
+async def daily_thread_function():
+	import time
+	while True:
+		await tasks_module.daily_tasks()
+		time.sleep(60*60) # 1 hour
 
 '''
 	Discord handling
@@ -127,18 +126,20 @@ def send_output_to_discord(message):
 				asyncio.ensure_future(channel.send(message))
 
 async def run_bot():
+	sys.stdout.write = send_output_to_discord
+	sys.stderr.write = send_output_to_discord
+
 	utils_module.fill_banned_users()
 	utils_module.fill_emojis()
 	database_module.init_db()
 	utils_module.current_prompt = database_module.get_most_recent_prompt()
 
-	sys.stdout.write = send_output_to_discord
-	sys.stderr.write = send_output_to_discord
+	daily_thread.start()
 
 	try:
 		await utils_module.discord_bot.start(utils_module.token)
 	except KeyboardInterrupt:
 		pass
 
-aiocron.crontab('0 0 * * *', func=once_per_day, start=True) # somehow this means midnight every day
+daily_thread = threading.Thread(target=daily_thread_function, daemon=True) # daemon means it can be shut off when the main thread ends
 asyncio.run(run_bot())

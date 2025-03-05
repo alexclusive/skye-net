@@ -1,5 +1,6 @@
 import duckdb
 from datetime import datetime
+from typing import Optional
 
 import handlers.utils as utils_module
 
@@ -7,12 +8,14 @@ def init_db():
 	'''
 		If database does not exist, create it
 		If table "prompts" does not exist, create it with columns "prompt TEXT, user_id TEXT, datetime TIMESTAMP"
-		If table "react_opt_out" does not exist, create it with columns "user_id TEXT"
+		If table "react_opt_out" does not exist, create it with column "user_id TEXT"
+		If table "daily_tasks" does not exist, create it with column "datetime TIMESTAMP"
 		Insert the initial prompt into the database
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS prompts (prompt TEXT NOT NULL, user_id TEXT NOT NULL, datetime TIMESTAMP NOT NULL)")
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS react_opt_out (user_id TEXT)")
+	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS daily_tasks (datetime TIMESTAMP NOT NULL)")
 
 	utils_module.database_conn.execute("INSERT INTO prompts VALUES (?, ?, ?)", (utils_module.initial_prompt, utils_module.ownerid, datetime.now()))
 	utils_module.database_conn.close()
@@ -37,6 +40,17 @@ def get_all_opt_out_users():
 	utils_module.database_conn.close()
 	return [int(row[0]) for row in result]
 
+def get_last_daily_task_time() -> Optional[datetime]:
+	'''
+		Return the most recent datetime in the daily_tasks table
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT datetime FROM daily_tasks ORDER BY datetime DESC LIMIT 1").fetchall()
+	utils_module.database_conn.close()
+	if result:
+		return result[0][0]
+	return None
+
 def insert_prompt(prompt, user_id):
 	'''
 		Insert a new prompt into the database
@@ -59,4 +73,12 @@ def opt_in(user_id):
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("DELETE FROM react_opt_out WHERE user_id = ?", (int(user_id),))
+	utils_module.database_conn.close()
+
+def insert_daily_task_time():
+	'''
+		Insert the current datetime into the daily_tasks table
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	utils_module.database_conn.execute("INSERT INTO daily_tasks VALUES (?)", (datetime.now()))
 	utils_module.database_conn.close()
