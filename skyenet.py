@@ -98,7 +98,7 @@ async def opt_in(interaction:discord.Interaction):
 '''
 @utils_module.discord_bot.event
 async def on_ready():
-	await utils_module.discord_bot.change_presence(activity=discord.Game(name="!help"))
+	await utils_module.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching...", type=discord.ActivityType.watching, emoji="👀"))
 	await utils_module.discord_bot.tree.sync()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
 	asyncio.create_task(daily_thread_function())
