@@ -34,6 +34,11 @@ async def get_opt_out_users(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.get_opt_out_users(interaction)
 
+@utils_module.discord_bot.tree.command(description="[Admin] Force daily tasks")
+async def force_daily_tasks(interaction:discord.Interaction):
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.force_daily_tasks(interaction)
+
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):
 	await interaction.response.defer()

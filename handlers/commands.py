@@ -6,6 +6,7 @@ import discord
 
 import handlers.utils as utils_module
 import handlers.database as database_module
+import handlers.tasks as tasks_module
 import handlers.helpers.train_game as train_game_module
 import handlers.helpers.etymology as etymology_module
 
@@ -57,6 +58,14 @@ async def get_opt_out_users(interaction:discord.Interaction):
 		return
 	opted_out_users = database_module.get_all_opt_out_users()
 	await interaction.followup.send(f"Opted out users: {opted_out_users}")
+
+# Admin
+async def force_daily_tasks(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	await tasks_module.daily_tasks(force=True)
+	await interaction.followup.send("Forced daily tasks")
 
 async def ping(interaction:discord.Interaction):
 	latency = round(utils_module.discord_bot.latency * 1000)

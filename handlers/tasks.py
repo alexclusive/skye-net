@@ -4,7 +4,7 @@ import discord
 import handlers.utils as utils_module
 import handlers.database as database_module
 
-async def daily_tasks():
+async def daily_tasks(force=False):
 	'''
 		Get last time daily tasks were run from database (if not exist or more than 1 day ago, run daily tasks)
 		Go through list of each guild member
@@ -24,7 +24,7 @@ async def daily_tasks():
 		if time_diff.days >= 1:
 			run_task = True
 
-	if run_task:
+	if run_task or force:
 		print(f"daily_tasks: Last run {last_daily_task_time}, running now")
 		guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
 		if not utils_module.guild_id:
