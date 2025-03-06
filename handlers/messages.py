@@ -1,7 +1,6 @@
 from discord.errors import Forbidden
 import discord
 from datetime import datetime as dt
-from datetime import timezone
 
 import handlers.utils as utils_module
 import handlers.database as database_module
@@ -24,6 +23,7 @@ async def message(message:discord.Message):
 		opted_out_users = database_module.get_all_opt_out_users()
 		if int(message.author.id) in opted_out_users:
 			return
+		
 		await triggers_module.handle_reactions(message, utils_module.all_emojis)
 		if not message_sent:
 			await triggers_module.handle_triggers(message, utils_module.all_emojis)
@@ -50,14 +50,13 @@ async def message_deleted(message:discord.Message):
 			title=f"Message Deleted in {message.channel.mention}",
 			colour=0xff0000
 		)
-		embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
-		embed.timestamp = message.created_at
-		
 		if message.content:
 			embed.add_field(name="Content", value=message.content, inline=False)
 		if message.attachments:
 			embed.add_field(name="Attachments", value="\n".join([attachment.url for attachment in message.attachments]), inline=False)
-
+			
+		embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
+		embed.timestamp = message.created_at
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"on_message_delete: {e}")
@@ -73,9 +72,14 @@ async def channel_create(channel:discord.abc.GuildChannel):
 
 		embed = discord.Embed(
 			title=f"Channel Created {channel.mention}",
-			colour=0xff0000
+			colour=0x00ff00
 		)
+		embed.add_field(name="Type", value=channel.type)
+		embed.add_field(name="Category", value=channel.category.mention if channel.category else "None")
+		embed.add_field(name="Position", value=channel.position)
+
 		embed.timestamp = dt.now(utils_module.timezone_syd)
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"channel_create: {e}")
 
@@ -92,7 +96,12 @@ async def channel_delete(channel:discord.abc.GuildChannel):
 			title=f"Channel Deleted {channel.mention}",
 			colour=0xff0000
 		)
+		embed.add_field(name="Type", value=channel.type)
+		embed.add_field(name="Category", value=channel.category.mention if channel.category else "None")
+		embed.add_field(name="Position", value=channel.position)
+
 		embed.timestamp = dt.now(utils_module.timezone_syd)
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"channel_delete: {e}")
 
@@ -107,9 +116,12 @@ async def role_create(role:discord.Role):
 
 		embed = discord.Embed(
 			title=f"Role Created {role.mention}",
-			colour=0xff0000
+			colour=0x00ff00
 		)
+		embed.add_field(name="Permissions", value="\n".join([permission[0] for permission in role.permissions if permission[1]]))
+
 		embed.timestamp = dt.now(utils_module.timezone_syd)
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"role_create: {e}")
 
@@ -126,7 +138,10 @@ async def role_delete(role:discord.Role):
 			title=f"Role Deleted {role.mention}",
 			colour=0xff0000
 		)
+		embed.add_field(name="Permissions", value="\n".join([permission[0] for permission in role.permissions if permission[1]]))
+
 		embed.timestamp = dt.now(utils_module.timezone_syd)
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"role_delete: {e}")
 
@@ -141,10 +156,15 @@ async def member_join(member:discord.Member):
 
 		embed = discord.Embed(
 			title=f"Member Join {member.mention}",
-			colour=0xff0000
+			colour=0x0000ff
 		)
+		embed.add_field(name="Joined At", value=member.joined_at)
+		embed.add_field(name="Created At", value=member.created_at)
+		embed.add_field(name="Roles", value="\n".join([role.mention for role in member.roles]))
+
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_syd)	  
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_join: {e}")
 
@@ -161,8 +181,14 @@ async def member_remove(member:discord.Member):
 			title=f"Member Remove {member.mention}",
 			colour=0xff0000
 		)
+		embed.add_field(name="Joined At", value=member.joined_at)
+		embed.add_field(name="Created At", value=member.created_at)
+		embed.add_field(name="Roles", value="\n".join([role.mention for role in member.roles]))
+		embed.add_field(name="Left At", value=dt.now(utils_module.timezone_syd))
+
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_remove: {e}")
 
@@ -176,11 +202,33 @@ async def member_update(before:discord.Member, after:discord.Member):
 			return
 
 		embed = discord.Embed(
-			title=f"Member Updated {before.mention} to {after.mention}",
-			colour=0xff0000
+			title=f"Member Updated: {after.nick}",
+			colour=0x0000ff
 		)
+		if before.nick != after.nick:
+			embed.add_field(name="Nickname", value=f"*Before:* {before.nick}\n*After:* {after.nick}")
+		if before.roles != after.roles:
+			role_added = None
+			role_removed = None
+			for role in before.roles:
+				if role not in after.roles:
+					role_removed = role
+					break
+			for role in after.roles:
+				if role not in before.roles:
+					role_added = role
+					break
+			if role_added:
+				embed.add_field(name="Role Added", value=role_added.mention)
+			if role_removed:
+				embed.add_field(name="Role Removed", value=role_removed.mention)
+		if before.display_avatar != after.display_avatar:
+			embed.add_field(name="Avatar", value=f"{before.display_avatar.url} -> {after.display_avatar.url}")
+			embed.set_thumbnail(url=after.display_avatar.url)
+
 		embed.set_author(name=before.name, icon_url=before.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_update: {e}")
 
@@ -197,7 +245,13 @@ async def member_ban(member:discord.Member):
 			title=f"Member Banned {member.mention}",
 			colour=0xff0000
 		)
+		embed.add_field(name="Joined At", value=member.joined_at)
+		embed.add_field(name="Created At", value=member.created_at)
+		embed.add_field(name="Roles", value="\n".join([role.mention for role in member.roles]))
+		embed.add_field(name="Banned At", value=dt.now(utils_module.timezone_syd))
+
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)
+		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_ban: {e}")
