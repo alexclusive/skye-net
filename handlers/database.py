@@ -1,4 +1,5 @@
 import duckdb
+import discord
 from datetime import datetime
 from typing import Optional
 
@@ -10,12 +11,14 @@ def init_db():
 		If table "prompts" does not exist, create it with columns "prompt TEXT, user_id TEXT, datetime TIMESTAMP"
 		If table "react_opt_out" does not exist, create it with column "user_id TEXT"
 		If table "daily_tasks" does not exist, create it with column "datetime TIMESTAMP"
+		If table "train_facts" does not exist, create it with column "fact_num INTEGER, fact TEXT"
 		Insert the initial prompt into the database
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS prompts (prompt TEXT NOT NULL, user_id TEXT NOT NULL, datetime TIMESTAMP NOT NULL)")
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS react_opt_out (user_id TEXT)")
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS daily_tasks (datetime TIMESTAMP NOT NULL)")
+	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS train_facts (fact_num INTEGER NOT NULL, fact TEXT NOT NULL)")
 
 	utils_module.database_conn.execute("INSERT INTO prompts VALUES (?, ?, ?)", (utils_module.initial_prompt, utils_module.ownerid, datetime.now()))
 	utils_module.database_conn.close()
@@ -51,6 +54,19 @@ def get_last_daily_task_time() -> Optional[datetime]:
 		return result[0][0]
 	return None
 
+def get_all_train_facts():
+	'''
+		Return a list of all train facts
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT fact_num, fact FROM train_facts").fetchall()
+	utils_module.database_conn.close()
+	embed = discord.Embed(title="Train Facts", colour=0xffffff)
+	for row in result:
+		embed.add_field(name=f"Fact {row[0]}", value=row[1], inline=False)
+	embed.set_author(name="SkyeNet", icon_url=utils_module.discord_bot.user.display_avatar.url)
+	return result
+
 def insert_prompt(prompt, user_id):
 	'''
 		Insert a new prompt into the database
@@ -82,3 +98,23 @@ def insert_daily_task_time():
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("INSERT INTO daily_tasks VALUES (?)", (datetime.now(),))
 	utils_module.database_conn.close()
+
+def insert_train_fact(fact):
+	'''
+		Get the next fact_num and insert a new train fact into the database
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT MAX(fact_num) FROM train_facts").fetchall()
+	fact_num = result[0][0] + 1 if result[0][0] else 1
+	utils_module.database_conn.execute("INSERT INTO train_facts VALUES (?, ?)", (fact_num, fact))
+	utils_module.database_conn.close()
+
+def remove_train_fact(fact_num):
+	'''
+		Remove a train fact from the database
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT fact FROM train_facts WHERE fact_num = ?", (fact_num,)).fetchall()
+	utils_module.database_conn.execute("DELETE FROM train_facts WHERE fact_num = ?", (fact_num,))
+	utils_module.database_conn.close()
+	return result[0][0] if result else None
