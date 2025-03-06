@@ -126,7 +126,11 @@ async def train_game_rules(interaction:discord.Interaction):
 	await interaction.followup.send(rules)
 
 async def train_fact(interaction:discord.Interaction):
-	await interaction.followup.send("TODO, sorry!")
+	fact = database_module.get_random_train_fact()
+	if fact is None:
+		await interaction.followup.send("No train facts found :(")
+	embed = discord.Embed(title="Train Fact", description=fact, colour=0xffffff)
+	await interaction.followup.send(embed=embed)
 
 async def reset_prompt(interaction:discord.Interaction):
 	utils_module.current_prompt = utils_module.initial_prompt

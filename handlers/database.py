@@ -54,6 +54,15 @@ def get_last_daily_task_time() -> Optional[datetime]:
 		return result[0][0]
 	return None
 
+def get_random_train_fact():
+	'''
+		Return a random train fact
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT fact FROM train_facts ORDER BY RANDOM() LIMIT 1").fetchall()
+	utils_module.database_conn.close()
+	return result[0][0] if result else None
+
 def get_all_train_facts():
 	'''
 		Return a list of all train facts

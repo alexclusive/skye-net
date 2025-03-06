@@ -227,7 +227,7 @@ async def member_update(before:discord.Member, after:discord.Member):
 			embed.set_thumbnail(url=after.display_avatar.url)
 
 		if not embed.fields:
-			embed.add_field(name="No Changes", value="No changes were detected")
+			return
 
 		embed.set_author(name=before.name, icon_url=before.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)
