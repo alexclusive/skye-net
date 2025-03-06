@@ -6,7 +6,7 @@ import discord
 import handlers.utils as utils_module
 import handlers.commands as commands_module
 import handlers.database as database_module
-import handlers.messages as messages_module
+import handlers.events as events_module
 import handlers.tasks as tasks_module
 
 '''
@@ -38,6 +38,21 @@ async def get_opt_out_users(interaction:discord.Interaction):
 async def force_daily_tasks(interaction:discord.Interaction):
 	await interaction.response.defer()
 	await commands_module.force_daily_tasks(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Enter train fact")
+async def enter_train_fact(interaction:discord.Interaction, fact:str):
+	await interaction.response.defer()
+	await commands_module.enter_train_fact(interaction, fact)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Remove train fact")
+async def remove_train_fact(interaction:discord.Interaction, fact_num:int):
+	await interaction.response.defer()
+	await commands_module.remove_train_fact(interaction, fact_num)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Get the list of train facts - may overflow")
+async def get_train_facts(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.get_train_facts(interaction)
 
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):
@@ -77,7 +92,6 @@ async def set_prompt(interaction:discord.Interaction, prompt:str):
 	await interaction.response.defer()
 	await commands_module.set_prompt(interaction, prompt)
 
-# etymology: argument is the word to get etymology for, plus an optional 'tree' argument to print the tree
 @utils_module.discord_bot.tree.command(description="Get the etymology of a word")
 async def etymology(interaction:discord.Interaction, argument:str):
 	await interaction.response.defer()
@@ -105,44 +119,44 @@ async def on_ready():
 
 @utils_module.discord_bot.event
 async def on_message(message):
-	await messages_module.message(message)
+	await events_module.message(message)
 
 @utils_module.discord_bot.event
 async def on_message_delete(message):
-	await messages_module.message_deleted(message)
+	await events_module.message_deleted(message)
 
 @utils_module.discord_bot.event
 async def on_guild_channel_create(channel:discord.abc.GuildChannel):
-	await messages_module.channel_create(channel)
+	await events_module.channel_create(channel)
 
 @utils_module.discord_bot.event
 async def on_guild_channel_delete(channel:discord.abc.GuildChannel):
-	await messages_module.channel_delete(channel)
+	await events_module.channel_delete(channel)
 
 @utils_module.discord_bot.event
 async def on_guild_role_create(role:discord.Role):
-	await messages_module.role_create(role)
+	await events_module.role_create(role)
 
 @utils_module.discord_bot.event
 async def on_guild_role_delete(role:discord.Role):
-	await messages_module.role_delete(role)
+	await events_module.role_delete(role)
 
 @utils_module.discord_bot.event
 async def on_member_join(member:discord.Member):
-	await messages_module.member_join(member)
+	await events_module.member_join(member)
 
 @utils_module.discord_bot.event
 async def on_member_remove(member:discord.Member):
-	await messages_module.member_remove(member)
+	await events_module.member_remove(member)
 
 @utils_module.discord_bot.event
 async def on_member_update(before:discord.Member, after:discord.Member):
 	# nickname / roles / guild avatar
-	await messages_module.member_update(before, after)
+	await events_module.member_update(before, after)
 
 @utils_module.discord_bot.event
 async def on_member_ban(member:discord.Member):
-	await messages_module.member_ban(member)
+	await events_module.member_ban(member)
 
 '''
 	Threading

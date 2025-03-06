@@ -223,7 +223,7 @@ async def member_update(before:discord.Member, after:discord.Member):
 			if role_removed:
 				embed.add_field(name="Role Removed", value=role_removed.mention)
 		if before.display_avatar != after.display_avatar:
-			embed.add_field(name="Avatar", value=f"{before.display_avatar.url} -> {after.display_avatar.url}")
+			embed.add_field(name="Avatar", value="")
 			embed.set_thumbnail(url=after.display_avatar.url)
 
 		embed.set_author(name=before.name, icon_url=before.display_avatar.url)

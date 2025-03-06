@@ -67,6 +67,33 @@ async def force_daily_tasks(interaction:discord.Interaction):
 	await tasks_module.daily_tasks(force=True)
 	await interaction.followup.send("Forced daily tasks")
 
+# Admin
+async def enter_train_fact(interaction:discord.Interaction, fact:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.insert_train_fact(fact)
+	await interaction.followup.send("Train fact entered")
+
+# Admin
+async def remove_train_fact(interaction:discord.Interaction, fact_num:int):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	fact = database_module.remove_train_fact(fact_num)
+	if fact is None:
+		await interaction.followup.send(f"Fact {fact_num} not found")
+	else:
+		await interaction.followup.send(f"Train fact removed\n{fact}")
+
+# Admin
+async def get_train_facts(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	facts_embed = database_module.get_all_train_facts()
+	await interaction.followup.send(embed=facts_embed)
+
 async def ping(interaction:discord.Interaction):
 	latency = round(utils_module.discord_bot.latency * 1000)
 	await interaction.followup.send(f"Ponged your ping in {latency}ms")
