@@ -18,16 +18,6 @@ import handlers.tasks as tasks_module
 async def kill(interaction:discord.Interaction):
 	await interaction.response.defer()
 	await commands_module.die(interaction)
-	
-@utils_module.discord_bot.tree.command(name="restart", description="[Owner] Restart the bot")
-async def restart(interaction:discord.Interaction):
-	await interaction.response.defer(ephemeral=True)
-	await commands_module.restart(interaction)
-
-@utils_module.discord_bot.tree.command(description="[Admin] Delete a message by ID")
-async def delete_message_by_id(interaction:discord.Interaction, id:str):
-	await interaction.response.defer(ephemeral=True)
-	await commands_module.delete_message_by_id(interaction, id)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Get list of user IDs that have opted out of reactions")
 async def get_opt_out_users(interaction:discord.Interaction):
@@ -53,6 +43,56 @@ async def remove_train_fact(interaction:discord.Interaction, fact_num:int):
 async def get_train_facts(interaction:discord.Interaction):
 	await interaction.response.defer()
 	await commands_module.get_train_facts(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Get the list of reactions")
+async def get_reactions(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.get_reactions(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Insert a reaction trigger")
+async def insert_reaction(interaction:discord.Interaction, trigger:str, emoji_1:str, emoji_2:str="", emoji_3:str=""):
+	await interaction.response.defer()
+	await commands_module.insert_reaction(interaction, trigger, emoji_1, emoji_2, emoji_3)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Remove a reaction trigger")
+async def remove_reaction(interaction:discord.Interaction, trigger:str):
+	await interaction.response.defer()
+	await commands_module.remove_reaction(interaction, trigger)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Get logging channels")
+async def get_logging_channels(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.get_log_channels(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Set logging channel")
+async def set_logging_channel(interaction:discord.Interaction, message_channel:discord.TextChannel=None, member_channel:discord.TextChannel=None, role_channel:discord.TextChannel=None):
+	await interaction.response.defer()
+	await commands_module.set_log_channels(interaction, message_channel, member_channel, role_channel)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Get banned users")
+async def get_banned_users(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.get_banned_users(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Ban a user from openai interactions")
+async def ban_user(interaction:discord.Interaction, user:discord.User):
+	await interaction.response.defer()
+	await commands_module.ban_user(interaction, user)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Unban a user from openai interactions")
+async def unban_user(interaction:discord.Interaction, user:discord.User):
+	await interaction.response.defer()
+	await commands_module.unban_user(interaction, user)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Get important roles")
+async def get_roles(interaction:discord.Interaction):
+	await interaction.response.defer()
+	await commands_module.get_important_roles(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Set important roles")
+async def set_roles(interaction:discord.Interaction, welcomed:discord.Role=None, trusted:discord.Role=None, trusted_time_days:int=14):
+	await interaction.response.defer()
+	await commands_module.set_important_roles(interaction, welcomed, trusted, trusted_time_days)
 
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):
@@ -115,7 +155,7 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching...", type=discord.ActivityType.watching))
 	await utils_module.discord_bot.tree.sync()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
-	asyncio.create_task(daily_thread_function())
+	await tasks_module.tasks_on_ready()
 
 @utils_module.discord_bot.event
 async def on_message(message):
@@ -123,14 +163,17 @@ async def on_message(message):
 
 @utils_module.discord_bot.event
 async def on_message_delete(message):
+	return
 	await events_module.message_deleted(message)
 
 @utils_module.discord_bot.event
 async def on_guild_channel_create(channel:discord.abc.GuildChannel):
+	return
 	await events_module.channel_create(channel)
 
 @utils_module.discord_bot.event
 async def on_guild_channel_delete(channel:discord.abc.GuildChannel):
+	return
 	await events_module.channel_delete(channel)
 
 @utils_module.discord_bot.event
@@ -143,19 +186,23 @@ async def on_guild_role_delete(role:discord.Role):
 
 @utils_module.discord_bot.event
 async def on_member_join(member:discord.Member):
+	return
 	await events_module.member_join(member)
 
 @utils_module.discord_bot.event
 async def on_member_remove(member:discord.Member):
+	return
 	await events_module.member_remove(member)
 
 @utils_module.discord_bot.event
 async def on_member_update(before:discord.Member, after:discord.Member):
 	# nickname / roles / guild avatar
+	return
 	await events_module.member_update(before, after)
 
 @utils_module.discord_bot.event
 async def on_member_ban(member:discord.Member):
+	return
 	await events_module.member_ban(member)
 
 '''

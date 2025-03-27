@@ -25,32 +25,6 @@ async def die(interaction:discord.Interaction):
 	else:
 		os.kill(os.getpid(), signal.SIGKILL)
 
-# Owner
-async def restart(interaction:discord.Interaction):
-	if not utils_module.is_owner(interaction):
-		await interaction.followup.send(nice_try)
-		return
-	await interaction.followup.send("Restarting the bot...", ephemeral=True)
-
-	try:
-		await utils_module.discord_bot.close()
-		os.execl(sys.executable, sys.executable, *sys.argv)
-	except Exception as e:
-		await interaction.followup.send(f"Failed to restart: {e}")
-
-# Admin
-async def delete_message_by_id(interaction:discord.Interaction, id):
-	if not utils_module.is_admin(interaction):
-		await interaction.followup.send(nice_try)
-		return
-	try:
-		channel = interaction.channel
-		message = await channel.fetch_message(id)
-		await message.delete()
-		await interaction.followup.send("Deleted", ephemeral=True)
-	except Exception as e:
-		await interaction.followup.send(e)
-
 # Admin
 async def get_opt_out_users(interaction:discord.Interaction):
 	if not utils_module.is_admin(interaction):
@@ -64,7 +38,7 @@ async def force_daily_tasks(interaction:discord.Interaction):
 	if not utils_module.is_admin(interaction):
 		await interaction.followup.send(nice_try)
 		return
-	await tasks_module.daily_tasks(force=True)
+	await tasks_module.add_trusted_roles_task()
 	await interaction.followup.send("Forced daily tasks")
 
 # Admin
@@ -94,6 +68,109 @@ async def get_train_facts(interaction:discord.Interaction):
 	facts_embed = database_module.get_all_train_facts()
 	await interaction.followup.send(embed=facts_embed)
 
+# Admin
+async def get_reactions(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	reactions = database_module.get_all_reactions()
+	await interaction.followup.send(f"Reactions: {reactions}")
+
+# Admin
+async def insert_reaction(interaction:discord.Interaction, trigger:str, emoji_1:str, emoji_2:str="", emoji_3:str=""):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.insert_reaction(trigger, emoji_1, emoji_2, emoji_3)
+	await interaction.followup.send(f"Reaction inserted for trigger '{trigger}': {emoji_1} {emoji_2} {emoji_3}")
+
+# Admin
+async def remove_reaction(interaction:discord.Interaction, trigger:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	reaction = database_module.remove_reaction(trigger)
+	if reaction is None:
+		await interaction.followup.send(f"Reaction for trigger '{trigger}' not found")
+	else:
+		emoji_1, emoji_2, emoji_3 = reaction
+		await interaction.followup.send(f"Reaction removed for trigger '{trigger}': {emoji_1} {emoji_2} {emoji_3}")
+
+# Admin
+async def get_log_channels(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	log_channels = database_module.get_logging_channels(interaction.guild_id)
+	if log_channels is None:
+		await interaction.followup.send("No log channels found")
+	else:
+		message, member, guild = log_channels
+		await interaction.followup.send(f"Log channels:\nMessages: {message}\nMembers: {member}\nGuild: {guild}")
+
+# Admin
+async def set_log_channels(interaction:discord.Interaction, message:discord.TextChannel=None, member:discord.TextChannel=None, guild:discord.TextChannel=None):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.insert_logging_channels(interaction.guild_id, message, member, guild)
+	response = ""
+	if message:
+		response += f"Messages logging channel set to {message}\n"
+	if member:
+		response += f"Members logging channel set to {member}\n"
+	if guild:
+		response += f"Guild logging channel set to {guild}\n"
+	
+	if len(response) == 0:
+		await interaction.followup.send("No logging channels set")
+	else:
+		await interaction.followup.send(response)
+
+# Admin
+async def get_banned_users(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	banned_users = database_module.get_all_banned_users()
+	await interaction.followup.send(f"Banned users: {banned_users}")
+
+# Admin
+async def ban_user(interaction:discord.Interaction, user_id:int):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.ban_user(user_id)
+	await interaction.followup.send(f"User {user_id} banned")
+
+# Admin
+async def unban_user(interaction:discord.Interaction, user_id:int):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.unban_user(user_id)
+	await interaction.followup.send(f"User {user_id} unbanned")
+
+# Admin
+async def get_important_roles(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	important_roles = database_module.get_important_roles(interaction.guild_id)
+	if important_roles is None:
+		await interaction.followup.send("No important roles found")
+	else:
+		welcomed, trusted, trusted_days = important_roles
+		await interaction.followup.send(f"Important roles:\nWelcomed: {welcomed}\nTrusted: {trusted}\nTrusted days: {trusted_days}")
+
+# Admin
+async def set_important_roles(interaction:discord.Interaction, welcomed:discord.Role, trusted:discord.Role, trusted_days:int):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.insert_important_roles(interaction.guild_id, welcomed, trusted, trusted_days)
+	await interaction.followup.send(f"Important roles set\nWelcomed: {welcomed}\nTrusted: {trusted}\nTrusted days: {trusted_days}")
+
 async def ping(interaction:discord.Interaction):
 	latency = round(utils_module.discord_bot.latency * 1000)
 	await interaction.followup.send(f"Ponged your ping in {latency}ms")
@@ -116,14 +193,15 @@ async def train_game(interaction:discord.Interaction, number, target, use_power,
 	await train_game_module.attempt_train_game(interaction, number, a, b, c, d, target, use_power, use_modulo)
 
 async def train_game_rules(interaction:discord.Interaction):
-	rules = "Train game rules:\n"
-	rules += "In each car for every train, there is a four digit number.\n"
+	rules = "In each car for every train, there is a four digit number.\n"
 	rules += "We break down the number into four separate digits, and perform simple arithmetic operations to reach a specified target.\n"
 	rules += "In general, the target number is 10 (but you can also use any other positive integer).\n"
 	rules += "By default, the operations are: addition (+), subtraction (-), multiplication (*), and division (/).\n"
 	rules += "Optionally, you can also use power/exponentiation (^), and modulo (%).\n"
 
-	await interaction.followup.send(rules)
+	embed = discord.Embed(title="Train Game Rules", colour=0xffffff, description=rules)
+
+	await interaction.followup.send(embed=embed)
 
 async def train_fact(interaction:discord.Interaction):
 	fact = database_module.get_random_train_fact()

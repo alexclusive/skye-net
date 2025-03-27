@@ -1,11 +1,18 @@
 from datetime import datetime as dt
-from datetime import timezone
-import discord
+from datetime import timezone, time
+from discord.ext import tasks
 
 import handlers.utils as utils_module
 import handlers.database as database_module
 
-async def daily_tasks(force=False):
+task_start_time = time(19, 0) # utc time
+
+async def tasks_on_ready():
+	if not add_trusted_roles_task.is_running():
+		add_trusted_roles_task.start()
+
+@tasks.loop(time=task_start_time)
+async def add_trusted_roles_task():
 	'''
 		Get last time daily tasks were run from database (if not exist or more than 1 day ago, run daily tasks)
 		Go through list of each guild member
@@ -14,42 +21,21 @@ async def daily_tasks(force=False):
 				If they have been in the server for more than utils_module.trusted_time_days days:
 					Add the trusted role to the member
 	'''
-	run_task = False
-
-	last_daily_task_time = database_module.get_last_daily_task_time()
-	if not last_daily_task_time:
-		run_task = True
-	else:
-		time_now = dt.now()
-		time_diff = time_now - last_daily_task_time
-		if time_diff.days >= 1:
-			run_task = True
-
-	utc_seconds = int(last_daily_task_time.replace(tzinfo=timezone.utc).timestamp())
-	print(f"Last ran daily tasks <t:{utc_seconds}:R>")
-	if run_task or force:
-		print("daily_tasks: Running now")
-		guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
-		if not utils_module.guild_id:
-			print("daily_tasks: Guild not found.")
-			return
-		
-		welcomed_role = guild.get_role(utils_module.welcomed_role_id)
-		if not welcomed_role:
-			print("daily_tasks: Welcomed role not found.")
-			return
-		
-		trusted_role = guild.get_role(utils_module.trusted_role_id)
-		if not trusted_role:
-			print("daily_tasks: Trusted role not found.")
-			return
-		
-		print("daily_tasks: Adding trusted roles")
-		await add_trusted_roles(guild, welcomed_role, trusted_role)
-		database_module.insert_daily_task_time()
-		print(f"daily_tasks: Adding trusted roles task completed at {database_module.get_last_daily_task_time()}")
-
-async def add_trusted_roles(guild:discord.Guild, welcomed_role:discord.Role, trusted_role:discord.Role):
+	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
+	if not utils_module.guild_id:
+		print("daily_tasks: Guild not found.")
+		return
+	
+	welcomed_role = guild.get_role(utils_module.welcomed_role_id)
+	if not welcomed_role:
+		print("daily_tasks: Welcomed role not found.")
+		return
+	
+	trusted_role = guild.get_role(utils_module.trusted_role_id)
+	if not trusted_role:
+		print("daily_tasks: Trusted role not found.")
+		return
+	
 	try:
 		time_now = dt.now(timezone.utc)
 		for member in guild.members:
@@ -57,6 +43,8 @@ async def add_trusted_roles(guild:discord.Guild, welcomed_role:discord.Role, tru
 				days_in_server = (time_now - member.joined_at).days
 				if days_in_server > utils_module.trusted_time_days:
 					await member.add_roles(trusted_role)
-					print(f"Added {trusted_role.name} role to {member.name}")
+					print(f"Added <@{trusted_role.id}> role to @{member.id}")
 	except Exception as e:
 		print(f"add_trusted_roles: {e}")
+
+	database_module.insert_daily_task_time()
