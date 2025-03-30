@@ -8,6 +8,8 @@ import handlers.database as database_module
 import handlers.events as events_module
 import handlers.tasks as tasks_module
 
+import handlers.helpers.spotify as spotify_module
+
 '''
 	Commands
 	[Owner] is for just the bot owner
@@ -270,6 +272,7 @@ async def run_bot():
 	utils_module.fill_emojis()
 	database_module.init_db()
 	utils_module.current_prompt = database_module.get_most_recent_prompt()
+	spotify_module.setup_spotify_credentials()
 
 	try:
 		await utils_module.discord_bot.start(utils_module.token)

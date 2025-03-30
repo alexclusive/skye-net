@@ -1,11 +1,13 @@
 from discord.errors import Forbidden
 import discord
 from datetime import datetime as dt
+import re
 
 import handlers.utils as utils_module
 import handlers.database as database_module
 import handlers.helpers.bot_ping as bot_ping_module
 import handlers.helpers.triggers as triggers_module
+import handlers.helpers.spotify as spotify_module
 
 async def message(message:discord.Message):
 	try:
@@ -17,7 +19,32 @@ async def message(message:discord.Message):
 			await bot_ping_module.handle_bot_ping(message)
 			message_sent = True
 	except Exception as e:
-		print(f"on_message: openai interaction{e}")
+		print(f"on_message: openai interaction {e}")
+
+	try:
+		spotify_tracks = re.findall(r"https?://open\.spotify\.com/track/[a-zA-Z0-9]+", message.content)
+		for link in spotify_tracks:
+			embed = spotify_module.get_spotify_track_embed(link)
+			if embed:
+				await message.reply(embed=embed)
+				message_sent = True
+
+		spotify_album = re.findall(r"https?://open\.spotify\.com/album/[a-zA-Z0-9]+", message.content)
+		for link in spotify_album:
+			embed = spotify_module.get_spotify_album_embed(link)
+			if embed:
+				await message.reply(embed=embed)
+				message_sent = True
+
+		spotify_playlist = re.findall(r"https?://open\.spotify\.com/playlist/[a-zA-Z0-9]+", message.content)
+		for link in spotify_playlist:
+			embed = spotify_module.get_spotify_playlist_embed(link)
+			if embed:
+				await message.reply(embed=embed)
+				message_sent = True
+	
+	except Exception as e:
+		print(f"on_message: spotify embed {e}")
 
 	try:
 		opted_out_users = database_module.get_all_opt_out_users()

@@ -1,7 +1,7 @@
 import duckdb
 import discord
 from datetime import datetime
-from typing import Optional, List, Tuple
+from typing import Optional
 
 import handlers.utils as utils_module
 
