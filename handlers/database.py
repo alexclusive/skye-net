@@ -15,7 +15,8 @@ def init_db():
 		If table "reactions" does not exist, create it with columns "trigger TEXT, emoji_id_1 TEXT, emoji_id_2 TEXT, emoji_id_3 TEXT"
 		If table "logging_channels" does not exist, create it with columns "guild_id TEXT, message_channel_id TEXT, member_channel_id TEXT, guild_channel_id TEXT"
 		If table "banned_users" does not exist, create it with column "user_id TEXT"
-		If table "important_roles" does not exist, create it with column "guild_id TEXT, welcomed_role_id TEXT, trusted_role_id TEXT, trusted_time_days INTEGER"
+		If table "important_roles" does not exist, create it with columns "guild_id TEXT, welcomed_role_id TEXT, trusted_role_id TEXT, trusted_time_days INTEGER"
+		If table "todo" does not exist, create it with columns "item_num INTEGER, todo TEXT"
 		Insert the initial prompt into the database
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
@@ -27,6 +28,7 @@ def init_db():
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS logging_channels (guild_id TEXT NOT NULL, message_channel_id TEXT NOT NULL, member_channel_id TEXT NOT NULL, guild_channel_id TEXT NOT NULL)")
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS banned_users (user_id TEXT NOT NULL)")
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS important_roles (guild_id TEXT NOT NULL, welcomed_role_id TEXT NOT NULL, trusted_role_id TEXT NOT NULL, trusted_time_days INTEGER NOT NULL)")
+	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS todo (item_num INTEGER NOT NULL, todo TEXT NOT NULL)")
 	utils_module.database_conn.execute("INSERT INTO prompts VALUES (?, ?, ?)", (utils_module.initial_prompt, utils_module.ownerid, datetime.now()))
 	utils_module.database_conn.close()
 
@@ -140,7 +142,7 @@ def remove_train_fact(fact_num):
 	return result[0][0] if result else None
 
 # Reactions
-def get_all_reactions() -> list[tuple[str, list[str]]]:
+def get_all_reactions():
 	'''
 		Return a list of tuples of (reaction_text, emoji_ids)
 	'''
@@ -178,12 +180,16 @@ def get_logging_channels(guild_id):
 	utils_module.database_conn.close()
 	return result if result else None
 
-def insert_logging_channels(guild_id, message_channel_id=None, member_channel_id=None, guild_channel_id=None):
+def insert_logging_channels(guild_id, message_channel:discord.TextChannel=None, member_channel:discord.TextChannel=None, guild_channel:discord.TextChannel=None):
 	'''
 		Insert the logging channels for a guild
 		If guild already exists, update the channels
 		Only update the channels that are not None
 	'''
+	message_channel_id = message_channel.id if message_channel else None
+	member_channel_id = member_channel.id if member_channel else None
+	guild_channel_id = guild_channel.id if guild_channel else None
+	
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT * FROM logging_channels WHERE guild_id = ?", (guild_id,)).fetchall()
 	if result:
@@ -243,3 +249,34 @@ def insert_important_roles(guild_id, welcomed_role_id, trusted_role_id, trusted_
 	else:
 		utils_module.database_conn.execute("INSERT INTO important_roles VALUES (?, ?, ?, ?)", (guild_id, welcomed_role_id, trusted_role_id, trusted_time_days))
 	utils_module.database_conn.close()
+
+# To do list
+
+def get_all_todo_items():
+	'''
+		Return a list of all todo items
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT item_num, todo FROM todo").fetchall()
+	utils_module.database_conn.close()
+	return result if result else None
+
+def insert_todo_item(todo):
+	'''
+		Insert a new todo item into the database
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT MAX(item_num) FROM todo").fetchall()
+	item_num = result[0][0] + 1 if result[0][0] else 1
+	utils_module.database_conn.execute("INSERT INTO todo VALUES (?, ?)", (item_num, todo))
+	utils_module.database_conn.close()
+
+def remove_todo_item(item_num):
+	'''
+		Remove a todo item from the database
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT todo FROM todo WHERE item_num = ?", (item_num,)).fetchall()
+	utils_module.database_conn.execute("DELETE FROM todo WHERE item_num = ?", (item_num,))
+	utils_module.database_conn.close()
+	return result[0][0] if result else None

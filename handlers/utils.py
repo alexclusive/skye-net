@@ -17,6 +17,8 @@ message_log_channel_id = int(os.getenv("MESSAGE_LOGGING"))
 member_log_channel_id = int(os.getenv("MEMBER_LOGGING"))
 guild_log_channel_id = int(os.getenv("GUILD_LOGGING"))
 
+admin_role_id = int(os.getenv('ADMIN_ROLE'))
+bot_role_id = int(os.getenv('BOT_ROLE'))
 welcomed_role_id = int(os.getenv('WELCOMED_ROLE'))
 trusted_role_id = int(os.getenv('TRUSTED_ROLE'))
 

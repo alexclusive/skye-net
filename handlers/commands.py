@@ -27,19 +27,30 @@ async def die(interaction:discord.Interaction):
 
 # Admin
 async def get_opt_out_users(interaction:discord.Interaction):
-	if not utils_module.is_admin(interaction):
+	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
 	opted_out_users = database_module.get_all_opt_out_users()
 	await interaction.followup.send(f"Opted out users: {opted_out_users}")
+	print(f"{interaction.user.name} requested opted out users: {opted_out_users}")
 
 # Admin
 async def force_daily_tasks(interaction:discord.Interaction):
-	if not utils_module.is_admin(interaction):
+	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
 	await tasks_module.add_trusted_roles_task()
 	await interaction.followup.send("Forced daily tasks")
+	print(f"{interaction.user.name} requested force daily tasks")
+
+# Admin
+async def force_audit_log(interaction:discord.Interaction):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	await tasks_module.audit_log_task()
+	await interaction.followup.send("Forced audit tasks")
+	print(f"{interaction.user.name} requested force audit tasks")
 
 # Admin
 async def enter_train_fact(interaction:discord.Interaction, fact:str):
@@ -170,6 +181,37 @@ async def set_important_roles(interaction:discord.Interaction, welcomed:discord.
 		return
 	database_module.insert_important_roles(interaction.guild_id, welcomed, trusted, trusted_days)
 	await interaction.followup.send(f"Important roles set\nWelcomed: {welcomed}\nTrusted: {trusted}\nTrusted days: {trusted_days}")
+
+# Admin
+async def get_todo(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	todo = database_module.get_all_todo_items()
+	embed = discord.Embed(title="Todo List", colour=0xffffff)
+	embed.description = ""
+	for item in todo:
+		embed.description += f"{item[0]}- {item[1]}\n"
+	if len(embed.description):
+		await interaction.followup.send(embed=embed)
+	else:
+		await interaction.followup.send("Todo List Empty")
+
+# Admin
+async def add_todo(interaction:discord.Interaction, todo:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.insert_todo_item(todo)
+	await interaction.followup.send(f"Todo added: {todo}")
+
+# Admin
+async def remove_todo(interaction:discord.Interaction, todo_id:int):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.remove_todo_item(todo_id)
+	await interaction.followup.send(f"Todo {todo_id} removed")
 
 async def ping(interaction:discord.Interaction):
 	latency = round(utils_module.discord_bot.latency * 1000)
