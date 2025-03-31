@@ -2,3 +2,4 @@
 *pycache*
 nohup.out
 *.db
+.cache

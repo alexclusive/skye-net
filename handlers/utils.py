@@ -6,24 +6,32 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
-ownerid = int(os.getenv('OWNER'))
+# Verification
 token = str(os.getenv("TOKEN"))
 client_id = str(os.getenv("CLIENT_ID"))
-guild_id = int(os.getenv('GUILD_ID'))
+ownerid = int(os.getenv("OWNER"))
+
+# Open AI
+history_limit = int(os.getenv("HISTORY_LIMIT"))
 openai_key = str(os.getenv("OPENAI_API_KEY"))
 
+# Spotify
+spotify_client_id = str(os.getenv("SPOTIFY_CLIENT_ID"))
+spotify_client_secret = str(os.getenv("SPOTIFY_CLIENT_SECRET"))
+
+# Discord outputs
 stdout_channel_id = int(os.getenv("STDOUT"))
 message_log_channel_id = int(os.getenv("MESSAGE_LOGGING"))
 member_log_channel_id = int(os.getenv("MEMBER_LOGGING"))
 guild_log_channel_id = int(os.getenv("GUILD_LOGGING"))
 
-admin_role_id = int(os.getenv('ADMIN_ROLE'))
-bot_role_id = int(os.getenv('BOT_ROLE'))
-welcomed_role_id = int(os.getenv('WELCOMED_ROLE'))
-trusted_role_id = int(os.getenv('TRUSTED_ROLE'))
-
-history_limit = int(os.getenv('HISTORY_LIMIT'))
-trusted_time_days = int(os.getenv('TRUSTED_TIME_DAYS'))
+# Discord ids
+guild_id = int(os.getenv("GUILD_ID"))
+admin_role_id = int(os.getenv("ADMIN_ROLE"))
+bot_role_id = int(os.getenv("BOT_ROLE"))
+welcomed_role_id = int(os.getenv("WELCOMED_ROLE"))
+trusted_role_id = int(os.getenv("TRUSTED_ROLE"))
+trusted_time_days = int(os.getenv("TRUSTED_TIME_DAYS"))
 
 all_banned_users = []
 all_emojis = {}
