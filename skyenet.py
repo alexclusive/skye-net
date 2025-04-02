@@ -37,11 +37,11 @@ async def get_opt_out_users(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.get_opt_out_users(interaction)
 
-@utils_module.discord_bot.tree.command(description="[Owner] Force daily tasks")
+@utils_module.discord_bot.tree.command(description="[Owner] Force trusted roles task")
 @owner_only()
-async def force_daily_tasks(interaction:discord.Interaction):
+async def force_trusted_roles(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
-	await commands_module.force_daily_tasks(interaction)
+	await commands_module.force_trusted_roles(interaction)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Force audit log check")
 @owner_only()

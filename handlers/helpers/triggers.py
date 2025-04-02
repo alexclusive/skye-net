@@ -13,6 +13,7 @@ async def handle_reactions(message, emojis):
 	# mwah			💋
 	# nomnom		<:Chomp:1309732491862609930>
 	# not far		<:NotFar:1300683648650973306>
+	# oasis			🏝️
 	# perchance		🦀
 	# perhaps		🦀
 	# prey animal	🐰
@@ -50,11 +51,13 @@ async def handle_reactions(message, emojis):
 	if "not far" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["NOT_FAR"])
 		await message.add_reaction(emoji)
-	if 'perchance' in message.content.lower():
+	if "oasis" in content:
+		await message.add_reaction("🏝️")
+	if 'perchance' in content:
 		await message.add_reaction("🦀")
-	if 'perhaps' in message.content.lower():
+	if 'perhaps' in content:
 		await message.add_reaction("🦀")
-	if 'prey animal' in message.content.lower():
+	if 'prey animal' in content:
 		await message.add_reaction("🐰")
 	if "see no evil" in content:
 		await message.add_reaction("🙈")

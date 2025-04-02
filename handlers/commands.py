@@ -35,13 +35,12 @@ async def get_opt_out_users(interaction:discord.Interaction):
 	print(f"{interaction.user.name} requested opted out users: {opted_out_users}")
 
 # Admin
-async def force_daily_tasks(interaction:discord.Interaction):
+async def force_trusted_roles(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
 	await tasks_module.add_trusted_roles_task()
 	await interaction.followup.send("Forced daily tasks")
-	print(f"{interaction.user.name} requested force daily tasks")
 
 # Admin
 async def force_audit_log(interaction:discord.Interaction):
@@ -50,7 +49,6 @@ async def force_audit_log(interaction:discord.Interaction):
 		return
 	await tasks_module.audit_log_task()
 	await interaction.followup.send("Forced audit tasks")
-	print(f"{interaction.user.name} requested force audit tasks")
 
 # Admin
 async def enter_train_fact(interaction:discord.Interaction, fact:str):

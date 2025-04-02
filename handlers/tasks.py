@@ -25,6 +25,8 @@ async def add_trusted_roles_task():
 				If they have been in the server for more than utils_module.trusted_time_days days:
 					Add the trusted role to the member
 	'''
+	print("Running add_trusted_roles_task...")
+
 	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
 	if not utils_module.guild_id:
 		print("daily_tasks: Guild not found.")
@@ -81,6 +83,8 @@ async def audit_log_task():
 					If the action was performed by the member:
 						Print the action with details on the action
 	'''
+	print("Running audit_log_task...")
+
 	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
 	if not utils_module.guild_id:
 		print("audit_log_task: Guild not found.")

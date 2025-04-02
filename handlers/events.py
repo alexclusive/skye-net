@@ -71,7 +71,9 @@ async def message_deleted(message:discord.Message):
 		
 		log_channel = message.guild.get_channel(utils_module.message_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Message Deleted in {message.channel.mention}",
@@ -95,7 +97,9 @@ async def channel_create(channel:discord.abc.GuildChannel):
 		
 		log_channel = channel.guild.get_channel(utils_module.guild_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Channel Created {channel.mention}",
@@ -117,7 +121,9 @@ async def channel_delete(channel:discord.abc.GuildChannel):
 		
 		log_channel = channel.guild.get_channel(utils_module.guild_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Channel Deleted {channel.mention}",
@@ -139,7 +145,9 @@ async def role_create(role:discord.Role):
 		
 		log_channel = role.guild.get_channel(utils_module.guild_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Role Created {role.mention}",
@@ -159,7 +167,9 @@ async def role_delete(role:discord.Role):
 		
 		log_channel = role.guild.get_channel(utils_module.guild_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Role Deleted {role.mention}",
@@ -179,7 +189,9 @@ async def member_join(member:discord.Member):
 		
 		log_channel = member.guild.get_channel(utils_module.member_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Member Join {member.mention}",
@@ -202,7 +214,9 @@ async def member_remove(member:discord.Member):
 		
 		log_channel = member.guild.get_channel(utils_module.member_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Member Remove {member.mention}",
@@ -226,7 +240,9 @@ async def member_update(before:discord.Member, after:discord.Member):
 		
 		log_channel = after.guild.get_channel(utils_module.member_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Member Updated: {after.nick}",
@@ -269,7 +285,9 @@ async def member_ban(member:discord.Member):
 		
 		log_channel = member.guild.get_channel(utils_module.member_log_channel_id)
 		if log_channel is None:
-			return
+			log_channel = utils_module.get_default_log_channel()
+			if log_channel is None:
+				return
 
 		embed = discord.Embed(
 			title=f"Member Banned {member.mention}",

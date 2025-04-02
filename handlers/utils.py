@@ -96,3 +96,6 @@ def is_owner(interaction:discord.Interaction):
 
 def is_admin(interaction:discord.Interaction):
 	return interaction.user.guild_permissions.administrator
+
+def get_default_log_channel():
+	return discord_bot.get_channel(stdout_channel_id)
