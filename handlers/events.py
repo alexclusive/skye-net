@@ -126,7 +126,7 @@ async def channel_delete(channel:discord.abc.GuildChannel):
 				return
 
 		embed = discord.Embed(
-			title=f"Channel Deleted {channel.mention}",
+			title=f"Channel Deleted {channel.name} {channel.mention}",
 			colour=0xff0000
 		)
 		embed.add_field(name="Type", value=channel.type)
@@ -150,7 +150,7 @@ async def role_create(role:discord.Role):
 				return
 
 		embed = discord.Embed(
-			title=f"Role Created {role.mention}",
+			title=f"Role Created {role.name}",
 			colour=0x00ff00
 		)
 		embed.add_field(name="Permissions", value="\n".join([permission[0] for permission in role.permissions if permission[1]]))
@@ -172,7 +172,7 @@ async def role_delete(role:discord.Role):
 				return
 
 		embed = discord.Embed(
-			title=f"Role Deleted {role.mention}",
+			title=f"Role Deleted {role.name}",
 			colour=0xff0000
 		)
 		embed.add_field(name="Permissions", value="\n".join([permission[0] for permission in role.permissions if permission[1]]))
@@ -243,9 +243,13 @@ async def member_update(before:discord.Member, after:discord.Member):
 			log_channel = utils_module.get_default_log_channel()
 			if log_channel is None:
 				return
+			
+		display_name = after.nick
+		if display_name is None:
+			display_name = after.name
 
 		embed = discord.Embed(
-			title=f"Member Updated: {after.nick}",
+			title=f"Member Updated: {display_name}",
 			colour=0x0000ff
 		)
 		if before.nick != after.nick:
@@ -262,9 +266,9 @@ async def member_update(before:discord.Member, after:discord.Member):
 					role_added = role
 					break
 			if role_added:
-				embed.add_field(name="Role Added", value=role_added.mention)
+				embed.add_field(name="Role Added", value=role_added.name)
 			if role_removed:
-				embed.add_field(name="Role Removed", value=role_removed.mention)
+				embed.add_field(name="Role Removed", value=role_removed.name)
 		if before.display_avatar != after.display_avatar:
 			embed.add_field(name="Avatar", value="")
 			embed.set_thumbnail(url=after.display_avatar.url)

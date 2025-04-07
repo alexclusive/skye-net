@@ -170,7 +170,7 @@ async def handle_triggers(message, emojis):
 		Respond to message when certain content is found
 	'''
 	# 500 cigarettes		5️⃣0️⃣0️⃣🚬
-	# i know what you are	<:point:1116044591196549120>
+	# i know what you are	🫵
 	# nuh uh				<a:no:1300690431373217802> <a:WaggingFinger:1300743838926770186>
 	# oh.					🫥
 	content = message.content.lower()
@@ -179,9 +179,7 @@ async def handle_triggers(message, emojis):
 		contents = "5️⃣0️⃣0️⃣🚬"
 		await message.reply(contents, mention_author=False)
 	if "i know what you are" in content:
-		emoji = utils_module.discord_bot.get_emoji(emojis["POINT"])
-		point = format_emoji(emoji)
-		await message.reply(point, mention_author=False)
+		await message.reply(":index_pointing_at_the_viewer:", mention_author=False)
 	if "nuh uh" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["NUH_UH"])
 		nuhuh = format_emoji(emoji)
