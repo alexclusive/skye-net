@@ -2,6 +2,7 @@ from datetime import datetime as dt
 from datetime import timezone, time, timedelta
 from discord.ext import tasks
 from discord import AuditLogEntry
+import asyncio
 
 import handlers.utils as utils_module
 import handlers.database as database_module
@@ -138,6 +139,7 @@ async def audit_log_task():
 				timestamp = int(log.created_at.timestamp())
 				details.append(f"\n- `{log.action.name}` on {log.target} at <t:{timestamp}:f> (<t:{timestamp}:R>)\nDetails: {log.reason}")
 			print("".join(details))
+			await asyncio.sleep(0.2) # Avoid rate limiting
 
 	except Exception as e:
 		print(f"audit_log_task: {e}")

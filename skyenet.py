@@ -252,17 +252,25 @@ async def on_member_ban(member:discord.Member):
 '''
 	Discord handling
 '''
-def send_output_to_discord(message):
+def send_message(channel:discord.abc.Messageable, message:str) -> None:
+	if len(message) > 2000:  # discord won't allow longer than 2000 characters, so split it up
+		for i in range(0, len(message), 2000):
+			chunk = message[i:i+2000]
+			asyncio.ensure_future(channel.send(chunk))
+	else:
+		asyncio.ensure_future(channel.send(message))
+
+def send_output_to_discord(message:str):
 	message = message.strip()
 	if message:
 		channel = utils_module.discord_bot.get_channel(utils_module.stdout_channel_id)
 		if channel:
-			if len(message) > 2000: # discord won't allow longer than 2000 characters, so split it up
-				for i in range(0, len(message), 2000):
-					chunk = message[i:i+2000]
-					asyncio.ensure_future(channel.send(chunk))
-			else:
-				asyncio.ensure_future(channel.send(message))
+			try: # catch error code 32: broken pipe
+				send_message(channel, message)
+			except discord.HTTPException as e:
+				if e.code == 32:
+					asyncio.sleep(0.5) # wait for a bit and try again
+					send_message(channel, message)
 
 async def run_bot():
 	sys.stdout.write = send_output_to_discord
