@@ -86,7 +86,11 @@ async def message_deleted(message:discord.Message):
 			
 		embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
 		embed.timestamp = message.created_at
-		await log_channel.send(embed=embed)
+
+		if message.attachments:
+			await log_channel.send(embed=embed, files=[await x.to_file() for x in message.attachments])
+		else:
+			await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"on_message_delete: {e}")
 
