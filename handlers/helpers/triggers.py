@@ -3,7 +3,7 @@ import discord
 
 import handlers.utils as utils_module
 
-async def handle_reactions(message:discord.Message, emojis:dict[str, int]):
+async def handle_reactions(message:discord.Message, emojis:dict):
 	'''
 		React to message when certain content is found
 	'''
@@ -79,7 +79,7 @@ async def handle_reactions(message:discord.Message, emojis:dict[str, int]):
 		emoji = utils_module.discord_bot.get_emoji(emojis["AUTISM_CREATURE"])
 		await message.add_reaction(emoji)
 
-async def handle_reactions_vtm(message:discord.Message, emojis:dict[str, int], content:str) -> None:
+async def handle_reactions_vtm(message:discord.Message, emojis:dict, content:str) -> None:
 	# anarch		<:VTM_Anarch:1297549861750571078>
 	# banu haqim	<:VTM_BanuHaqim:1297549896080953454>
 	# book of nod	<:VTM_BookOfNod:1297549855576817756>
@@ -166,7 +166,7 @@ async def handle_reactions_vtm(message:discord.Message, emojis:dict[str, int], c
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM"])
 		await message.add_reaction(emoji)
 
-async def handle_triggers(message:discord.Message, emojis:dict[str, int]) -> None:
+async def handle_triggers(message:discord.Message, emojis:dict) -> None:
 	'''
 		Respond to message when certain content is found
 	'''
