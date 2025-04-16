@@ -9,6 +9,9 @@ import handlers.helpers.bot_ping as bot_ping_module
 import handlers.helpers.triggers as triggers_module
 import handlers.helpers.spotify as spotify_module
 
+joined = "Joined At"
+created = "Created At"
+
 async def message(message:discord.Message):
 	try:
 		if message.author == utils_module.discord_bot.user:
@@ -201,9 +204,9 @@ async def member_join(member:discord.Member):
 			title=f"Member Join {member.mention}",
 			colour=0x0000ff
 		)
-		embed.add_field(name="Joined At", value=member.joined_at)
-		embed.add_field(name="Created At", value=member.created_at)
-		embed.add_field(name="Roles", value="\n".join([role.mention for role in member.roles]))
+		embed.add_field(name=joined, value=member.joined_at)
+		embed.add_field(name=created, value=member.created_at)
+		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)	  
@@ -223,13 +226,13 @@ async def member_remove(member:discord.Member):
 				return
 
 		embed = discord.Embed(
-			title=f"Member Remove {member.mention}",
+			title=f"Member Remove {member.name} {member.mention}",
 			colour=0xff0000
 		)
-		embed.add_field(name="Joined At", value=member.joined_at)
-		embed.add_field(name="Created At", value=member.created_at)
-		embed.add_field(name="Roles", value="\n".join([role.mention for role in member.roles]))
-		embed.add_field(name="Left At", value=dt.now(utils_module.timezone_syd))
+		embed.add_field(name=joined, value=member.joined_at)
+		embed.add_field(name=created, value=member.created_at)
+		embed.add_field(name="Left At", value=utils_module.get_timestamp_now_formatted())
+		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)
@@ -301,10 +304,11 @@ async def member_ban(member:discord.Member):
 			title=f"Member Banned {member.mention}",
 			colour=0xff0000
 		)
-		embed.add_field(name="Joined At", value=member.joined_at)
-		embed.add_field(name="Created At", value=member.created_at)
-		embed.add_field(name="Roles", value="\n".join([role.mention for role in member.roles]))
-		embed.add_field(name="Banned At", value=dt.now(utils_module.timezone_syd))
+		embed.add_field(name=joined, value=member.joined_at)
+		embed.add_field(name=created, value=member.created_at)
+		embed.add_field(name="Banned At", value=utils_module.get_timestamp_now_formatted())
+		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
+		embed.add_field(name="Banned By", value=member.guild.me.mention)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)

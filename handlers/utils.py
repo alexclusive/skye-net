@@ -1,9 +1,12 @@
 import os
 import discord
 import pytz
+from datetime import datetime as dt
 
 from discord.ext import commands
 from dotenv import load_dotenv
+
+received_shutdown = False
 
 load_dotenv()
 # Verification
@@ -99,3 +102,9 @@ def is_admin(interaction:discord.Interaction):
 
 def get_default_log_channel():
 	return discord_bot.get_channel(stdout_channel_id)
+
+def get_timestamp_formatted(timestamp:int):
+	return f"<t:{timestamp}:f> (<t:{timestamp}:R>)"
+
+def get_timestamp_now_formatted():
+	return get_timestamp_formatted(int(dt.now(timezone_syd).timestamp()))

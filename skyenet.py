@@ -286,5 +286,10 @@ async def run_bot():
 		await utils_module.discord_bot.start(utils_module.token)
 	except KeyboardInterrupt:
 		pass
+	except Exception as e:
+		if not utils_module.received_shutdown: # Probably won't happen cause shutdown shouldn't raise exception
+			await utils_module.discord_bot.close()
+		print(f"Error: {e}")
+		raise e
 
 asyncio.run(run_bot())

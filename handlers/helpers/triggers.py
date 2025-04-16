@@ -1,8 +1,9 @@
 import re
+import discord
 
 import handlers.utils as utils_module
 
-async def handle_reactions(message, emojis):
+async def handle_reactions(message:discord.Message, emojis:dict[str, int]):
 	'''
 		React to message when certain content is found
 	'''
@@ -28,7 +29,7 @@ async def handle_reactions(message, emojis):
 	# what!			‼️
 	# yippee		<:AutismCreature:1235124052813807658>
 	content = message.content.lower()
-	await handle_reactions_vtm(message, emojis, content)	
+	await handle_reactions_vtm(message, emojis, content)
 
 	# other reactions
 	if "birth in vc" in content:
@@ -78,7 +79,7 @@ async def handle_reactions(message, emojis):
 		emoji = utils_module.discord_bot.get_emoji(emojis["AUTISM_CREATURE"])
 		await message.add_reaction(emoji)
 
-async def handle_reactions_vtm(message, emojis, content):
+async def handle_reactions_vtm(message:discord.Message, emojis:dict[str, int], content:str) -> None:
 	# anarch		<:VTM_Anarch:1297549861750571078>
 	# banu haqim	<:VTM_BanuHaqim:1297549896080953454>
 	# book of nod	<:VTM_BookOfNod:1297549855576817756>
@@ -165,7 +166,7 @@ async def handle_reactions_vtm(message, emojis, content):
 		emoji = utils_module.discord_bot.get_emoji(emojis["VTM"])
 		await message.add_reaction(emoji)
 
-async def handle_triggers(message, emojis):
+async def handle_triggers(message:discord.Message, emojis:dict[str, int]) -> None:
 	'''
 		Respond to message when certain content is found
 	'''
@@ -182,9 +183,9 @@ async def handle_triggers(message, emojis):
 		await message.reply(":index_pointing_at_the_viewer:", mention_author=False)
 	if "nuh uh" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["NUH_UH"])
-		nuhuh = format_emoji(emoji)
+		nuhuh = format_emoji(emoji, True)
 		emoji = utils_module.discord_bot.get_emoji(emojis["WAGGING_FINGER"])
-		wagging = format_emoji(emoji)
+		wagging = format_emoji(emoji, True)
 
 		contents = nuhuh + wagging
 		await message.reply(contents, mention_author=False)
@@ -192,8 +193,10 @@ async def handle_triggers(message, emojis):
 		contents = "🫥" # dotted line neutral face
 		await message.reply(contents, mention_author=False)
 	
-def format_emoji(emoji):
+def format_emoji(emoji:discord.Emoji, animated:bool=False) -> str:
 	if emoji:
+		if animated:
+			return f"<a:{emoji.name}:{emoji.id}>"
 		return f"<:{emoji.name}:{emoji.id}>"
 	else:
 		return ""

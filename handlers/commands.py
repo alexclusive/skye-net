@@ -19,6 +19,7 @@ async def die(interaction:discord.Interaction):
 		return
 	await interaction.followup.send("Going to sleep... Goodnight!")
 	await utils_module.discord_bot.close()
+	utils_module.received_shutdown = True
 	
 	if platform.system() == "Windows":
 		os.kill(os.getpid(), signal.SIGTERM)
