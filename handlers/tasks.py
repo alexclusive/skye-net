@@ -137,7 +137,10 @@ async def audit_log_task():
 			details = [f"Audit logs for admin: {admin.name}:"]
 			for log in this_admin_logs:
 				timestamp = int(log.created_at.timestamp())
-				details.append(f"\n- `{log.action.name}` on {log.target} at <t:{timestamp}:f> (<t:{timestamp}:R>)\nDetails: {log.reason}")
+				detail_text = f"\n- `{log.action.name}` on {log.target} at <t:{timestamp}:f> (<t:{timestamp}:R>)"
+				if log.reason:
+					detail_text += f"\nDetails: {log.reason}"
+				details.append(detail_text)
 			print("".join(details))
 			await asyncio.sleep(0.2) # Avoid rate limiting
 
