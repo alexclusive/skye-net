@@ -4,6 +4,9 @@ from datetime import datetime
 from typing import Optional
 
 import handlers.utils as utils_module
+import handlers.logger as logger_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 def init_db():
 	'''
@@ -17,6 +20,7 @@ def init_db():
 		If table "banned_users" does not exist, create it with column "user_id TEXT"
 		If table "important_roles" does not exist, create it with columns "guild_id TEXT, welcomed_role_id TEXT, trusted_role_id TEXT, trusted_time_days INTEGER"
 		If table "todo" does not exist, create it with columns "item_num INTEGER, todo TEXT"
+		If table "debug_level" does not exist, create it with column "level INTEGER"
 		Insert the initial prompt into the database
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
@@ -29,8 +33,11 @@ def init_db():
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS banned_users (user_id TEXT NOT NULL)")
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS important_roles (guild_id TEXT NOT NULL, welcomed_role_id TEXT NOT NULL, trusted_role_id TEXT NOT NULL, trusted_time_days INTEGER NOT NULL)")
 	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS todo (item_num INTEGER NOT NULL, todo TEXT NOT NULL)")
+	utils_module.database_conn.execute("CREATE TABLE IF NOT EXISTS debug_level (level INTEGER NOT NULL)")
 	utils_module.database_conn.execute("INSERT INTO prompts VALUES (?, ?, ?)", (utils_module.initial_prompt, utils_module.ownerid, datetime.now()))
 	utils_module.database_conn.close()
+
+	logger_module.log(LOG_SETUP, "Initialised database.")
 
 # Prompts
 def get_most_recent_prompt():
@@ -48,6 +55,7 @@ def insert_prompt(prompt, user_id):
 	'''
 		Insert a new prompt into the database
 	'''
+	logger_module.log(LOG_INFO, f"User {user_id} added prompt >{prompt}<.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("INSERT INTO prompts VALUES (?, ?, ?)", (prompt, int(user_id), datetime.now()))
 	utils_module.database_conn.close()
@@ -66,6 +74,7 @@ def opt_out(user_id):
 	'''
 		Insert a user_id into the react_opt_out table
 	'''
+	logger_module.log(LOG_INFO, f"User {user_id} opted out of reactions.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("INSERT INTO react_opt_out VALUES (?)", (int(user_id),))
 	utils_module.database_conn.close()
@@ -74,6 +83,7 @@ def opt_in(user_id):
 	'''
 		Remove a user_id from the react_opt_out table
 	'''
+	logger_module.log(LOG_INFO, f"User {user_id} opted in to reactions.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("DELETE FROM react_opt_out WHERE user_id = ?", (int(user_id),))
 	utils_module.database_conn.close()
@@ -125,6 +135,7 @@ def insert_train_fact(fact):
 	'''
 		Get the next fact_num and insert a new train fact into the database
 	'''
+	logger_module.log(LOG_INFO, f"Inserting new train fact >{fact}<.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT MAX(fact_num) FROM train_facts").fetchall()
 	fact_num = result[0][0] + 1 if result[0][0] else 1
@@ -135,10 +146,12 @@ def remove_train_fact(fact_num):
 	'''
 		Remove a train fact from the database
 	'''
+	logger_module.log(LOG_INFO, f"Removing train fact with id {fact_num}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT fact FROM train_facts WHERE fact_num = ?", (fact_num,)).fetchall()
 	utils_module.database_conn.execute("DELETE FROM train_facts WHERE fact_num = ?", (fact_num,))
 	utils_module.database_conn.close()
+	logger_module.log(LOG_DETAIL, f"Removed train fact >{result[0][0]}<.")
 	return result[0][0] if result else None
 
 # Reactions
@@ -155,6 +168,7 @@ def insert_reaction(trigger, emoji_id_1, emoji_id_2="", emoji_id_3=""):
 	'''
 		Insert a new reaction into the database
 	'''
+	logger_module.log(LOG_INFO, f"Inserting reaction for trigger >{trigger}< with emoji id/s {emoji_id_1}/{emoji_id_2}/{emoji_id_3}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("INSERT INTO reactions VALUES (?, ?, ?, ?)", (trigger, emoji_id_1, emoji_id_2, emoji_id_3))
 	utils_module.database_conn.close()
@@ -164,10 +178,12 @@ def remove_reaction(trigger):
 		Remove a reaction from the database
 		Returns the emoji_ids of the removed reaction
 	'''
+	logger_module.log(LOG_INFO, f"Removing reaction for trigger >{trigger}<.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT emoji_id_1, emoji_id_2, emoji_id_3 FROM reactions WHERE trigger = ?", (trigger,)).fetchall()
 	utils_module.database_conn.execute("DELETE FROM reactions WHERE trigger = ?", (trigger,))
 	utils_module.database_conn.close()
+	logger_module.log(LOG_DETAIL, f"Removed reaction emojis {result[0][0]}/{result[0][1]}/{result[0][2]}.")
 	return result if result else None
 
 # Logging Channels
@@ -189,6 +205,8 @@ def insert_logging_channels(guild_id, message_channel:discord.TextChannel=None, 
 	message_channel_id = message_channel.id if message_channel else None
 	member_channel_id = member_channel.id if member_channel else None
 	guild_channel_id = guild_channel.id if guild_channel else None
+	
+	logger_module.log(LOG_INFO, f"Updating logging channels for guild {guild_id}. Message >{message_channel_id}<. Member >{member_channel_id}<. Guild >{guild_channel_id}<.")
 	
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT * FROM logging_channels WHERE guild_id = ?", (guild_id,)).fetchall()
@@ -216,6 +234,7 @@ def ban_user(user_id):
 	'''
 		Insert a user_id into the banned_users table
 	'''
+	logger_module.log(LOG_INFO, f"Adding user {user_id} to banned list.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("INSERT INTO banned_users VALUES (?)", (int(user_id),))
 	utils_module.database_conn.close()
@@ -224,6 +243,7 @@ def unban_user(user_id):
 	'''
 		Remove a user_id from the banned_users table
 	'''
+	logger_module.log(LOG_INFO, f"Removing user {user_id} from banned list.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("DELETE FROM banned_users WHERE user_id = ?", (int(user_id),))
 	utils_module.database_conn.close()
@@ -242,6 +262,7 @@ def insert_important_roles(guild_id, welcomed_role_id, trusted_role_id, trusted_
 	'''
 		Insert the important roles for a guild'
 	'''
+	logger_module.log(LOG_INFO, f"Updating important roles for guild {guild_id}. Welcomed >{welcomed_role_id}<. Trusted >{trusted_role_id}<. Trusted time >{trusted_time_days}<.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT * FROM important_roles WHERE guild_id = ?", (guild_id,)).fetchall()
 	if result:
@@ -251,7 +272,6 @@ def insert_important_roles(guild_id, welcomed_role_id, trusted_role_id, trusted_
 	utils_module.database_conn.close()
 
 # To do list
-
 def get_all_todo_items():
 	'''
 		Return a list of all todo items
@@ -265,6 +285,7 @@ def insert_todo_item(todo):
 	'''
 		Insert a new todo item into the database
 	'''
+	logger_module.log(LOG_INFO, f"Inserting todo task >{todo}<.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT MAX(item_num) FROM todo").fetchall()
 	item_num = result[0][0] + 1 if result[0][0] else 1
@@ -275,8 +296,35 @@ def remove_todo_item(item_num):
 	'''
 		Remove a todo item from the database
 	'''
+	logger_module.log(LOG_INFO, f"Removing todo task number >{item_num}<.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT todo FROM todo WHERE item_num = ?", (item_num,)).fetchall()
 	utils_module.database_conn.execute("DELETE FROM todo WHERE item_num = ?", (item_num,))
 	utils_module.database_conn.close()
+	logger_module.log(LOG_DETAIL, f"Removed todo task >{result[0][0]}<.")
 	return result[0][0] if result else None
+
+# Debug Level
+def get_debug_level():
+	'''
+		Return the debug level
+	'''
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	result = utils_module.database_conn.execute("SELECT level FROM debug_level").fetchone()
+	utils_module.database_conn.close()
+	level = int(result[0]) if result else LOG_EXTRA_DETAIL
+	if level < LOG_SETUP or level > LOG_EXTRA_DETAIL:
+		level = LOG_EXTRA_DETAIL
+	return level
+
+def set_debug_level(level:int):
+	'''
+		Set the first entry in the debug_level table to the given level, whether it exists or not
+	'''
+	logger_module.log(LOG_INFO, f"Setting debug level to {level}.")
+	if level < LOG_SETUP or level > LOG_EXTRA_DETAIL:
+		level = LOG_EXTRA_DETAIL
+		logger_module.log(LOG_INFO, f"Invalid debug level {level} set to {LOG_EXTRA_DETAIL}.")
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	utils_module.database_conn.execute("INSERT OR REPLACE INTO debug_level VALUES (?)", (level,))
+	utils_module.database_conn.close()

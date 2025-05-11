@@ -5,10 +5,13 @@ import signal
 import discord
 
 import handlers.utils as utils_module
+import handlers.logger as logger_module
 import handlers.database as database_module
 import handlers.tasks as tasks_module
 import handlers.helpers.train_game as train_game_module
 import handlers.helpers.etymology as etymology_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 nice_try = "Guess you're not cool enough for this one :)"
 
@@ -17,6 +20,7 @@ async def die(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
+	logger_module.log(LOG_SETUP, "Shutting down...")
 	await interaction.followup.send("Going to sleep... Goodnight!")
 	await utils_module.discord_bot.close()
 	utils_module.received_shutdown = True
@@ -25,6 +29,17 @@ async def die(interaction:discord.Interaction):
 		os.kill(os.getpid(), signal.SIGTERM)
 	else:
 		os.kill(os.getpid(), signal.SIGKILL)
+
+# Owner
+async def set_debug_level(interaction:discord.Interaction, level:int):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	if level < LOG_SETUP or level > LOG_EXTRA_DETAIL:
+		await interaction.followup.send("Debug level must be between 0 and 3")
+		return
+	logger_module.debug_level = level
+	await interaction.followup.send(f"Debug level set to {level}")
 
 # Admin
 async def get_opt_out_users(interaction:discord.Interaction):
@@ -44,11 +59,11 @@ async def force_trusted_roles(interaction:discord.Interaction):
 	await interaction.followup.send("Forced daily tasks")
 
 # Admin
-async def force_audit_log(interaction:discord.Interaction):
+async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
-	await tasks_module.audit_log_task()
+	await tasks_module.audit_log_task(days_to_check)
 	await interaction.followup.send("Forced audit tasks")
 
 # Admin

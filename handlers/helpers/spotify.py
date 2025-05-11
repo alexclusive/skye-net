@@ -3,6 +3,9 @@ from typing import Optional
 import spotipy
 
 import handlers.utils as utils_module
+import handlers.logger as logger_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 spotify_creds = None
 
@@ -13,6 +16,8 @@ def setup_spotify_credentials():
 		client_secret = utils_module.spotify_client_secret
 	)
 	spotify_creds = spotipy.Spotify(auth_manager=auth_manager)
+
+	logger_module.log(LOG_SETUP, "Spotify credentials set up.")
 
 def get_track(link:str):
 	try:
@@ -79,7 +84,6 @@ def get_all_playlist_track_details(playlist):
 	tracks = get_all_tracks(playlist)
 	details = []
 	for track in tracks:
-		# title = f"[{get_title(track['track'])}]({track['track']['external_urls']['spotify']})"
 		title = f"{get_title(track['track'])}"
 		artists = get_artists(track['track'])
 		track_detail = (title, artists)
@@ -87,6 +91,7 @@ def get_all_playlist_track_details(playlist):
 	return details
 
 def get_spotify_track_embed(link: str) -> Optional[discord.Embed]:
+	logger_module.log(LOG_DETAIL, f"Getting spotify details for link >{link}<.")
 	track = get_track(link)
 	if not track:
 		return None
@@ -102,6 +107,7 @@ def get_spotify_track_embed(link: str) -> Optional[discord.Embed]:
 	return embed
 
 def get_spotify_album_embed(link:str) -> Optional[discord.Embed]:
+	logger_module.log(LOG_DETAIL, f"Getting spotify details for link >{link}<.")
 	album = get_album(link)
 	if not album:
 		return None
@@ -124,6 +130,7 @@ def get_spotify_album_embed(link:str) -> Optional[discord.Embed]:
 	return embed
 
 def get_spotify_playlist_embed(link:str) -> Optional[discord.Embed]:
+	logger_module.log(LOG_DETAIL, f"Getting spotify details for link >{link}<.")
 	playlist = get_playlist(link)
 	if not playlist:
 		return None

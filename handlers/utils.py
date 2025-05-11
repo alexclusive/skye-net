@@ -6,6 +6,10 @@ from datetime import datetime as dt
 from discord.ext import commands
 from dotenv import load_dotenv
 
+import handlers.logger as logger_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
+
 received_shutdown = False
 
 load_dotenv()
@@ -13,6 +17,9 @@ load_dotenv()
 token = str(os.getenv("TOKEN"))
 client_id = str(os.getenv("CLIENT_ID"))
 ownerid = int(os.getenv("OWNER"))
+
+# Logging
+log_file_path = str(os.getenv("LOG_FILE_PATH"))
 
 # Open AI
 history_limit = int(os.getenv("HISTORY_LIMIT"))
@@ -61,6 +68,8 @@ def fill_banned_users():
 			except Exception as _:
 				pass
 
+	logger_module.log(LOG_SETUP, f"Loaded {len(all_banned_users)} banned users.")
+
 def fill_emojis():
 	all_emojis["NOT_FAR"] = int(os.getenv('NOT_FAR'))
 	all_emojis["AUTISM_CREATURE"] = int(os.getenv('AUTISM_CREATURE'))
@@ -91,6 +100,8 @@ def fill_emojis():
 	all_emojis["CHOMP"] = int(os.getenv('CHOMP'))
 	all_emojis["HEADPAT"] = int(os.getenv('HEADPAT'))
 
+	logger_module.log(LOG_SETUP, f"Loaded {len(all_emojis)} emojis.")
+
 async def error_message(interaction:discord.Interaction):
 	await interaction.followup.send("Sorry! Unable to compute.")
 
@@ -108,3 +119,6 @@ def get_timestamp_formatted(timestamp:int):
 
 def get_timestamp_now_formatted():
 	return get_timestamp_formatted(int(dt.now(timezone_syd).timestamp()))
+
+def get_timestamp_now_ymd_hms():
+	return dt.now(timezone_syd).strftime("%Y-%m-%d %H:%M:%S")

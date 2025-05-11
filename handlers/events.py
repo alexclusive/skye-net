@@ -4,10 +4,13 @@ from datetime import datetime as dt
 import re
 
 import handlers.utils as utils_module
+import handlers.logger as logger_module
 import handlers.database as database_module
 import handlers.helpers.bot_ping as bot_ping_module
 import handlers.helpers.triggers as triggers_module
 import handlers.helpers.spotify as spotify_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 joined = "Joined At"
 created = "Created At"
@@ -26,25 +29,29 @@ async def message(message:discord.Message):
 
 	try:
 		spotify_tracks = re.findall(r"https?://open\.spotify\.com/track/[a-zA-Z0-9]+", message.content)
-		for link in spotify_tracks:
-			embed = spotify_module.get_spotify_track_embed(link)
-			if embed:
-				await message.reply(embed=embed)
-				message_sent = True
+		spotify_albums = re.findall(r"https?://open\.spotify\.com/album/[a-zA-Z0-9]+", message.content)
+		spotify_playlists = re.findall(r"https?://open\.spotify\.com/playlist/[a-zA-Z0-9]+", message.content)
 
-		spotify_album = re.findall(r"https?://open\.spotify\.com/album/[a-zA-Z0-9]+", message.content)
-		for link in spotify_album:
-			embed = spotify_module.get_spotify_album_embed(link)
-			if embed:
-				await message.reply(embed=embed)
-				message_sent = True
+		if len(spotify_tracks) > 0 or len(spotify_albums) > 0 or len(spotify_playlists) > 0:
+			logger_module.log(LOG_EXTRA_DETAIL, f"Found spotify details - {len(spotify_tracks)} tracks, {len(spotify_albums)} albums, and {len(spotify_playlists)} playlists in message.")
 
-		spotify_playlist = re.findall(r"https?://open\.spotify\.com/playlist/[a-zA-Z0-9]+", message.content)
-		for link in spotify_playlist:
-			embed = spotify_module.get_spotify_playlist_embed(link)
-			if embed:
-				await message.reply(embed=embed)
-				message_sent = True
+			for link in spotify_tracks:
+				embed = spotify_module.get_spotify_track_embed(link)
+				if embed:
+					await message.reply(embed=embed)
+					message_sent = True
+	
+			for link in spotify_albums:
+				embed = spotify_module.get_spotify_album_embed(link)
+				if embed:
+					await message.reply(embed=embed)
+					message_sent = True
+	
+			for link in spotify_playlists:
+				embed = spotify_module.get_spotify_playlist_embed(link)
+				if embed:
+					await message.reply(embed=embed)
+					message_sent = True
 	
 	except Exception as e:
 		print(f"on_message: spotify embed {e}")
@@ -52,6 +59,7 @@ async def message(message:discord.Message):
 	try:
 		opted_out_users = database_module.get_all_opt_out_users()
 		if int(message.author.id) in opted_out_users:
+			logger_module.log(LOG_EXTRA_DETAIL, f"User {message.author.name} opted out of reactions.")
 			return
 		
 		await triggers_module.handle_reactions(message, utils_module.all_emojis)
@@ -60,8 +68,13 @@ async def message(message:discord.Message):
 	except Forbidden as e:
 		if e.code == 90001: # blocked
 			print(f"on_message: I was blocked by user {message.author} :(")
+			logger_module.log(LOG_EXTRA_DETAIL, f"User {message.author.name} blocked Skyenet :(")
 		else:
 			print(f"on_message: reactions/triggers {e}")
+	except discord.NotFound as e:
+		if e.status == 404 and e.code == 10008:
+			logger_module.log(LOG_EXTRA_DETAIL, "Attempted to react to a message that was deleted.")
+			return # message was deleted before we could react to it
 	except Exception as e:
 		print(f"on_message: reactions/triggers {e}")
 
@@ -91,11 +104,17 @@ async def message_deleted(message:discord.Message):
 		embed.timestamp = message.created_at
 
 		if message.attachments:
-			await log_channel.send(embed=embed, files=[await x.to_file() for x in message.attachments])
+			try:
+				await log_channel.send(embed=embed, files=[await x.to_file() for x in message.attachments])
+			except discord.NotFound as e:
+				if e.status == 404 and e.code == 0:
+					logger_module.log(LOG_DETAIL, "Attempted to retrieve message attachments from a message that was deleted.")
+					embed.add_field(name="Attachments", value="Attachment/s not found (not cached before deletion)")
+					await log_channel.send(embed=embed)
 		else:
 			await log_channel.send(embed=embed)
 	except Exception as e:
-		print(f"on_message_delete: {e}")
+		print(f"message_deleted: {e}")
 
 async def channel_create(channel:discord.abc.GuildChannel):
 	try:
@@ -204,8 +223,8 @@ async def member_join(member:discord.Member):
 			title=f"Member Join {member.mention}",
 			colour=0x0000ff
 		)
-		embed.add_field(name=joined, value=member.joined_at)
-		embed.add_field(name=created, value=member.created_at)
+		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()))
+		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()))
 		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
@@ -229,8 +248,8 @@ async def member_remove(member:discord.Member):
 			title=f"Member Remove {member.name} {member.mention}",
 			colour=0xff0000
 		)
-		embed.add_field(name=joined, value=member.joined_at)
-		embed.add_field(name=created, value=member.created_at)
+		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()))
+		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()))
 		embed.add_field(name="Left At", value=utils_module.get_timestamp_now_formatted())
 		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
 
@@ -304,8 +323,8 @@ async def member_ban(member:discord.Member):
 			title=f"Member Banned {member.mention}",
 			colour=0xff0000
 		)
-		embed.add_field(name=joined, value=member.joined_at)
-		embed.add_field(name=created, value=member.created_at)
+		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()))
+		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()))
 		embed.add_field(name="Banned At", value=utils_module.get_timestamp_now_formatted())
 		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
 		embed.add_field(name="Banned By", value=member.guild.me.mention)

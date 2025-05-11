@@ -4,9 +4,14 @@ import requests
 import bs4
 from bs4 import BeautifulSoup
 
+import handlers.logger as logger_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
+
 word_classes = ["adj.", "adv.", "conj.", "n.", "prep.", "pron.", "v."]
 
 def get_etymology(word):
+	logger_module.log(LOG_DETAIL, f"Getting etymology >{word}<.")
 	try:
 		url_safe_word = urllib.parse.quote(word)
 		etymonline_url = "https://etymonline.com/word/" + url_safe_word

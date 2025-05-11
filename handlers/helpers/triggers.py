@@ -2,6 +2,9 @@ import re
 import discord
 
 import handlers.utils as utils_module
+import handlers.logger as logger_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 async def handle_reactions(message:discord.Message, emojis:dict):
 	'''
