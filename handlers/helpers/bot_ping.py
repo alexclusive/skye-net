@@ -1,4 +1,5 @@
 import re
+import discord
 from openai import OpenAI
 
 import handlers.utils as utils_module
@@ -69,6 +70,12 @@ async def bot_ping_message(message):
 
 	async with message.channel.typing():
 		response_content = openai_chat(contents)
+		if len(response_content) > 2000:
+			chunk_size = 1900
+			total_chunks = (len(response_content) + chunk_size - 1) // chunk_size
+			for current_chunk_num, chunk in enumerate([response_content[i:i+chunk_size] for i in range(0, len(response_content), chunk_size)], start=1):
+				chunk_with_footer = f"z{chunk}\n\n{current_chunk_num}/{total_chunks}"
+				await message.reply(chunk_with_footer, mention_author=False)
 		await message.reply(response_content, mention_author=False)
 
 def attempting_reset_instructions(message):
