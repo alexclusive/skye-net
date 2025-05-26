@@ -192,7 +192,7 @@ async def handle_triggers(message:discord.Message, emojis:dict) -> None:
 
 		contents = nuhuh + wagging
 		await message.reply(contents, mention_author=False)
-	if "oh." in content:
+	if re.fullmatch(r"oh\.+", content):
 		contents = "🫥" # dotted line neutral face
 		await message.reply(contents, mention_author=False)
 	

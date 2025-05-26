@@ -115,7 +115,7 @@ def get_default_log_channel():
 	return discord_bot.get_channel(stdout_channel_id)
 
 def get_timestamp_formatted(timestamp:int):
-	return f"<t:{timestamp}:f> (<t:{timestamp}:R>)"
+	return f"<t:{int(timestamp)}:f> (<t:{int(timestamp)}:R>)"
 
 def get_timestamp_now_formatted():
 	return get_timestamp_formatted(int(dt.now(timezone_syd).timestamp()))

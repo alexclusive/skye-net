@@ -57,16 +57,16 @@ async def add_trusted_roles_task():
 				days_in_server = (time_now - member.joined_at).days
 				if days_in_server > utils_module.trusted_time_days:
 					await member.add_roles(trusted_role)
-					print(f"Added <@{trusted_role.id}> role to @{member.id}")
+					print(f"Added {trusted_role.name} role to {member.name} ({member.nick})")
 					trusted_added += 1
 					logger_module.log(LOG_EXTRA_DETAIL, f"Added <@{trusted_role.id}> role to @{member.id}")
 			elif welcomed_role not in member.roles and trusted_role not in member.roles:
 				days_in_server = (time_now - member.joined_at).days
 				if days_in_server > (utils_module.trusted_time_days // 2):
 					await member.add_roles(welcomed_role)
-					print(f"Added <@{welcomed_role.id}> role to @{member.id}")
+					print(f"Added {welcomed_role.name} role to {member.name} ({member.nick})")
 					welcomed_added += 1
-					logger_module.log(LOG_EXTRA_DETAIL, f"Added <@{welcomed_role.id}> role to @{member.id}")
+					logger_module.log(LOG_EXTRA_DETAIL, f"Added {welcomed_role.name} role to {member.name} ({member.nick}, {member.id})")
 	except Exception as e:
 		print(f"add_trusted_roles: {e}")
 
