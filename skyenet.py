@@ -205,6 +205,20 @@ async def remove_sticker(interaction:discord.Interaction, sticker_id:str):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.remove_sticker(interaction, sticker_id)
 
+@utils_module.discord_bot.tree.command(description="[Admin] Opt a user out of reactions")
+@admin_only()
+async def opt_out_user(interaction:discord.Interaction, user_id:int):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.force_opt_out_reactions(interaction, user_id)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Opt a user in to reactions")
+@admin_only()
+async def opt_in_user(interaction:discord.Interaction, user_id:int):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.force_opt_in_reactions(interaction, user_id)
+
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):
 	logger_module.log(LOG_DETAIL, command_called_log_string)

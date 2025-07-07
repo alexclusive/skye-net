@@ -340,3 +340,11 @@ async def opt_out_reactions(interaction:discord.Interaction):
 async def opt_in_reactions(interaction:discord.Interaction):
 	database_module.opt_in(interaction.user.id)
 	await interaction.followup.send("You have opted in to reactions")
+
+async def force_opt_out_reactions(interaction:discord.Interaction, user_id:int):
+	database_module.opt_out(user_id)
+	await interaction.followup.send("You have opted out of reactions")
+
+async def force_opt_in_reactions(interaction:discord.Interaction, user_id:int):
+	database_module.opt_in(user_id)
+	await interaction.followup.send("You have opted in to reactions")
