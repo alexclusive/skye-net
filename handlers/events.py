@@ -90,28 +90,51 @@ async def message_deleted(message:discord.Message):
 			log_channel = utils_module.get_default_log_channel()
 			if log_channel is None:
 				return
-
-		embed = discord.Embed(
-			title=f"Message Deleted in {message.channel.mention}",
-			colour=0xff0000
-		)
-		if message.content:
-			embed.add_field(name="Content", value=message.content, inline=False)
-		if message.attachments:
-			embed.add_field(name="Attachments", value="\n".join([attachment.url for attachment in message.attachments]), inline=False)
 			
-		embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
-		embed.timestamp = message.created_at
+		if len(message.content) > 1500:
+			message.content = message.content[:1500] + "..."  # truncate long messages
 
-		if message.attachments:
+		embeds:list[discord.Embed] = []
+		if message.content and len(message.content) > 900:
+			# We need to send more than one message (Discord has a 1024 character limit)
+			num_messages_needed = len(message.content) // 900 + 1
+			for i in range(num_messages_needed):
+				embed_part = discord.Embed(
+					title=f"Message Deleted in {message.channel.mention} (Part {i+1} of {num_messages_needed})",
+					colour=0xff0000
+				)
+
+				start = i * 900
+				end = start + 900
+				embed_part.add_field(name="Content", value=message.content[start:end], inline=False)
+				
+				embeds.append(embed_part)
+		else:
+			# Only need one message
+			embed = discord.Embed(
+				title=f"Message Deleted in {message.channel.mention}",
+				colour=0xff0000
+			)
+
+			if message.content:
+				embed.add_field(name="Content", value=message.content, inline=False)
+
+			embeds.append(embed)
+
+		if message.attachments and len(embeds) > 0:
+			# Add any attachements to just the first embed
 			try:
-				await log_channel.send(embed=embed, files=[await x.to_file() for x in message.attachments])
+				await log_channel.send(files=[await x.to_file() for x in message.attachments]) # discord.NotFound will be raised here
+				embeds[0].add_field(name="Attachments", value="\n".join([attachment.url for attachment in message.attachments]), inline=False)
 			except discord.NotFound as e:
 				if e.status == 404 and e.code == 0:
 					logger_module.log(LOG_DETAIL, "Attempted to retrieve message attachments from a message that was deleted.")
-					embed.add_field(name="Attachments", value="Attachment/s not found (not cached before deletion)")
-					await log_channel.send(embed=embed)
-		else:
+					embeds[0].add_field(name="Attachments", value="Attachment/s not found (not cached before deletion)")
+
+		for embed in embeds:
+			embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
+			embed.timestamp = dt.now(utils_module.timezone_syd)
+			embed.set_footer(text=f"Message ID: {message.id}")
 			await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"message_deleted: {e}")

@@ -65,6 +65,13 @@ async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.force_audit_log(interaction, days_to_check)
 
+@utils_module.discord_bot.tree.command(description="[Owner] Get a list of all stickers in all guilds")
+@owner_only()
+async def get_all_stickers(interaction:discord.Interaction):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.get_stickers(interaction)
+
 @utils_module.discord_bot.tree.command(description="[Admin] Enter train fact")
 @admin_only()
 async def enter_train_fact(interaction:discord.Interaction, fact:str):
@@ -177,6 +184,27 @@ async def remove_todo(interaction:discord.Interaction, item_num:int):
 	await interaction.response.defer()
 	await commands_module.remove_todo(interaction, item_num)
 
+@utils_module.discord_bot.tree.command(description="[Admin] Get a list of all stickers for this guild")
+@admin_only()
+async def get_stickers(interaction:discord.Interaction):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.get_stickers_for_guild(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Add a sticker")
+@admin_only()
+async def add_sticker(interaction:discord.Interaction, sticker_id:str):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.add_sticker(interaction, sticker_id)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Remove a sticker")
+@admin_only()
+async def remove_sticker(interaction:discord.Interaction, sticker_id:str):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.remove_sticker(interaction, sticker_id)
+
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -252,42 +280,42 @@ async def on_ready():
 
 @utils_module.discord_bot.event
 async def on_message(message):
-	logger_module.log(LOG_EXTRA_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_EXTRA_DETAIL, event_triggered_log_string + f" by {message.author} in {message.channel}")
 	await events_module.message(message)
 
 @utils_module.discord_bot.event
 async def on_message_delete(message):
-	logger_module.log(LOG_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_DETAIL, event_triggered_log_string + f" by {message.author} in {message.channel}")
 	await events_module.message_deleted(message)
 
 @utils_module.discord_bot.event
 async def on_guild_channel_create(channel:discord.abc.GuildChannel):
-	logger_module.log(LOG_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_DETAIL, event_triggered_log_string + f" in {channel.guild.name}")
 	await events_module.channel_create(channel)
 
 @utils_module.discord_bot.event
 async def on_guild_channel_delete(channel:discord.abc.GuildChannel):
-	logger_module.log(LOG_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_DETAIL, event_triggered_log_string + f" in {channel.guild.name}")
 	await events_module.channel_delete(channel)
 
 @utils_module.discord_bot.event
 async def on_guild_role_create(role:discord.Role):
-	logger_module.log(LOG_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_DETAIL, event_triggered_log_string + f" in {role.guild.name}")
 	await events_module.role_create(role)
 
 @utils_module.discord_bot.event
 async def on_guild_role_delete(role:discord.Role):
-	logger_module.log(LOG_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_DETAIL, event_triggered_log_string + f" in {role.guild.name}")
 	await events_module.role_delete(role)
 
 @utils_module.discord_bot.event
 async def on_member_join(member:discord.Member):
-	logger_module.log(LOG_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_DETAIL, event_triggered_log_string + f" in {member.guild.name}")
 	await events_module.member_join(member)
 
 @utils_module.discord_bot.event
 async def on_member_remove(member:discord.Member):
-	logger_module.log(LOG_DETAIL, event_triggered_log_string)
+	logger_module.log(LOG_DETAIL, event_triggered_log_string + f" in {member.guild.name}")
 	await events_module.member_remove(member)
 
 @utils_module.discord_bot.event
@@ -298,7 +326,7 @@ async def on_member_update(before:discord.Member, after:discord.Member):
 
 @utils_module.discord_bot.event
 async def on_member_ban(member:discord.Member):
-	logger_module.log(LOG_DETAIL, "Event triggered")
+	logger_module.log(LOG_DETAIL, "Event triggered" + f" in {member.guild.name}")
 	await events_module.member_ban(member)
 
 '''
@@ -325,8 +353,6 @@ def send_output_to_discord(message:str):
 					send_message(channel, message)
 
 async def run_bot():
-	sys.stdout.write = send_output_to_discord
-	sys.stderr.write = send_output_to_discord
 
 	logger_module.set_log_file(utils_module.log_file_path)
 	database_module.init_db()
@@ -338,6 +364,8 @@ async def run_bot():
 
 	try:
 		logger_module.log(LOG_SETUP, "Starting bot...")
+		sys.stdout.write = send_output_to_discord
+		sys.stderr.write = send_output_to_discord
 		await utils_module.discord_bot.start(utils_module.token)
 	except Exception as e:
 		logger_module.log(LOG_SETUP, "Shutting down bot...")

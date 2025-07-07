@@ -45,6 +45,7 @@ trusted_time_days = int(os.getenv("TRUSTED_TIME_DAYS"))
 
 all_banned_users = []
 all_emojis = {}
+all_stickers = {}
 
 intents = discord.Intents.all()
 intents.members = True
@@ -71,6 +72,7 @@ def fill_banned_users():
 	logger_module.log(LOG_SETUP, f"Loaded {len(all_banned_users)} banned users.")
 
 def fill_emojis():
+	global all_emojis
 	all_emojis["NOT_FAR"] = int(os.getenv('NOT_FAR'))
 	all_emojis["AUTISM_CREATURE"] = int(os.getenv('AUTISM_CREATURE'))
 	

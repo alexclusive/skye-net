@@ -41,6 +41,24 @@ async def set_debug_level(interaction:discord.Interaction, level:int):
 	logger_module.debug_level = level
 	await interaction.followup.send(f"Debug level set to {level}")
 
+# Owner
+async def get_stickers(interaction:discord.Interaction):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	stickers = database_module.get_all_stickers()
+	if not stickers:
+		await interaction.followup.send("No stickers found")
+		return
+	
+	embed = discord.Embed(title="Stickers", colour=0xffffff)
+	for guild_id, guild_stickers in stickers.items():
+		sticker_text = ""
+		for sticker in guild_stickers:
+			sticker_text += f"{sticker.name}: {sticker.id}\n"
+		embed.add_field(name=f"Guild {guild_id}", value=sticker_text, inline=False)
+	await interaction.followup.send(embed=embed)
+
 # Admin
 async def get_opt_out_users(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
@@ -226,6 +244,43 @@ async def remove_todo(interaction:discord.Interaction, todo_id:int):
 		return
 	database_module.remove_todo_item(todo_id)
 	await interaction.followup.send(f"Todo {todo_id} removed")
+
+# Admin
+async def get_stickers_for_guild(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	stickers = database_module.get_all_stickers_for_guild(interaction.guild_id)
+	if not stickers:
+		await interaction.followup.send("No stickers found for this guild")
+		return
+	
+	embed = discord.Embed(title="Stickers", colour=0xffffff)
+	sticker_text = ""
+	for sticker in stickers:
+		sticker_text += f"{sticker.name}: {sticker.id}\n"
+	embed.add_field(name=f"Guild {interaction.guild_id}", value=sticker_text, inline=False)
+	await interaction.followup.send(embed=embed)
+
+# Admin
+async def add_sticker(interaction:discord.Interaction, sticker_id:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	sticker = utils_module.discord_bot.get_sticker(int(sticker_id))
+	if sticker is None:
+		await interaction.followup.send(f"Sticker with ID {sticker_id} not found")
+		return
+	database_module.insert_sticker(interaction.guild_id, sticker.name, sticker.id)
+	await interaction.followup.send(f"Sticker {sticker.name} added with ID {sticker.id}")
+
+# Admin
+async def remove_sticker(interaction:discord.Interaction, sticker_id:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.remove_sticker(interaction.guild_id, sticker_id)
+	await interaction.followup.send(f"Sticker with ID {sticker_id} removed")
 
 async def ping(interaction:discord.Interaction):
 	latency = round(utils_module.discord_bot.latency * 1000)
