@@ -48,7 +48,7 @@ async def handle_reactions(message:discord.Message, emojis:dict):
 	if "lesbian" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["LESBIAN_BRICK"])
 		await message.add_reaction(emoji)
-	if "mwah" in content:
+	if re.search(r'\bmwah\b', content): # don't match mwaha
 		await message.add_reaction("💋")
 	if "nomnom" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["CHOMP"])

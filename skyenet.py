@@ -72,6 +72,27 @@ async def get_all_stickers(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.get_stickers(interaction)
 
+@utils_module.discord_bot.tree.command(description="[Admin] Get to do list")
+@owner_only()
+async def get_todo(interaction:discord.Interaction):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.get_todo(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Add to do item")
+@owner_only()
+async def add_todo(interaction:discord.Interaction, item:str):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.add_todo(interaction, item)
+
+@utils_module.discord_bot.tree.command(description="[Admin] Remove to do item")
+@owner_only()
+async def remove_todo(interaction:discord.Interaction, item_num:int):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.remove_todo(interaction, item_num)
+
 @utils_module.discord_bot.tree.command(description="[Admin] Enter train fact")
 @admin_only()
 async def enter_train_fact(interaction:discord.Interaction, fact:str):
@@ -162,27 +183,6 @@ async def set_roles(interaction:discord.Interaction, welcomed:discord.Role=None,
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	await interaction.response.defer()
 	await commands_module.set_important_roles(interaction, welcomed, trusted, trusted_time_days)
-
-@utils_module.discord_bot.tree.command(description="[Admin] Get to do list")
-@admin_only()
-async def get_todo(interaction:discord.Interaction):
-	logger_module.log(LOG_DETAIL, command_called_log_string)
-	await interaction.response.defer()
-	await commands_module.get_todo(interaction)
-
-@utils_module.discord_bot.tree.command(description="[Admin] Add to do item")
-@admin_only()
-async def add_todo(interaction:discord.Interaction, item:str):
-	logger_module.log(LOG_DETAIL, command_called_log_string)
-	await interaction.response.defer()
-	await commands_module.add_todo(interaction, item)
-
-@utils_module.discord_bot.tree.command(description="[Admin] Remove to do item")
-@admin_only()
-async def remove_todo(interaction:discord.Interaction, item_num:int):
-	logger_module.log(LOG_DETAIL, command_called_log_string)
-	await interaction.response.defer()
-	await commands_module.remove_todo(interaction, item_num)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Get a list of all stickers for this guild")
 @admin_only()
