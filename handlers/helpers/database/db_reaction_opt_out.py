@@ -29,7 +29,7 @@ def opt_out(user_id):
 	'''
 	logger_module.log(LOG_INFO, f"User {user_id} opted out of reactions.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
-	utils_module.database_conn.execute("INSERT INTO react_opt_out VALUES (?)", (int(user_id),))
+	utils_module.database_conn.execute("INSERT INTO react_opt_out VALUES (?)", (user_id,))
 	utils_module.database_conn.close()
 
 def opt_in(user_id):
@@ -38,5 +38,5 @@ def opt_in(user_id):
 	'''
 	logger_module.log(LOG_INFO, f"User {user_id} opted in to reactions.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
-	utils_module.database_conn.execute("DELETE FROM react_opt_out WHERE user_id = ?", (int(user_id),))
+	utils_module.database_conn.execute("DELETE FROM react_opt_out WHERE user_id = ?", (user_id,))
 	utils_module.database_conn.close()

@@ -58,7 +58,7 @@ async def message(message:discord.Message):
 
 	try:
 		opted_out_users = database_module.get_all_opt_out_users()
-		if int(message.author.id) in opted_out_users:
+		if str(message.author.id) in opted_out_users:
 			logger_module.log(LOG_EXTRA_DETAIL, f"User {message.author.name} opted out of reactions.")
 			return
 		

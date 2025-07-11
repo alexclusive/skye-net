@@ -92,6 +92,9 @@ Add to the todo list
 ### [Owner] remove_todo
 Remove from the todo list
 
+### [Owner] get_all_bingo_templates
+Remove all bingo templates
+
 ### [Admin] enter_train_fact
 Enter a train fact
 
@@ -146,6 +149,15 @@ Opt a user out of reactions
 ### [Admin] opt_in_user
 Opt a user in to reactions
 
+### [Admin] get_bingo_templates_for_guild
+Get all bingo templates for the current guild
+
+### [Admin] create_bingo_template
+Create a new bingo template
+
+### [Admin] delete_bingo_template
+Delete a new bingo template
+
 ### ping
 Check the bots ping
 
@@ -172,3 +184,12 @@ Opt out of reactions
 
 ### opt_in
 Opt in to reactions
+
+### create_bingo_card
+Create a new bingo card (overwriting any existing)
+
+### get_bingo_card
+Get a bingo card
+
+### bingo_check
+Check off an item in a bingo card

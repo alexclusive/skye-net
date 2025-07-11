@@ -10,6 +10,7 @@ import handlers.database as database_module
 import handlers.tasks as tasks_module
 import handlers.helpers.train_game as train_game_module
 import handlers.helpers.etymology as etymology_module
+import handlers.helpers.bingo as bingo_module
 
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
@@ -58,6 +59,19 @@ async def get_stickers(interaction:discord.Interaction):
 			sticker_text += f"{sticker.name}: {sticker.id}\n"
 		embed.add_field(name=f"Guild {guild_id}", value=sticker_text, inline=False)
 	await interaction.followup.send(embed=embed)
+
+# Owner
+async def get_all_bingo_templates(interaction:discord.Interaction):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	
+	templates_embed = bingo_module.get_all_bingo_templates()
+	if templates_embed is None:
+		await interaction.followup.send("No bingo templates found")
+		return
+
+	await interaction.followup.send(embed=templates_embed)
 
 # Admin
 async def get_opt_out_users(interaction:discord.Interaction):
@@ -286,6 +300,53 @@ async def ping(interaction:discord.Interaction):
 	latency = round(utils_module.discord_bot.latency * 1000)
 	await interaction.followup.send(f"Ponged your ping in {latency}ms")
 
+# Admin
+async def get_bingo_templates_for_guild(interaction:discord.Interaction):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	
+	templates_embed = bingo_module.get_bingo_templates_for_guild(interaction.guild.id)
+	if templates_embed is None:
+		await interaction.followup.send("No bingo templates found for this guild")
+		return
+
+	await interaction.followup.send(embed=templates_embed)
+
+# Admin
+async def create_bingo_template(interaction:discord.Interaction, bingo_name:str, free_space:bool, items:list):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	
+	created = bingo_module.create_bingo_template(interaction.guild.id, bingo_name, free_space, "\n".join(items))
+	if created:
+		await interaction.followup.send(f"Bingo template '{bingo_name}' created successfully.")
+	else:
+		await interaction.followup.send(f"Failed to create bingo template '{bingo_name}'.")
+
+# Admin
+async def create_bingo_template_through_message(interaction:discord.Interaction, bingo_name:str, free_space:bool, items_message:discord.Message):
+	items = items_message.content.split("\n")
+	await create_bingo_template(interaction, bingo_name, free_space, items)
+
+# Admin
+async def create_bingo_template_through_csv(interaction:discord.Interaction, bingo_name:str, free_space:bool, items_csv:str):
+	items = items_csv.split(",")
+	await create_bingo_template(interaction, bingo_name, free_space, items)
+
+# Admin
+async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	
+	deleted = bingo_module.delete_bingo_template(interaction.guild.id, bingo_name)
+	if deleted:
+		await interaction.followup.send(f"Bingo template '{bingo_name}' deleted successfully.")
+	else:
+		await interaction.followup.send(f"Failed to delete bingo template '{bingo_name}'. It may not exist.")
+
 async def train_game(interaction:discord.Interaction, number, target, use_power, use_modulo):
 	try:
 		target = int(target)
@@ -341,10 +402,34 @@ async def opt_in_reactions(interaction:discord.Interaction):
 	database_module.opt_in(interaction.user.id)
 	await interaction.followup.send("You have opted in to reactions")
 
-async def force_opt_out_reactions(interaction:discord.Interaction, user_id:int):
+async def force_opt_out_reactions(interaction:discord.Interaction, user_id:str):
 	database_module.opt_out(user_id)
 	await interaction.followup.send("You have opted out of reactions")
 
-async def force_opt_in_reactions(interaction:discord.Interaction, user_id:int):
+async def force_opt_in_reactions(interaction:discord.Interaction, user_id:str):
 	database_module.opt_in(user_id)
 	await interaction.followup.send("You have opted in to reactions")
+
+async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
+	created = bingo_module.create_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+
+	if created:
+		await interaction.followup.send(f"Bingo card created for {interaction.user.name} in bingo '{bingo_name}'.")
+	else:
+		await interaction.followup.send(f"Failed to create bingo card for {interaction.user.name} in bingo '{bingo_name}'. Template may not exist.")
+
+async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
+	card = bingo_module.get_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+
+	if card is None:
+		await interaction.followup.send(f"No bingo card found for {interaction.user.name} for bingo '{bingo_name}'. Are you sure that bingo exists?")
+	else:
+		await interaction.followup.send(embed=card)
+
+async def bingo_check(interaction:discord.Interaction, bingo_name:str, item_row:int, item_column:int):
+	embed = bingo_module.bingo_check(interaction.guild.id, bingo_name, interaction.user.id,item_row, item_column)
+
+	if embed is None:
+		await interaction.followup.send(f"Unable to update bingo card for '{bingo_name}'. Either no template exists or the card has not been created yet.")
+	else:
+		await interaction.followup.send(embed=embed)

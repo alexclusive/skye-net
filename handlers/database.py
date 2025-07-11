@@ -8,6 +8,7 @@ import handlers.logger as logger_module
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 from handlers.helpers.database.db_banned_users import get_all_banned_users, ban_user, unban_user
+from handlers.helpers.database.db_bingo import get_all_bingo_templates, get_all_bingo_templates_for_guild, does_bingo_template_exist, create_bingo_template, delete_bingo_template, create_bingo_card, has_user_created_bingo_card, get_bingo_card, update_bingo_card
 from handlers.helpers.database.db_daily_tasks import get_last_daily_task_time, insert_daily_task_time
 from handlers.helpers.database.db_debug_level import get_debug_level, set_debug_level
 from handlers.helpers.database.db_important_roles import get_important_roles, insert_important_roles
@@ -40,6 +41,8 @@ def set_up_tables():
 		Create the database tables if they don't already exist.
 		Tables:
 			banned_users
+			bingo_template
+			bingo_cards
 			daily_tasks
 			debug_level
 			important_roles
@@ -57,6 +60,26 @@ def set_up_tables():
 	CREATE TABLE IF NOT EXISTS banned_users (
 		user_id TEXT,
 		PRIMARY KEY (user_id)
+	)
+	''')
+
+	utils_module.database_conn.execute('''
+	CREATE TABLE IF NOT EXISTS bingo_template (
+		guild_id TEXT,
+		bingo_name TEXT,
+		free_space BOOLEAN,
+		items TEXT,
+		PRIMARY KEY (guild_id, bingo_name)
+	)
+	''')
+
+	utils_module.database_conn.execute('''
+	CREATE TABLE IF NOT EXISTS bingo_cards (
+		guild_id TEXT,
+		bingo_name TEXT,
+		user_id TEXT,
+		card_data TEXT,
+		PRIMARY KEY (guild_id, bingo_name, user_id)
 	)
 	''')
 
