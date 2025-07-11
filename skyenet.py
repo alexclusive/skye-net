@@ -508,12 +508,32 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		print(f"Error getting bingo card: {e}")
 		await interaction.followup.send(something_went_wrong)
 
+@utils_module.discord_bot.tree.command(description="Get a bingo card - minimal version (just emojis)")
+async def get_bingo_card_minimal(interaction:discord.Interaction, bingo_name:str):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await interaction.response.defer()
+		await commands_module.get_bingo_card_minimal(interaction, bingo_name)
+	except Exception as e:
+		print(f"Error getting bingo card: {e}")
+		await interaction.followup.send(something_went_wrong)
+
 @utils_module.discord_bot.tree.command(description="Check or uncheck a bingo item")
 async def bingo_check(interaction:discord.Interaction, bingo_name:str, item_row:int, item_column:int):
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
 		await interaction.response.defer()
 		await commands_module.bingo_check(interaction, bingo_name, item_row, item_column)
+	except Exception as e:
+		print(f"Error checking bingo item: {e}")
+		await interaction.followup.send(something_went_wrong)
+
+@utils_module.discord_bot.tree.command(description="Help for bingo")
+async def bingo_help(interaction:discord.Interaction, bingo_name:str, item_row:int, item_column:int):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await interaction.response.defer()
+		await commands_module.bingo_help()
 	except Exception as e:
 		print(f"Error checking bingo item: {e}")
 		await interaction.followup.send(something_went_wrong)

@@ -191,5 +191,11 @@ Create a new bingo card (overwriting any existing)
 ### get_bingo_card
 Get a bingo card
 
+### get_bing_card_minimal
+Get a bingo card - only showing the emoji representation
+
 ### bingo_check
 Check off an item in a bingo card
+
+### bingo_help
+Get a list of bingo commands

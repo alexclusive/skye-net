@@ -152,6 +152,14 @@ def get_bingo_card(guild_id:str, bingo_name:str, user_id:str) -> Optional[discor
 	embed.set_footer(text=f"User ID: {user_id} | Guild ID: {guild_id}")
 	return embed
 
+def get_bingo_card_minimal(guild_id:str, bingo_name:str, user_id:str) -> Optional[discord.Embed]:
+	embed = get_bingo_card(guild_id, bingo_name, user_id)
+	
+	if embed is not None:
+		embed.clear_fields()
+	
+	return embed
+
 def bingo_check(guild_id:str, bingo_name:str, user_id:str, item_row:int, item_column:int) -> Optional[discord.Embed]:
 	if not database_module.does_bingo_template_exist(guild_id, bingo_name):
 		logger_module.log(LOG_INFO, f"Bingo template '{bingo_name}' does not exist for guild {guild_id}.")
@@ -189,5 +197,31 @@ def bingo_check(guild_id:str, bingo_name:str, user_id:str, item_row:int, item_co
 		if user:
 			embed_title = f"BINGO! Congratulations {user.name}!"
 		embed.title = embed_title
+
+	return embed
+
+def bingo_help() -> discord.Embed:
+	'''
+		Admin
+			create_bingo_template
+			delete_bingo_template
+			get_bingo_templates
+		Everyone
+			create_bingo_card
+			get_bingo_card
+			get_bingo_card_minimal
+			bingo_check
+			bingo_help
+	'''
+	embed = discord.Embed(title="Bingo Help", colour=0xffffff)
+	embed.add_field(name="/create_bingo_template `admin only`", value="Create a new bingo template for the server. Specify a name, whether it has a free center space, and the items for the bingo card. Items can be provided in the command with each item separated by a comma, or through a message where each item is separated by a new line.")
+	embed.add_field(name="/delete_bingo_template `admin only`", value="Delete a bingo template from the server. Specify the name of the bingo template to delete.")
+	embed.add_field(name="/get_bingo_templates `admin only`", value="Get a list of all bingo templates for the server.")
+
+	embed.add_field(name="/create_bingo_card", value="Create a new bingo card for the user. Specify the name of the bingo template to use.")
+	embed.add_field(name="/get_bingo_card", value="Get the current bingo card for the user. Creates a new card if the user has not created one yet.")
+	embed.add_field(name="/get_bingo_card_minimal", value="Get a minimal version of the current bingo card for the user.")
+	embed.add_field(name="/bingo_check", value="Mark off an item in the user's bingo card. Specify the name of the bingo template, the row (1-5), and the column (1-5) of the item to check or uncheck.")
+	embed.add_field(name="/bingo_help", value="Get help information for using the bingo commands.")
 
 	return embed

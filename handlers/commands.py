@@ -426,6 +426,14 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	else:
 		await interaction.followup.send(embed=card)
 
+async def get_bingo_card_minimal(interaction:discord.Interaction, bingo_name:str):
+	card = bingo_module.get_bingo_card_minimal(interaction.guild.id, bingo_name, interaction.user.id)
+
+	if card is None:
+		await interaction.followup.send(f"No bingo card found for {interaction.user.name} for bingo '{bingo_name}'. Are you sure that bingo exists?")
+	else:
+		await interaction.followup.send(embed=card)
+
 async def bingo_check(interaction:discord.Interaction, bingo_name:str, item_row:int, item_column:int):
 	embed = bingo_module.bingo_check(interaction.guild.id, bingo_name, interaction.user.id,item_row, item_column)
 
@@ -433,3 +441,7 @@ async def bingo_check(interaction:discord.Interaction, bingo_name:str, item_row:
 		await interaction.followup.send(f"Unable to update bingo card for '{bingo_name}'. Either no template exists or the card has not been created yet.")
 	else:
 		await interaction.followup.send(embed=embed)
+
+async def bingo_help(interaction:discord.Interaction):
+	embed = bingo_module.bingo_help(interaction.guild.id)
+	await interaction.followup.send(embed=embed)
