@@ -177,7 +177,7 @@ def bingo_check(guild_id:str, bingo_name:str, user_id:str, item_row:int, item_co
 	if item_row < 1 or item_row > 5 or item_column < 1 or item_column > 5:
 		logger_module.log(LOG_DETAIL, f"Invalid item row {item_row} or column {item_column} for bingo '{bingo_name}' in guild {guild_id}.")
 		embed = discord.Embed(title="Invalid Bingo Index", colour=0xff0000)
-		embed.add_field(name=f"Invalid item row {item_row} or column {item_column}.", value="Please provide values between 1 and 5.")
+		embed.add_field(name=f"Invalid item row {item_row} or column {item_column}.", value="Please provide values between 1 and 5.", inline=False)
 		return embed
 	
 	items_array = split_bingo_card_items(card)
@@ -214,14 +214,14 @@ def bingo_help() -> discord.Embed:
 			bingo_help
 	'''
 	embed = discord.Embed(title="Bingo Help", colour=0xffffff)
-	embed.add_field(name="/create_bingo_template `admin only`", value="Create a new bingo template for the server. Specify a name, whether it has a free center space, and the items for the bingo card. Items can be provided in the command with each item separated by a comma, or through a message where each item is separated by a new line.")
-	embed.add_field(name="/delete_bingo_template `admin only`", value="Delete a bingo template from the server. Specify the name of the bingo template to delete.")
-	embed.add_field(name="/get_bingo_templates `admin only`", value="Get a list of all bingo templates for the server.")
+	embed.add_field(name="/create_bingo_template `admin only`", value="Create a new bingo template for the server. Specify a name, whether it has a free center space, and the items for the bingo card. Items can be provided in the command with each item separated by a comma, or through a message where each item is separated by a new line.", inline=False)
+	embed.add_field(name="/delete_bingo_template `admin only`", value="Delete a bingo template from the server. Specify the name of the bingo template to delete.", inline=False)
+	embed.add_field(name="/get_bingo_templates `admin only`", value="Get a list of all bingo templates for the server.", inline=False)
 
-	embed.add_field(name="/create_bingo_card", value="Create a new bingo card for the user. Specify the name of the bingo template to use.")
-	embed.add_field(name="/get_bingo_card", value="Get the current bingo card for the user. Creates a new card if the user has not created one yet.")
-	embed.add_field(name="/get_bingo_card_minimal", value="Get a minimal version of the current bingo card for the user.")
-	embed.add_field(name="/bingo_check", value="Mark off an item in the user's bingo card. Specify the name of the bingo template, the row (1-5), and the column (1-5) of the item to check or uncheck.")
-	embed.add_field(name="/bingo_help", value="Get help information for using the bingo commands.")
+	embed.add_field(name="/create_bingo_card", value="Create a new bingo card for the user. Specify the name of the bingo template to use.", inline=False)
+	embed.add_field(name="/get_bingo_card", value="Get the current bingo card for the user. Creates a new card if the user has not created one yet.", inline=False)
+	embed.add_field(name="/get_bingo_card_minimal", value="Get a minimal version of the current bingo card for the user.", inline=False)
+	embed.add_field(name="/bingo_check", value="Mark off an item in the user's bingo card. Specify the name of the bingo template, the row (1-5), and the column (1-5) of the item to check or uncheck.", inline=False)
+	embed.add_field(name="/bingo_help", value="Get help information for using the bingo commands.", inline=False)
 
 	return embed

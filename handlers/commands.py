@@ -73,7 +73,38 @@ async def get_all_bingo_templates(interaction:discord.Interaction):
 
 	await interaction.followup.send(embed=templates_embed)
 
-# Admin
+# Owner
+async def get_todo(interaction:discord.Interaction):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	todo = database_module.get_all_todo_items()
+	if len(todo) != 0:
+		embed = discord.Embed(title="Todo List", colour=0xffffff)
+		embed.description = ""
+		for item in todo:
+			embed.description += f"{item[0]}- {item[1]}\n"
+		await interaction.followup.send(embed=embed)
+	else:
+		await interaction.followup.send("Todo List Empty")
+
+# Owner
+async def add_todo(interaction:discord.Interaction, todo:str):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.insert_todo_item(todo)
+	await interaction.followup.send(f"Todo added: {todo}")
+
+# Owner
+async def remove_todo(interaction:discord.Interaction, todo_id:int):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.remove_todo_item(todo_id)
+	await interaction.followup.send(f"Todo {todo_id} removed")
+
+# Owner
 async def get_opt_out_users(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
@@ -227,37 +258,6 @@ async def set_important_roles(interaction:discord.Interaction, welcomed:discord.
 		return
 	database_module.insert_important_roles(interaction.guild_id, welcomed, trusted, trusted_days)
 	await interaction.followup.send(f"Important roles set\nWelcomed: {welcomed}\nTrusted: {trusted}\nTrusted days: {trusted_days}")
-
-# Admin
-async def get_todo(interaction:discord.Interaction):
-	if not utils_module.is_admin(interaction):
-		await interaction.followup.send(nice_try)
-		return
-	todo = database_module.get_all_todo_items()
-	embed = discord.Embed(title="Todo List", colour=0xffffff)
-	embed.description = ""
-	for item in todo:
-		embed.description += f"{item[0]}- {item[1]}\n"
-	if len(embed.description):
-		await interaction.followup.send(embed=embed)
-	else:
-		await interaction.followup.send("Todo List Empty")
-
-# Admin
-async def add_todo(interaction:discord.Interaction, todo:str):
-	if not utils_module.is_admin(interaction):
-		await interaction.followup.send(nice_try)
-		return
-	database_module.insert_todo_item(todo)
-	await interaction.followup.send(f"Todo added: {todo}")
-
-# Admin
-async def remove_todo(interaction:discord.Interaction, todo_id:int):
-	if not utils_module.is_admin(interaction):
-		await interaction.followup.send(nice_try)
-		return
-	database_module.remove_todo_item(todo_id)
-	await interaction.followup.send(f"Todo {todo_id} removed")
 
 # Admin
 async def get_stickers_for_guild(interaction:discord.Interaction):
@@ -443,5 +443,5 @@ async def bingo_check(interaction:discord.Interaction, bingo_name:str, item_row:
 		await interaction.followup.send(embed=embed)
 
 async def bingo_help(interaction:discord.Interaction):
-	embed = bingo_module.bingo_help(interaction.guild.id)
+	embed = bingo_module.bingo_help()
 	await interaction.followup.send(embed=embed)

@@ -60,6 +60,7 @@ def does_bingo_template_exist(guild_id:str, bingo_name:str) -> bool:
 	'''
 		Check if a bingo template exists for a specific guild and bingo name
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Checking if bingo template '{bingo_name}' exists for guild {guild_id}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT COUNT(*) FROM bingo_template WHERE guild_id = ? AND bingo_name = ?", (guild_id, bingo_name)).fetchone()
@@ -70,6 +71,7 @@ def get_shuffled_bingo_template_items(guild_id:str, bingo_name:str) -> list: # l
 	'''
 		Get a list of 25 items for a bingo card
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Getting bingo template items for guild {guild_id} and bingo '{bingo_name}'.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT free_space, items FROM bingo_template WHERE guild_id = ? AND bingo_name = ?", (guild_id, bingo_name)).fetchone()
@@ -92,6 +94,7 @@ def create_bingo_template(guild_id:str, bingo_name:str, free_space:bool, items:s
 	'''
 		Create a bingo template in the database
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Creating bingo template '{bingo_name}' for guild {guild_id}.")
 	print(f"Putting bingo template '{bingo_name}' into the database for guild {guild_id}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
@@ -102,6 +105,7 @@ def delete_bingo_template(guild_id:str, bingo_name:str):
 	'''
 		Delete a bingo template from the database
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Deleting bingo template '{bingo_name}' for guild {guild_id}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("DELETE FROM bingo_template WHERE guild_id = ? AND bingo_name = ?", (guild_id, bingo_name))
@@ -112,6 +116,7 @@ def create_bingo_card(guild_id:str, bingo_name:str, user_id:str):
 	'''
 		Create a bingo card in the database
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Creating bingo card for user {user_id} in bingo '{bingo_name}' for guild {guild_id}.")
 	card_items = get_shuffled_bingo_template_items(guild_id, bingo_name)
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
@@ -122,6 +127,7 @@ def has_user_created_bingo_card(guild_id:str, bingo_name:str, user_id:str) -> bo
 	'''
 		Check if a user has created a bingo card for a specific bingo in a guild
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Checking if user {user_id} has created a bingo card for bingo '{bingo_name}' in guild {guild_id}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT COUNT(*) FROM bingo_cards WHERE guild_id = ? AND bingo_name = ? AND user_id = ?", (guild_id, bingo_name, user_id)).fetchone()
@@ -133,6 +139,7 @@ def get_bingo_card(guild_id:str, bingo_name:str, user_id:str) -> list: #list[str
 		Get a bingo card from the database
 		Return a list of items in the bingo card.
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Getting bingo card for user {user_id} in bingo '{bingo_name}' for guild {guild_id}.")
 	if not has_user_created_bingo_card(guild_id, bingo_name, user_id):
 		logger_module.log(LOG_DETAIL, f"User {user_id} has not created a bingo card for bingo '{bingo_name}' in guild {guild_id}.")
@@ -151,6 +158,7 @@ def update_bingo_card(guild_id:str, bingo_name:str, user_id:str, card_data:list)
 	'''
 		Update a bingo card in the database
 	'''
+	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Updating bingo card for user {user_id} in bingo '{bingo_name}' for guild {guild_id}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("UPDATE bingo_cards SET card_data = ? WHERE guild_id = ? AND bingo_name = ? AND user_id = ?", ("\n".join(card_data), guild_id, bingo_name, user_id))

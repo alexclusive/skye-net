@@ -15,16 +15,16 @@ from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 		PRIMARY KEY (item_num)
 '''
 
-def get_all_todo_items():
+def get_all_todo_items() -> list:
 	'''
 		Return a list of all todo items
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT item_num, todo FROM todo").fetchall()
 	utils_module.database_conn.close()
-	return result if result else None
+	return result
 
-def insert_todo_item(todo):
+def insert_todo_item(todo:str):
 	'''
 		Insert a new todo item into the database
 	'''
@@ -35,7 +35,7 @@ def insert_todo_item(todo):
 	utils_module.database_conn.execute("INSERT INTO todo VALUES (?, ?)", (item_num, todo))
 	utils_module.database_conn.close()
 
-def remove_todo_item(item_num):
+def remove_todo_item(item_num:int) -> Optional[str]:
 	'''
 		Remove a todo item from the database
 	'''
