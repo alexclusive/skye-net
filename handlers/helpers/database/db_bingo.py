@@ -123,6 +123,16 @@ def create_bingo_card(guild_id:str, bingo_name:str, user_id:str):
 	utils_module.database_conn.execute("INSERT OR REPLACE INTO bingo_cards (guild_id, bingo_name, user_id, card_data) VALUES (?, ?, ?, ?)", (guild_id, bingo_name, user_id, "\n".join(card_items)))
 	utils_module.database_conn.close()
 
+def delete_bingo_card(guild_id:str, bingo_name:str, user_id:str):
+	'''
+		Delete a bingo card from the database
+	'''
+	bingo_name = bingo_name.lower()
+	logger_module.log(LOG_INFO, f"Deleting bingo card for user {user_id} in bingo '{bingo_name}' for guild {guild_id}.")
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	utils_module.database_conn.execute("DELETE FROM bingo_cards WHERE guild_id = ? AND bingo_name = ? AND user_id = ?", (guild_id, bingo_name, user_id))
+	utils_module.database_conn.close()
+
 def has_user_created_bingo_card(guild_id:str, bingo_name:str, user_id:str) -> bool:
 	'''
 		Check if a user has created a bingo card for a specific bingo in a guild

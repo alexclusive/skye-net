@@ -61,19 +61,6 @@ async def get_stickers(interaction:discord.Interaction):
 	await interaction.followup.send(embed=embed)
 
 # Owner
-async def get_all_bingo_templates(interaction:discord.Interaction):
-	if not utils_module.is_owner(interaction):
-		await interaction.followup.send(nice_try)
-		return
-	
-	templates_embed = bingo_module.get_all_bingo_templates()
-	if templates_embed is None:
-		await interaction.followup.send("No bingo templates found")
-		return
-
-	await interaction.followup.send(embed=templates_embed)
-
-# Owner
 async def get_todo(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
@@ -112,6 +99,19 @@ async def get_opt_out_users(interaction:discord.Interaction):
 	opted_out_users = database_module.get_all_opt_out_users()
 	await interaction.followup.send(f"Opted out users: {opted_out_users}")
 	print(f"{interaction.user.name} requested opted out users: {opted_out_users}")
+
+# Owner
+async def get_all_bingo_templates(interaction:discord.Interaction):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	
+	templates_embed = bingo_module.get_all_bingo_templates()
+	if templates_embed is None:
+		await interaction.followup.send("No bingo templates found")
+		return
+
+	await interaction.followup.send(embed=templates_embed)
 
 # Admin
 async def force_trusted_roles(interaction:discord.Interaction):
@@ -410,38 +410,18 @@ async def force_opt_in_reactions(interaction:discord.Interaction, user_id:str):
 	database_module.opt_in(user_id)
 	await interaction.followup.send("You have opted in to reactions")
 
-async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
-	created = bingo_module.create_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
-
-	if created:
-		await interaction.followup.send(f"Bingo card created for {interaction.user.name} in bingo '{bingo_name}'.")
-	else:
-		await interaction.followup.send(f"Failed to create bingo card for {interaction.user.name} in bingo '{bingo_name}'. Template may not exist.")
-
 async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
-	card = bingo_module.get_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+	embed, view = bingo_module.get_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+	await interaction.followup.send(embed=embed, view=view)
 
-	if card is None:
-		await interaction.followup.send(f"No bingo card found for {interaction.user.name} for bingo '{bingo_name}'. Are you sure that bingo exists?")
-	else:
-		await interaction.followup.send(embed=card)
+async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
+	bingo_module.reset_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+	await get_bingo_card(interaction, bingo_name)
 
-async def get_bingo_card_minimal(interaction:discord.Interaction, bingo_name:str):
-	card = bingo_module.get_bingo_card_minimal(interaction.guild.id, bingo_name, interaction.user.id)
+async def recreate_bingo_card(interaction:discord.Interaction, bingo_name:str):
+	database_module.delete_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+	await get_bingo_card(interaction, bingo_name)
 
-	if card is None:
-		await interaction.followup.send(f"No bingo card found for {interaction.user.name} for bingo '{bingo_name}'. Are you sure that bingo exists?")
-	else:
-		await interaction.followup.send(embed=card)
-
-async def bingo_check(interaction:discord.Interaction, bingo_name:str, item_row:int, item_column:int):
-	embed = bingo_module.bingo_check(interaction.guild.id, bingo_name, interaction.user.id,item_row, item_column)
-
-	if embed is None:
-		await interaction.followup.send(f"Unable to update bingo card for '{bingo_name}'. Either no template exists or the card has not been created yet.")
-	else:
-		await interaction.followup.send(embed=embed)
-
-async def bingo_help(interaction:discord.Interaction):
-	embed = bingo_module.bingo_help()
+async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
+	embed = bingo_module.get_bingo_card_items_embed(interaction.guild.id, bingo_name, interaction.user.id)
 	await interaction.followup.send(embed=embed)
