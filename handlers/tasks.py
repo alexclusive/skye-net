@@ -138,12 +138,13 @@ async def audit_log_task(days_to_check:int=1):
 		]
 		
 		for entry in audit_logs:
-			if bot_role in entry.user.roles:
-				continue
-			if entry.action.name in ignored_actions:
-				continue
-			if admin_role in entry.user.roles:
-				admin_logs.append(entry)
+			if entry.user.roles:
+				if bot_role in entry.user.roles:
+					continue
+				if entry.action.name in ignored_actions:
+					continue
+				if admin_role in entry.user.roles:
+					admin_logs.append(entry)
 		
 		admin_logs.sort(key=lambda log: log.created_at)
 		logger_module.log(LOG_DETAIL, f"Found {len(admin_logs)} admin logs.")
