@@ -6,7 +6,7 @@ import re
 import handlers.utils as utils_module
 import handlers.logger as logger_module
 import handlers.database as database_module
-import handlers.helpers.bot_ping as bot_ping_module
+import handlers.helpers.openai as openai_module
 import handlers.helpers.triggers as triggers_module
 import handlers.helpers.spotify as spotify_module
 
@@ -22,7 +22,7 @@ async def message(message:discord.Message):
 
 		message_sent = False
 		if utils_module.discord_bot.user in message.mentions:
-			await bot_ping_module.handle_bot_ping(message)
+			await openai_module.handle_bot_ping(message)
 			message_sent = True
 	except Exception as e:
 		print(f"on_message: openai interaction {e}")

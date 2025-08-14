@@ -23,12 +23,12 @@ something_went_wrong = "Something went wrong :("
 	[Admin] is for anyone with administrator permissions
 '''
 def owner_only():
-	async def predicate(interaction:discord.Interaction) -> bool:
+	def predicate(interaction:discord.Interaction) -> bool:
 		return utils_module.is_owner(interaction)
 	return discord.app_commands.check(predicate)
 
 def admin_only():
-	async def predicate(interaction:discord.Interaction) -> bool:
+	def predicate(interaction:discord.Interaction) -> bool:
 		return utils_module.is_admin(interaction)
 	return discord.app_commands.check(predicate)
 
@@ -464,7 +464,6 @@ async def etymology(interaction:discord.Interaction, argument:str):
 	try:
 		await commands_module.etymology(interaction, argument)
 	except Exception as e:
-		print(f"Error getting etymology: {e}")
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="Opt out of the bot's reactions")

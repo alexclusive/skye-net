@@ -96,7 +96,6 @@ def create_bingo_template(guild_id:str, bingo_name:str, free_space:bool, items:s
 	'''
 	bingo_name = bingo_name.lower()
 	logger_module.log(LOG_INFO, f"Creating bingo template '{bingo_name}' for guild {guild_id}.")
-	print(f"Putting bingo template '{bingo_name}' into the database for guild {guild_id}.")
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	utils_module.database_conn.execute("INSERT INTO bingo_template (guild_id, bingo_name, free_space, items) VALUES (?, ?, ?, ?)", (guild_id, bingo_name, free_space, items))
 	utils_module.database_conn.close()
