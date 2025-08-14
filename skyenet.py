@@ -34,7 +34,7 @@ def admin_only():
 
 @utils_module.discord_bot.tree.command(description="[Owner] Shutdown the bot")
 @owner_only()
-async def kill(interaction:discord.Interaction):
+async def die(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:

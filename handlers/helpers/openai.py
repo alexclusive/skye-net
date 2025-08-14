@@ -68,12 +68,13 @@ async def openai_chat(message:discord.Message):
 		user = "user"
 		if msg.author == utils_module.discord_bot.user:
 			user = "assistant"
-		elif msg.author.display_name:
-			user = msg.author.display_name
-		contents.append({"role": user, "content": msg.content})
+		name = msg.author.display_name
+		# replace non a-zA-Z0-9 characters
+		name = re.sub(r'[^a-zA-Z0-9]', '', name)
+		contents.append({"role": user, "content": msg.content, "name": name})
 
 	async with message.channel.typing():
-		response_content = openai_chat(contents)
+		response_content = openai_chat_response(contents)
 		if len(response_content) > 2000:
 			chunk_size = 1900
 			total_chunks = (len(response_content) + chunk_size - 1) // chunk_size
@@ -90,7 +91,7 @@ def attempting_reset_instructions(message:discord.Message):
 			return True
 	return False
 
-def openai_chat(messages):
+def openai_chat_response(messages):
 	try:
 		completion = client.chat.completions.create(
 			model="gpt-4o-mini",
@@ -99,4 +100,4 @@ def openai_chat(messages):
 		)
 		return completion.choices[0].message.content
 	except Exception as e:
-		return e
+		return f"OpenAI error: {e}"

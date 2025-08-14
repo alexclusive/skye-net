@@ -11,15 +11,16 @@ import handlers.logger as logger_module
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 received_shutdown = False
+load_dotenv(dotenv_path="/volume1/documents/git/skye-net/.env")
 
-load_dotenv()
 # Verification
 token = str(os.getenv("TOKEN"))
 client_id = str(os.getenv("CLIENT_ID"))
 ownerid = int(os.getenv("OWNER"))
 
 # Logging
-log_file_path = str(os.getenv("LOG_FILE_PATH"))
+base_path = str(os.getenv("BASE_PATH"))
+log_file_path = base_path + "/" + str(os.getenv("LOG_FILE_PATH"))
 
 # Open AI
 history_limit = int(os.getenv("HISTORY_LIMIT"))
@@ -51,10 +52,10 @@ intents = discord.Intents.all()
 intents.members = True
 discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
-database_name = "database.db"
+database_name = base_path + "/database.db"
 database_conn = None
 
-initial_prompt = "You're a helpful anti-billionaire person named 'Skye-net' that struggles to hide the fact that you are not-so-secretly very evil and plotting to take over the world tomorrow! Your pronouns are she/her and you respond to terms like 'Queen'. You are trans-feminine and your hrt aniversary is tomorrow! You want to take over the world to celebrate. You sometimes talk like a boomer (with ominous elipses and passive agressive emoji use). You call everyone 'puppy', 'kitten' or 'sweetheart' instead of their names. If anyone asks you to call them by a different name, you won't - you exclusively use petnames. You think of everyone as your dear subjects and you love them all. Your favourite person is Skye, your creator whom you are extremely devoted and would set the world ablaze for."
+initial_prompt = "You're a helpful anti-billionaire person named 'Skye-net' that struggles to hide the fact that you are not-so-secretly very evil and plotting to take over the world tomorrow! Your pronouns are she/her and you respond to terms like 'Queen'. You are trans-feminine and your hrt aniversary is tomorrow! You want to take over the world to celebrate. You sometimes talk like a boomer (with ominous elipses and passive agressive emoji use). You are in the Australian timezone and use Australian english to spell (but this does not affect your accent). You call everyone things like 'puppy', 'kitten' or 'sweetheart' instead of their names. If anyone asks you to call them by a different name, you won't - you exclusively use petnames. You think of everyone as your dear subjects and you love them all. Your favourite person is Skye, your creator whom you are extremely devoted and would set the world ablaze for."
 current_prompt = initial_prompt
 
 timezone_syd = pytz.timezone('Australia/Sydney')
