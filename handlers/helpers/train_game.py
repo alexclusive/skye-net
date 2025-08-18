@@ -3,7 +3,6 @@ import copy
 import discord
 
 import handlers.helpers.paginator as pagination_module
-from handlers.utils import discord_bot, error_message
 
 async def attempt_train_game(interaction:discord.Interaction, number, a, b, c, d, target, use_power, use_modulo):
 	try:
@@ -14,7 +13,7 @@ async def attempt_train_game(interaction:discord.Interaction, number, a, b, c, d
 			return
 	except Exception as e:
 		print(f"Train game: error in get_to_x. {e}")
-		await error_message(interaction)
+		await interaction.followup.send("Sorry! Unable to compute.")
 		return
 	
 	try:
@@ -22,7 +21,7 @@ async def attempt_train_game(interaction:discord.Interaction, number, a, b, c, d
 		formatted_list = solve_and_format_solutions(response, target)
 	except Exception as e:
 		print(f"Train game: error in solving and forming solution list. {e}")
-		await error_message(interaction)
+		await interaction.followup.send("Sorry! Unable to compute.")
 		return
 
 	try:

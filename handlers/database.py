@@ -7,18 +7,18 @@ import handlers.utils as utils_module
 import handlers.logger as logger_module
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
-from handlers.helpers.database.db_banned_users import get_all_banned_users, ban_user, unban_user
-from handlers.helpers.database.db_bingo import get_all_bingo_templates, get_all_bingo_templates_for_guild, does_bingo_template_exist, create_bingo_template, delete_bingo_card, delete_bingo_template, create_bingo_card, has_user_created_bingo_card, get_bingo_card, update_bingo_card
-from handlers.helpers.database.db_daily_tasks import get_last_daily_task_time, insert_daily_task_time
-from handlers.helpers.database.db_debug_level import get_debug_level, set_debug_level
-from handlers.helpers.database.db_important_roles import get_important_roles, insert_important_roles
-from handlers.helpers.database.db_logging_channels import get_logging_channels, insert_logging_channels
-from handlers.helpers.database.db_prompts import get_most_recent_prompt, insert_prompt
-from handlers.helpers.database.db_reaction_opt_out import get_all_opt_out_users, opt_out, opt_in
-from handlers.helpers.database.db_reactions import get_all_reactions, insert_reaction, remove_reaction
-from handlers.helpers.database.db_stickers import get_all_stickers, get_all_stickers_for_guild, insert_sticker, remove_sticker
-from handlers.helpers.database.db_todo import get_all_todo_items, insert_todo_item, remove_todo_item
-from handlers.helpers.database.db_train_facts import get_random_train_fact, get_all_train_facts, insert_train_fact, remove_train_fact
+from handlers.helpers.database.db_banned_users import *
+from handlers.helpers.database.db_bingo import *
+from handlers.helpers.database.db_daily_tasks import *
+from handlers.helpers.database.db_debug_level import *
+from handlers.helpers.database.db_important_roles import *
+from handlers.helpers.database.db_logging_channels import *
+from handlers.helpers.database.db_prompts import *
+from handlers.helpers.database.db_reaction_opt_out import *
+from handlers.helpers.database.db_reactions import *
+from handlers.helpers.database.db_stickers import *
+from handlers.helpers.database.db_todo import *
+from handlers.helpers.database.db_train_facts import *
 
 def init_db():
 	set_up_tables()
