@@ -33,7 +33,7 @@ def admin_only():
 	return discord.app_commands.check(predicate)
 
 # Generic Owner Only Commands
-@utils_module.discord_bot.tree.command(name="die", description="[Owner] Shutdown the bot")
+@utils_module.discord_bot.tree.command(description="[Owner] Shutdown the bot")
 @owner_only()
 async def die(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -44,7 +44,7 @@ async def die(interaction:discord.Interaction):
 		print(f"Error shutting down bot: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Set Debug Level", description="[Owner] Set debug level (0-3)")
+@utils_module.discord_bot.tree.command(description="[Owner] Set debug level (0-3)")
 @owner_only()
 async def set_debug_level(interaction:discord.Interaction, level:int):
 	await interaction.response.defer(ephemeral=True)
@@ -55,7 +55,7 @@ async def set_debug_level(interaction:discord.Interaction, level:int):
 		print(f"Error setting debug level: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Force Trusted Roles", description="[Owner] Force trusted roles task")
+@utils_module.discord_bot.tree.command(description="[Owner] Force trusted roles task")
 @owner_only()
 async def force_trusted_roles(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -67,7 +67,7 @@ async def force_trusted_roles(interaction:discord.Interaction):
 		print(f"Error forcing trusted roles: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Force Audit Log", description="[Owner] Force audit log check")
+@utils_module.discord_bot.tree.command(description="[Owner] Force audit log check")
 @owner_only()
 async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 	await interaction.response.defer(ephemeral=True)
@@ -79,7 +79,7 @@ async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 		await interaction.followup.send(something_went_wrong)
 
 # To Do List
-@utils_module.discord_bot.tree.command(name="Get To-Do List", description="[Owner] Get to do list")
+@utils_module.discord_bot.tree.command(description="[Owner] Get to do list")
 @owner_only()
 async def get_todo(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -90,7 +90,7 @@ async def get_todo(interaction:discord.Interaction):
 		print(f"Error getting to do list: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Add To-Do Item", description="[Owner] Add to do item")
+@utils_module.discord_bot.tree.command(description="[Owner] Add to do item")
 @owner_only()
 async def add_todo(interaction:discord.Interaction, item:str):
 	await interaction.response.defer(ephemeral=True)
@@ -101,7 +101,7 @@ async def add_todo(interaction:discord.Interaction, item:str):
 		print(f"Error adding to do item: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Remove To-Do Item", description="[Owner] Remove to do item")
+@utils_module.discord_bot.tree.command(description="[Owner] Remove to do item")
 @owner_only()
 async def remove_todo(interaction:discord.Interaction, item_num:int):
 	await interaction.response.defer(ephemeral=True)
@@ -113,7 +113,7 @@ async def remove_todo(interaction:discord.Interaction, item_num:int):
 		await interaction.followup.send(something_went_wrong)
 
 # Open AI
-@utils_module.discord_bot.tree.command(name="Get Banned Users - OpenAI", description="[Admin] Get openai banned users")
+@utils_module.discord_bot.tree.command(description="[Admin] Get openai banned users")
 @admin_only()
 async def get_banned_users(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -124,7 +124,7 @@ async def get_banned_users(interaction:discord.Interaction):
 		print(f"Error getting banned users: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Ban User - OpenAI", description="[Admin] Ban a user from openai interactions")
+@utils_module.discord_bot.tree.command(description="[Admin] Ban a user from openai interactions")
 @admin_only()
 async def ban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
@@ -135,7 +135,7 @@ async def ban_user(interaction:discord.Interaction, user:discord.User):
 		print(f"Error banning user: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Unban User - OpenAI", description="[Admin] Unban a user from openai interactions")
+@utils_module.discord_bot.tree.command(description="[Admin] Unban a user from openai interactions")
 @admin_only()
 async def unban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
@@ -146,7 +146,7 @@ async def unban_user(interaction:discord.Interaction, user:discord.User):
 		print(f"Error unbanning user: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Reset Default AI Prompt", description="Reset the bot's prompt")
+@utils_module.discord_bot.tree.command(description="Reset the bot's prompt")
 async def reset_prompt(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -156,7 +156,7 @@ async def reset_prompt(interaction:discord.Interaction):
 		print(f"Error resetting prompt: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Set AI Prompt", description="Set the bot's prompt")
+@utils_module.discord_bot.tree.command(description="Set the bot's prompt")
 async def set_prompt(interaction:discord.Interaction, prompt:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -167,7 +167,7 @@ async def set_prompt(interaction:discord.Interaction, prompt:str):
 		await interaction.followup.send(something_went_wrong)
 
 # Reaction Opt-in / Opt-out
-@utils_module.discord_bot.tree.command(name="Get Reaction Opted-Out Users", description="[Owner] Get list of user IDs that have opted out of reactions")
+@utils_module.discord_bot.tree.command(description="[Owner] Get list of user IDs that have opted out of reactions")
 @owner_only()
 async def get_opt_out_users(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -179,7 +179,7 @@ async def get_opt_out_users(interaction:discord.Interaction):
 		print(f"Error getting opt-out users: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Opt-Out User From Reactions", description="[Admin] Opt a user out of reactions")
+@utils_module.discord_bot.tree.command(description="[Admin] Opt a user out of reactions")
 @admin_only()
 async def opt_out_user(interaction:discord.Interaction, user_id:int):
 	await interaction.response.defer(ephemeral=True)
@@ -190,7 +190,7 @@ async def opt_out_user(interaction:discord.Interaction, user_id:int):
 		print(f"Error forcing opt out of reactions: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Opt-In User To Reactions", description="[Admin] Opt a user in to reactions")
+@utils_module.discord_bot.tree.command(description="[Admin] Opt a user in to reactions")
 @admin_only()
 async def opt_in_user(interaction:discord.Interaction, user_id:int):
 	await interaction.response.defer(ephemeral=True)
@@ -200,8 +200,8 @@ async def opt_in_user(interaction:discord.Interaction, user_id:int):
 	except Exception as e:
 		print(f"Error forcing opt in of reactions: {e}")
 		await interaction.followup.send(something_went_wrong)
-		
-@utils_module.discord_bot.tree.command(name="Opt-Out From Reactions", description="Opt out of the bot's reactions")
+
+@utils_module.discord_bot.tree.command(description="Opt out of the bot's reactions")
 async def opt_out(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -211,7 +211,7 @@ async def opt_out(interaction:discord.Interaction):
 		print(f"Error getting opt out reactions: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Opt-In To Reactions", description="Opt in to the bot's reactions")
+@utils_module.discord_bot.tree.command(description="Opt in to the bot's reactions")
 async def opt_in(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -222,7 +222,7 @@ async def opt_in(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 # Bingo
-@utils_module.discord_bot.tree.command(name="Get All Bingo Templates", description="[Owner] Get all bingo templates")
+@utils_module.discord_bot.tree.command(description="[Owner] Get all bingo templates")
 @owner_only()
 async def get_all_bingo_templates(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -233,7 +233,7 @@ async def get_all_bingo_templates(interaction:discord.Interaction):
 		print(f"Error getting all bingo templates: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Get Bingo Template", description="[Admin] Get bingo templates for this guild")
+@utils_module.discord_bot.tree.command(description="[Admin] Get bingo templates for this guild")
 @admin_only()
 async def get_bingo_templates(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -244,7 +244,7 @@ async def get_bingo_templates(interaction:discord.Interaction):
 		print(f"Error getting bingo templates: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Create Bingo Template", description="[Admin] Create a bingo template")
+@utils_module.discord_bot.tree.command(description="[Admin] Create a bingo template")
 @admin_only()
 async def create_bingo_template(interaction:discord.Interaction, bingo_name:str, free_space:bool, items_csv:str="", items_message_id:str=""):
 	await interaction.response.defer()
@@ -269,7 +269,7 @@ async def create_bingo_template(interaction:discord.Interaction, bingo_name:str,
 		print(f"Error creating bingo template: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Delete Bingo Template", description="[Admin] Delete a bingo template")
+@utils_module.discord_bot.tree.command(description="[Admin] Delete a bingo template")
 @admin_only()
 async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
@@ -280,7 +280,7 @@ async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str)
 		print(f"Error deleting bingo template: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Get Bingo Card", description="Get a bingo card")
+@utils_module.discord_bot.tree.command(description="Get a bingo card")
 async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -290,7 +290,7 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		print(f"Error getting bingo card: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Reset Bingo Card", description="Reset a bingo card")
+@utils_module.discord_bot.tree.command(description="Reset a bingo card")
 async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -300,7 +300,7 @@ async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		print(f"Error resetting bingo card: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Recreate Bingo Card", description="Recreate a bingo card (new items)")
+@utils_module.discord_bot.tree.command(description="Recreate a bingo card (new items)")
 async def recreate_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -310,7 +310,7 @@ async def recreate_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		print(f"Error recreating bingo card: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Get Bingo Card Items List", description="Get the list of your bingo card items")
+@utils_module.discord_bot.tree.command(description="Get the list of your bingo card items")
 async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -321,7 +321,7 @@ async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 		await interaction.followup.send(something_went_wrong)
 
 # Train Facts
-@utils_module.discord_bot.tree.command(name="Enter Train Fact", description="[Admin] Enter train fact")
+@utils_module.discord_bot.tree.command(description="[Admin] Enter train fact")
 @admin_only()
 async def enter_train_fact(interaction:discord.Interaction, fact:str):
 	await interaction.response.defer()
@@ -332,7 +332,7 @@ async def enter_train_fact(interaction:discord.Interaction, fact:str):
 		print(f"Error entering train fact: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Remoove Train Fact", description="[Admin] Remove train fact")
+@utils_module.discord_bot.tree.command(description="[Admin] Remove train fact")
 @admin_only()
 async def remove_train_fact(interaction:discord.Interaction, fact_num:int):
 	await interaction.response.defer()
@@ -343,7 +343,7 @@ async def remove_train_fact(interaction:discord.Interaction, fact_num:int):
 		print(f"Error removing train fact: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Get All Train Facts", description="[Admin] Get the list of train facts")
+@utils_module.discord_bot.tree.command(description="[Admin] Get the list of train facts")
 @admin_only()
 async def get_train_facts(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -354,7 +354,7 @@ async def get_train_facts(interaction:discord.Interaction):
 		print(f"Error getting train facts: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Get Train Fact", description="Train fun-fact")
+@utils_module.discord_bot.tree.command(description="Train fun-fact")
 async def train_fact(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -365,7 +365,7 @@ async def train_fact(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 # Train Game
-@utils_module.discord_bot.tree.command(name="Train Game", description="Train game - get to [target] using (+-*/) and optionally (^%)")
+@utils_module.discord_bot.tree.command(description="Train game - get to [target] using (+-*/) and optionally (^%)")
 async def train_game(
 	interaction:discord.Interaction,
 	number:int,  # The starting number for the game - four digits
@@ -383,7 +383,7 @@ async def train_game(
 		print(f"Error getting train game: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Train Game Rules", description="Train game - explanation of rules")
+@utils_module.discord_bot.tree.command(description="Train game - explanation of rules")
 async def train_game_rules(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -394,7 +394,7 @@ async def train_game_rules(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 # Misc
-@utils_module.discord_bot.tree.command(name="Ping", description="Check the bot's ping")
+@utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -404,7 +404,7 @@ async def ping(interaction:discord.Interaction):
 		print(f"Error getting ping: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(name="Etymology", description="Get the etymology of a word")
+@utils_module.discord_bot.tree.command(description="Get the etymology of a word")
 async def etymology(interaction:discord.Interaction, argument:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -647,12 +647,12 @@ def send_output_to_discord(message:str):
 					send_message(channel, message)
 
 async def run_bot():
+	utils_module.current_prompt = database_module.get_most_recent_prompt()
 	logger_module.set_log_file(utils_module.log_file_path)
 	logger_module.set_debug_level(database_module.get_debug_level())
 	database_module.init_db()
 	utils_module.fill_banned_users()
 	utils_module.fill_emojis()
-	utils_module.current_prompt = database_module.get_most_recent_prompt()
 	spotify_module.setup_spotify_credentials()
 	sys.stdout.write = send_output_to_discord
 	sys.stderr.write = send_output_to_discord

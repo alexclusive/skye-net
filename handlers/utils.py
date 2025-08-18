@@ -6,10 +6,6 @@ from datetime import datetime as dt
 from discord.ext import commands
 from dotenv import load_dotenv
 
-import handlers.logger as logger_module
-
-from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
-
 all_banned_users = []
 all_emojis = {}
 all_stickers = {}
@@ -125,8 +121,6 @@ def fill_banned_users():
 			except Exception as _:
 				pass
 
-	logger_module.log(LOG_SETUP, f"Loaded {len(all_banned_users)} banned users.")
-
 def fill_emojis():
 	global all_emojis
 	all_emojis["NOT_FAR"] = int(os.getenv('NOT_FAR'))
@@ -157,5 +151,3 @@ def fill_emojis():
 	all_emojis["LESBIAN_BRICK"] = int(os.getenv('LESBIAN_BRICK'))
 	all_emojis["CHOMP"] = int(os.getenv('CHOMP'))
 	all_emojis["HEADPAT"] = int(os.getenv('HEADPAT'))
-
-	logger_module.log(LOG_SETUP, f"Loaded {len(all_emojis)} emojis.")
