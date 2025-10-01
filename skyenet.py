@@ -65,6 +65,28 @@ async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 	await interaction.response.defer(ephemeral=True)
 	await commands_module.force_audit_log(interaction, days_to_check)
 
+@utils_module.discord_bot.tree.command(description="[Owner] Get bot info")
+@owner_only()
+async def get_bot_info(interaction:discord.Interaction):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	await commands_module.get_bot_info(interaction)
+
+@utils_module.discord_bot.tree.command(description="[Owner] Send message as Skye-net")
+@owner_only()
+async def send_as_bot(interaction:discord.Interaction, channel_id:str, server_id:str, message:str):
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	await interaction.response.defer(ephemeral=True)
+	server = utils_module.discord_bot.get_guild(int(server_id))
+	if not server:
+		await interaction.followup.send("Invalid server ID", ephemeral=True)
+		return
+	channel = server.get_channel(int(channel_id))
+	if not channel:
+		await interaction.followup.send("Invalid channel ID", ephemeral=True)
+		return
+	await commands_module.send_as_bot(interaction, channel, message)
+
 @utils_module.discord_bot.tree.command(description="[Admin] Enter train fact")
 @admin_only()
 async def enter_train_fact(interaction:discord.Interaction, fact:str):

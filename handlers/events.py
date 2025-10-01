@@ -78,7 +78,7 @@ async def message(message:discord.Message):
 	except Exception as e:
 		print(f"on_message: reactions/triggers {e}")
 
-async def message_deleted(message:discord.Message):
+async def message_deleted(message:discord.Message, retrying:bool=False):
 	try:
 		if message.author == utils_module.discord_bot.user:
 			return
@@ -113,6 +113,12 @@ async def message_deleted(message:discord.Message):
 					await log_channel.send(embed=embed)
 		else:
 			await log_channel.send(embed=embed)
+	except OSError as e:
+		if e.errno == 32:  # Broken pipe
+			if not retrying:
+				await message_deleted(message, retrying=True)
+			else:
+				print(f"message_deleted (after retry): {e}")
 	except Exception as e:
 		print(f"message_deleted: {e}")
 

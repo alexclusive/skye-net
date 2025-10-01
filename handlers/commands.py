@@ -41,6 +41,38 @@ async def set_debug_level(interaction:discord.Interaction, level:int):
 	logger_module.debug_level = level
 	await interaction.followup.send(f"Debug level set to {level}")
 
+# Owner
+async def get_bot_info(interaction:discord.Interaction):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	python_version = sys.version.split()[0]
+	discord_version = discord.__version__
+	os_info = platform.platform()
+	owner = await utils_module.discord_bot.fetch_user(utils_module.owner_id)
+	embed = discord.Embed(title="Bot Info", colour=0xffffff)
+
+	discord_info = f"Number of Servers: {len(utils_module.discord_bot.guilds)}\n"
+	code_info = f"[GitHub Repository](https://github.com/your-repo-link)\nPython Version: {python_version}\nDiscord.py Version: {discord_version}\nOperating System: {os_info}"
+
+	embed.add_field(name="Discord Info", value=discord_info, inline=False)
+	embed.add_field(name="Code Info", value=code_info, inline=False)
+
+	embed.set_footer(text=f"{owner} ({owner.id})")
+	await interaction.followup.send(embed=embed)
+
+# Owner
+async def send_as_bot(interaction:discord.Interaction, channel:discord.TextChannel, message:str):
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	try:
+		await channel.send(message)
+		await interaction.followup.send(f"Message sent to {channel.mention}:\n{message}")
+	except Exception as e:
+		logger_module.log(LOG_INFO, f"Error sending message as bot: {e}")
+		await interaction.followup.send(f"Error sending message: {e}")
+
 # Admin
 async def get_opt_out_users(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
