@@ -167,7 +167,7 @@ class BingoView(discord.ui.View):
 					btn.style = discord.ButtonStyle.success
 				self.add_item(btn)
 
-	def format_label(self, label:str, row:int, col:int, length:int=30) -> str:
+	def format_label(self, label:str, row:int, col:int, length:int=35) -> str:
 		position = f"({row + 1}, {col + 1}) "
 		label = position + label
 		if len(label) > length:

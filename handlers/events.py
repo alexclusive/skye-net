@@ -127,8 +127,8 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 				await log_channel.send(files=[await x.to_file() for x in message.attachments]) # discord.NotFound will be raised here
 				embeds[0].add_field(name="Attachments", value="\n".join([attachment.url for attachment in message.attachments]), inline=False)
 			except discord.NotFound as e:
+				logger_module.log(LOG_DETAIL, f"Error attempting to retrieve message attachments from a message that was deleted. Error: {e}")
 				if e.status == 404 and e.code == 0:
-					logger_module.log(LOG_DETAIL, "Attempted to retrieve message attachments from a message that was deleted.")
 					embeds[0].add_field(name="Attachments", value="Attachment/s not found (not cached before deletion)")
 
 		for embed in embeds:
@@ -252,9 +252,9 @@ async def member_join(member:discord.Member):
 			title=f"Member Join {member.mention}",
 			colour=0x0000ff
 		)
-		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()))
-		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()))
-		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
+		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()), inline=False)
+		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()), inline=False)
+		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]), inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)	  
@@ -275,12 +275,12 @@ async def member_remove(member:discord.Member):
 
 		embed = discord.Embed(
 			title=f"Member Remove {member.name} {member.mention}",
-			colour=0xff0000
+			colour=0xff0000,
 		)
-		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()))
-		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()))
-		embed.add_field(name="Left At", value=utils_module.get_timestamp_now_formatted())
-		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
+		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()), inline=False)
+		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()), inline=False)
+		embed.add_field(name="Left At", value=utils_module.get_timestamp_now_formatted(), inline=False)
+		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]), inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)
@@ -308,7 +308,7 @@ async def member_update(before:discord.Member, after:discord.Member):
 			colour=0x0000ff
 		)
 		if before.nick != after.nick:
-			embed.add_field(name="Nickname", value=f"*Before:* {before.nick}\n*After:* {after.nick}")
+			embed.add_field(name="Nickname", value=f"*Before:* {before.nick}\n*After:* {after.nick}", inline=False)
 		if before.roles != after.roles:
 			role_added = None
 			role_removed = None
@@ -321,11 +321,11 @@ async def member_update(before:discord.Member, after:discord.Member):
 					role_added = role
 					break
 			if role_added:
-				embed.add_field(name="Role Added", value=role_added.name)
+				embed.add_field(name="Role Added", value=role_added.name, inline=False)
 			if role_removed:
-				embed.add_field(name="Role Removed", value=role_removed.name)
+				embed.add_field(name="Role Removed", value=role_removed.name, inline=False)
 		if before.display_avatar != after.display_avatar:
-			embed.add_field(name="Avatar", value="")
+			embed.add_field(name="Avatar", value="", inline=False)
 			embed.set_thumbnail(url=after.display_avatar.url)
 
 		if not embed.fields:
@@ -352,11 +352,11 @@ async def member_ban(member:discord.Member):
 			title=f"Member Banned {member.mention}",
 			colour=0xff0000
 		)
-		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()))
-		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()))
-		embed.add_field(name="Banned At", value=utils_module.get_timestamp_now_formatted())
-		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]))
-		embed.add_field(name="Banned By", value=member.guild.me.mention)
+		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()), inline=False)
+		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()), inline=False)
+		embed.add_field(name="Banned At", value=utils_module.get_timestamp_now_formatted(), inline=False)
+		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]), inline=False)
+		embed.add_field(name="Banned By", value=member.guild.me.mention, inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_syd)

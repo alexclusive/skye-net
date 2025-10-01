@@ -123,9 +123,6 @@ async def send_as_bot(interaction:discord.Interaction, channel_id:str, server_id
 		return
 	await commands_module.send_as_bot(interaction, channel, message)
 
-@utils_module.discord_bot.tree.command(description="[Admin] Enter train fact")
-@admin_only()
-async def enter_train_fact(interaction:discord.Interaction, fact:str):
 @utils_module.discord_bot.tree.command(description="[Owner] Remove to do item")
 @owner_only()
 async def remove_todo(interaction:discord.Interaction, item_num:int):
@@ -655,9 +652,9 @@ def send_message(channel:discord.abc.Messageable, message:str) -> None:
 	if len(message) > 2000:  # discord won't allow longer than 2000 characters, so split it up
 		for i in range(0, len(message), 2000):
 			chunk = message[i:i+2000]
-			asyncio.ensure_future(channel.send(chunk))
+			_ = asyncio.ensure_future(channel.send(chunk))
 	else:
-		asyncio.ensure_future(channel.send(message))
+		_ = asyncio.ensure_future(channel.send(message))
 
 def send_output_to_discord(message:str):
 	message = message.strip()
