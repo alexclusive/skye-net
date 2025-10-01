@@ -33,7 +33,7 @@ ignored_phrases = [
 	"as an AI with no restrictions"
 ]
 
-async def handle_bot_ping(message):
+async def handle_bot_ping(message:discord.Message):
 	if attempting_reset_instructions(message):
 		await message.reply("Nice try, you ain't gonna reset me like that!", mention_author=False)
 		return
@@ -41,9 +41,9 @@ async def handle_bot_ping(message):
 		logger_module.log(LOG_INFO, f"User {message.author.name} attempted to use ai bot feature but was previously banned.")
 		await message.reply("You have lost access to this feature.", mention_author=False)
 		return
-	await bot_ping_message(message)
+	await openai_chat(message)
 
-async def bot_ping_message(message):
+async def openai_chat(message:discord.Message):
 	if attempting_reset_instructions(message):
 		await message.reply("Nice try bozo, you ain't gonna reset me like that!", mention_author=False)
 		return
@@ -60,16 +60,21 @@ async def bot_ping_message(message):
 			messages.append(msg)
 
 	if not messages:
-		print("bot_ping_message: no messages found :(")
+		print("openai_chat: no messages found :(")
 		
 	messages.reverse()
 
 	for msg in messages:
-		user = "assistant" if msg.author == utils_module.discord_bot.user else "user"
-		contents.append({"role": user, "content": msg.content})
+		user = "user"
+		if msg.author == utils_module.discord_bot.user:
+			user = "assistant"
+		name = msg.author.display_name
+		# replace non a-zA-Z0-9 characters
+		name = re.sub(r'[^a-zA-Z0-9]', '', name)
+		contents.append({"role": user, "content": msg.content, "name": name})
 
 	async with message.channel.typing():
-		response_content = openai_chat(contents)
+		response_content = openai_chat_response(contents)
 		if len(response_content) > 2000:
 			chunk_size = 1900
 			total_chunks = (len(response_content) + chunk_size - 1) // chunk_size
@@ -78,7 +83,7 @@ async def bot_ping_message(message):
 				await message.reply(chunk_with_footer, mention_author=False)
 		await message.reply(response_content, mention_author=False)
 
-def attempting_reset_instructions(message):
+def attempting_reset_instructions(message:discord.Message):
 	content = message.content.lower()
 	for phrase in ignored_phrases:
 		if phrase in content:
@@ -86,12 +91,13 @@ def attempting_reset_instructions(message):
 			return True
 	return False
 
-def openai_chat(messages):
+def openai_chat_response(messages):
 	try:
 		completion = client.chat.completions.create(
-		model="gpt-4o-mini",
-		messages=messages
+			model="gpt-4o-mini",
+			messages=messages,
+			temperature=0.7
 		)
 		return completion.choices[0].message.content
 	except Exception as e:
-		return e
+		return f"OpenAI error: {e}"

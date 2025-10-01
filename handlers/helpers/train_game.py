@@ -2,10 +2,9 @@ import itertools
 import copy
 import discord
 
-from handlers.utils import discord_bot, error_message
+import handlers.helpers.paginator as pagination_module
 
 async def attempt_train_game(interaction:discord.Interaction, number, a, b, c, d, target, use_power, use_modulo):
-	errored = False
 	try:
 		response = get_to_x(target, a, b, c, d, use_power, use_modulo)
 		num_of_solutions = len(response)
@@ -14,82 +13,123 @@ async def attempt_train_game(interaction:discord.Interaction, number, a, b, c, d
 			return
 	except Exception as e:
 		print(f"Train game: error in get_to_x. {e}")
-		errored = True
-
-	if errored:
-		await error_message(interaction)
-		return
-
-	try:
-		response_start = get_response_start(number, target, num_of_solutions, use_power, use_modulo)
-		formatted = format_and_paginate_all_solutions(response, target)
-	except Exception as e:
-		print(f"Train game: error in solving and forming pagination. {e}")
-		errored = True
-
-	if errored:
-		await error_message(interaction)
+		await interaction.followup.send("Sorry! Unable to compute.")
 		return
 	
 	try:
-		if len(formatted) == 1:
-			interaction.followup.send(response_start + "\n" + formatted[0])
-			return
+		response_start_title, response_start_subtitle = get_response_start(number, target, num_of_solutions, use_power, use_modulo)
+		formatted_list = solve_and_format_solutions(response, target)
 	except Exception as e:
-		print(f"Train game: error in printing single page solutions. {e}")
-		errored = True
-
-	if errored:
-		await error_message(interaction)
+		print(f"Train game: error in solving and forming solution list. {e}")
+		await interaction.followup.send("Sorry! Unable to compute.")
 		return
 
 	try:
-		# more than one page
-		pages = []
-		for grouping in formatted:
-			page = response_start + "\n" + grouping
-			pages.append(page)
-
-		current_page = 0
-		page_message = await interaction.followup.send(pages[current_page])
-		await page_message.add_reaction('◀️')
-		await page_message.add_reaction('▶️')
-
-		def check_reaction(reaction, user):
-			return user != discord_bot.user and reaction.message.id == page_message.id
-		
-		while True:
-			reaction, user = await discord_bot.wait_for('reaction_add', check=check_reaction)
-			if reaction.emoji == '◀️' and current_page > 0:
-				current_page -= 1
-				await page_message.edit(content=pages[current_page])
-			elif reaction.emoji == '▶️' and current_page < len(pages) - 1:
-				current_page += 1
-				await page_message.edit(content=pages[current_page])
-
-			await page_message.remove_reaction(reaction.emoji, user)
+		paginator = pagination_module.Paginator(timeout=None)
+		paginator.set(response_start_title, response_start_subtitle, formatted_list)
+		await paginator.send(interaction)
 	except Exception as e:
 		print(f"Train game: error in pagination. {e}")
-		errored = True
-
-	if errored:
-		await error_message(interaction)
 
 def get_response_start(number, target, num_of_solutions, use_power, use_modulo):
-	response_start = f"**Results for train game with number {number} and target {target}**"
-	response_start += "\n_All " + str(num_of_solutions) + " solutions"
+	title = f"**Results for train game with number {number} and target {target}**"
+
+	subtitle = "\nAll " + str(num_of_solutions) + " solutions"
 	if num_of_solutions == 1:
-		response_start = "The only solution"
+		subtitle = "The only solution"
 	elif num_of_solutions == 2:
-		response_start = "Both solutions"
-
-	response_start += " using +-*/"
+		subtitle = "Both solutions"
+	
+	subtitle += " using +-*/"
 	if use_power:
-		response_start += "^"
+		subtitle += "^"
 	if use_modulo:
-		response_start += "%"
+		subtitle += "%"
+		
+	return title, subtitle
 
-	return response_start + "_"
+def solve_and_format_solutions(solutions:str, target):
+	formatted = []
+	try:
+		sol_num = 0
+		for sol in solutions:
+			sol_num += 1
+			sol = breakdown_expression(place_brackets(sol), target)
+			if sol is None:
+				continue
+			sol = sol.replace("*", "\*")
+			sol = "**" + str(sol_num) + ")** " + sol
+			formatted.append(sol)
+	except Exception as e:
+		print(f"Train game (solve_and_format_solutions): error in solving. {e}")
+	return formatted
+
+def place_brackets(expression):
+	return "((" + expression[0:3] + ")" + expression[3:5] + ")" + expression[5:]
+
+def breakdown_expression(sol0, target):
+	# ((0+9)+0)+1 -> (9+0)+1 -> 9+1 -> 10
+	try:
+		if len(sol0) != 11:
+			print("Somehow got a solution the wrong length (" + str(len(sol0)) + "): " + sol0 + "\nExpected the form (([num] [operation] [num]) [operation] [num]) [operation] [num]")
+			return sol0
+
+		so_far = solve(sol0[2], sol0[3], sol0[4])
+		sol1 = "(" + str(so_far) + sol0[6:]
+
+		so_far = solve(so_far, sol0[6], sol0[7])
+		sol2 = str(so_far) + sol0[9:]
+
+		so_far = solve(so_far, sol0[9], sol0[10])
+		sol3 = str(so_far)
+
+		tolerance = 1e-3 # tolerance of ±0.003
+		if abs(float(sol3) - float(target)) > tolerance:
+			return None
+
+		return sol0 + " -> " + sol1 + " -> " + sol2 + " -> " + sol3
+	except Exception as e:
+		print(f"Train game (breakdown_expression): error in solving '{sol0}'. {e}")
+
+def solve(num1, op, num2):
+	result = 0
+	if op == "+":
+		result = float(num1) + float(num2)
+	elif op == "-":
+		result = float(num1) - float(num2)
+	elif op == "*":
+		result = float(num1) * float(num2)
+	elif op == "/":
+		result = float(num1) / float(num2)
+	elif op == "^":
+		result = float(num1) ** float(num2)
+	elif op == "%":
+		result = float(num1) % float(num2)
+	
+	if result == int(result):
+		return int(result)
+	else:
+		return float("{:.3f}".format(result))
+
+def get_to_x(x, a, b, c, d, use_power, use_modulo):
+	successions = []
+	for permutation in itertools.permutations([a, b, c, d]):
+		attempt = attempt_get_x(x, permutation, 0, [], use_power, use_modulo)
+		if attempt is not None:
+			successions.append(attempt)
+
+	for _ in range(0, 4): # the list looks like ass if you don't do this (flatten 4 times cause 4 numbers deep)
+		successions = list(itertools.chain.from_iterable(successions))
+	
+	# turn the list into a set (we need the inner loop because a list isn't hashable and can't be directly added to a set)
+	solutions = set()
+	for success in successions:
+		solution = ""
+		for character in success:
+			solution += character 
+		solutions.add(solution)
+
+	return sorted(solutions)
 
 def attempt_get_x(x, nums, current_total, current_operations:list, use_power, use_modulo):
 	successions = []
@@ -215,116 +255,3 @@ def attempt_get_x(x, nums, current_total, current_operations:list, use_power, us
 					successions.append(attempt)
 
 	return successions
-
-def get_to_x(x, a, b, c, d, use_power, use_modulo):
-	successions = []
-	for permutation in list(itertools.permutations([a, b, c, d])):
-		attempt = attempt_get_x(x, permutation, 0, [], use_power, use_modulo)
-		if attempt is not None:
-			successions.append(attempt)
-
-	for _ in range(0, 4): # the list looks like ass if you don't do this (flatten 4 times cause 4 numbers deep)
-		successions = list(itertools.chain.from_iterable(successions))
-	
-	# turn the list into a set (we need the inner loop because a list isn't hashable and can't be directly added to a set)
-	solutions = set()
-	for success in successions:
-		solution = ""
-		for character in success:
-			solution += character 
-		solutions.add(solution)
-
-	return sorted(solutions)
-
-def place_brackets(expression):
-	return "((" + expression[0:3] + ")" + expression[3:5] + ")" + expression[5:]
-
-def solve(num1, op, num2):
-	result = 0
-	if op == "+":
-		result = float(num1) + float(num2)
-	elif op == "-":
-		result = float(num1) - float(num2)
-	elif op == "*":
-		result = float(num1) * float(num2)
-	elif op == "/":
-		result = float(num1) / float(num2)
-	elif op == "^":
-		result = float(num1) ** float(num2)
-	elif op == "%":
-		result = float(num1) % float(num2)
-	
-	if result == int(result):
-		return int(result)
-	else:
-		return float("{:.3f}".format(result))
-
-def breakdown_expression(sol0, target):
-	# ((0+9)+0)+1 -> (9+0)+1 -> 9+1 -> 10
-	try:
-		if len(sol0) != 11:
-			print("Somehow got a solution the wrong length (" + str(len(sol0)) + "): " + sol0 + "\nExpected the form (([num] [operation] [num]) [operation] [num]) [operation] [num]")
-			return sol0
-
-		so_far = solve(sol0[2], sol0[3], sol0[4])
-		sol1 = "(" + str(so_far) + sol0[6:]
-
-		so_far = solve(so_far, sol0[6], sol0[7])
-		sol2 = str(so_far) + sol0[9:]
-
-		so_far = solve(so_far, sol0[9], sol0[10])
-		sol3 = str(so_far)
-
-		tolerance = 1e-3 # tolerance of ±0.003
-		if abs(float(sol3) - float(target)) > tolerance:
-			return None
-
-		return sol0 + " -> " + sol1 + " -> " + sol2 + " -> " + sol3
-	except Exception as e:
-		print(f"Train game (breakdown_expression): error in solving '{sol0}'. {e}")
-
-def solve_and_format_solutions(solutions:str, target):
-	formatted = []
-	try:
-		sol_num = 0
-		for sol in solutions:
-			sol_num += 1
-			sol = breakdown_expression(place_brackets(sol), target)
-			if sol is None:
-				continue
-			sol = sol.replace("*", "\*")
-			sol = "**" + str(sol_num) + ")** " + sol
-			formatted.append(sol)
-	except Exception as e:
-		print(f"Train game (solve_and_format_solutions): error in solving. {e}")
-	return formatted
-
-def format_and_paginate_all_solutions(solutions, target):
-	formatted_list = solve_and_format_solutions(solutions, target)
-	total_length = sum(len(solution) for solution in formatted_list)
-
-	if total_length > 1000:
-		current_length = 0
-		current_page = ""
-		result_pages = []
-
-		for solution in formatted_list:
-			solution_length = len(solution)
-			
-			if current_length + solution_length <= 1000:
-				# add to current page
-				current_page += solution + "\n"
-				current_length += solution_length + len("\n")
-			else:
-				# add to next page
-				result_pages.append(current_page.strip())
-				current_page = solution + "\n"
-				current_length = solution_length + len("\n")
-
-		last_page = current_page.strip()
-		if last_page:
-			result_pages.append(last_page)
-
-		return result_pages
-	else:
-		return ["\n".join(formatted_list)] # emough to fit in one page

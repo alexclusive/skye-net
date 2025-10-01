@@ -3,6 +3,7 @@ import discord
 
 import handlers.utils as utils_module
 import handlers.logger as logger_module
+import handlers.database as database_module
 
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
@@ -47,7 +48,7 @@ async def handle_reactions(message:discord.Message, emojis:dict):
 	if "lesbian" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["LESBIAN_BRICK"])
 		await message.add_reaction(emoji)
-	if "mwah" in content:
+	if re.search(r'\bmwah\b', content): # don't match mwaha
 		await message.add_reaction("💋")
 	if "nomnom" in content:
 		emoji = utils_module.discord_bot.get_emoji(emojis["CHOMP"])
@@ -174,6 +175,7 @@ async def handle_triggers(message:discord.Message, emojis:dict) -> None:
 		Respond to message when certain content is found
 	'''
 	# 500 cigarettes		5️⃣0️⃣0️⃣🚬
+	# how hungry			{how hungry sticker}
 	# i know what you are	🫵
 	# nuh uh				<a:no:1300690431373217802> <a:WaggingFinger:1300743838926770186>
 	# oh.					🫥
@@ -182,6 +184,11 @@ async def handle_triggers(message:discord.Message, emojis:dict) -> None:
 	if "500 cigarettes" in content:
 		contents = "5️⃣0️⃣0️⃣🚬"
 		await message.reply(contents, mention_author=False)
+	if "how hungry" in content:
+		this_guild_stickers = database_module.get_all_stickers_for_guild(message.guild.id) # only do this if we need to - don't want to do it for every message
+		hungry_sticker = next((s for s in this_guild_stickers if "how hungry" in s.name.lower()), None)
+		if hungry_sticker:
+			await message.reply(stickers=[hungry_sticker], mention_author=False)
 	if "i know what you are" in content:
 		await message.reply(":index_pointing_at_the_viewer:", mention_author=False)
 	if "nuh uh" in content:

@@ -1,7 +1,8 @@
 *.env
 *pycache*
 nohup.out
-*.db
+database.db
 .cache
 *.log
+*.old
 .vscode
