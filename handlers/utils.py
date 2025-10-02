@@ -16,7 +16,7 @@ intents.members = True
 discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
 received_shutdown = False
-load_dotenv(dotenv_path="/volume1/documents/git/skye-net/.env")
+load_dotenv(dotenv_path="C:/Users/Alex/Documents/git/skye-net/.env")
 
 # Verification
 token = str(os.getenv("TOKEN"))
@@ -66,28 +66,39 @@ def get_timestamp_now_ymd_hms():
 	return dt.now(timezone_syd).strftime("%Y-%m-%d %H:%M:%S")
 
 def get_cpu_usage():
-	current_usage = psutil.cpu_percent(percpu=True)
-	if current_usage:
-		return ", ".join(f"{x}%" for x in list[current_usage])
-	return "Unknown%"
+	current_usage_per_cpu = psutil.cpu_percent(percpu=True)
+	per_cpu_usages = ", ".join(f"{x}%" for x in current_usage_per_cpu)
+
+	if not per_cpu_usages:
+		per_cpu_usages = "n/a"
+
+	current_usage_total = psutil.cpu_percent()
+	return f"{per_cpu_usages} ({len(current_usage_per_cpu)} cores, {current_usage_total}% total)"
 
 def get_memory_usage():
 	mem = psutil.virtual_memory()
-	return f"{mem.used}/{mem.total} ({mem.percent}%)"
+	return f"{readable(mem.used)} / {readable(mem.total)} ({mem.percent}%)"
 
 def get_swap_memory_usage():
 	swap = psutil.swap_memory()
-	return f"{swap.used}/{swap.total} ({swap.percent}%)"
+	return f"{readable(swap.used)} / {readable(swap.total)} ({swap.percent}%)"
 
 def get_disk_usage():
-	disk = psutil.disk_usage('~')
-	return f"{disk.used}/{disk.total} ({disk.percent}%)"
+	disk = psutil.disk_usage('/')
+	return f"{readable(disk.used)} / {readable(disk.total)} ({disk.percent}%)"
 
-
-
-
-
-
+def readable(size_bytes: int):
+	'''
+	Convert bytes to a human-readable string (B, KB, MB, GB, TB).
+	'''
+	if size_bytes == 0:
+		return "0B"
+	units = ["B", "KB", "MB", "GB", "TB"]
+	i = 0
+	while size_bytes >= 1024 and i < len(units) - 1:
+		size_bytes /= 1024
+		i += 1
+	return f"{size_bytes:.2f}{units[i]}"
 
 
 

@@ -167,7 +167,7 @@ class BingoView(discord.ui.View):
 					btn.style = discord.ButtonStyle.success
 				self.add_item(btn)
 
-	def format_label(self, label:str, row:int, col:int, length:int=35) -> str:
+	def format_label(self, label:str, row:int, col:int, length:int=39) -> str:
 		position = f"({row + 1}, {col + 1}) "
 		label = position + label
 		if len(label) > length:
@@ -185,9 +185,10 @@ def get_all_bingo_templates() -> Optional[discord.Embed]:
 	embed = discord.Embed(title="Bingo Templates", colour=colour_white)
 	for guild_id, guild_templates in templates.items():
 		template_text = ""
+		guild_name = "Unknown"
 		for template in guild_templates:
 			template_text += f"{template[0]} (Free Space: {template[1]})\n"
-			guild_name = utils_module.discord_bot.get_guild(guild_id)
+			guild_name = utils_module.discord_bot.get_guild(guild_id).name
 		embed.add_field(name=f"Guild {guild_name}", value=template_text, inline=False)
 	return embed
 

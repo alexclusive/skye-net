@@ -102,13 +102,23 @@ async def add_todo(interaction:discord.Interaction, item:str):
 		print(f"Error adding to do item: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(description="[Owner] Get bot info")
+@utils_module.discord_bot.tree.command(description="[Owner] Remove to do item")
 @owner_only()
-async def info(interaction:discord.Interaction):
+async def remove_todo(interaction:discord.Interaction, item_num:int):
+	await interaction.response.defer(ephemeral=True)
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await commands_module.remove_todo(interaction, item_num)
+	except Exception as e:
+		print(f"Error removing to do item: {e}")
+		await interaction.followup.send(something_went_wrong)
+
+@utils_module.discord_bot.tree.command(description="[Owner] Get bot info - Checking disk usage can be slow on some machines")
+@owner_only()
+async def info(interaction:discord.Interaction, check_disk_usage:bool=True):
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	await interaction.response.defer(ephemeral=True)
-	logger_module.log(LOG_DETAIL, "After defer, before command mnodule")
-	await commands_module.get_bot_info(interaction)
+	await commands_module.get_bot_info(interaction, check_disk_usage)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Send message as Skye-net")
 @owner_only()
@@ -124,17 +134,6 @@ async def send_as_bot(interaction:discord.Interaction, channel_id:str, server_id
 		await interaction.followup.send("Invalid channel ID", ephemeral=True)
 		return
 	await commands_module.send_as_bot(interaction, channel, message)
-
-@utils_module.discord_bot.tree.command(description="[Owner] Remove to do item")
-@owner_only()
-async def remove_todo(interaction:discord.Interaction, item_num:int):
-	await interaction.response.defer(ephemeral=True)
-	logger_module.log(LOG_DETAIL, command_called_log_string)
-	try:
-		await commands_module.remove_todo(interaction, item_num)
-	except Exception as e:
-		print(f"Error removing to do item: {e}")
-		await interaction.followup.send(something_went_wrong)
 
 # Open AI
 @utils_module.discord_bot.tree.command(description="[Admin] Get openai banned users")

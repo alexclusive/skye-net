@@ -42,52 +42,43 @@ async def set_debug_level(interaction:discord.Interaction, level:int):
 	await interaction.followup.send(f"Debug level set to {level}")
 
 # Owner
-async def get_bot_info(interaction:discord.Interaction=None):
-	logger_module.log(LOG_DETAIL, "In command module")
+async def get_bot_info(interaction:discord.Interaction, check_disk_usage:bool):
 
 	if not utils_module.is_owner(interaction):
 		logger_module.log(LOG_DETAIL, "Not owner")
 		await interaction.followup.send(nice_try)
 		return
 
-	logger_module.log(LOG_DETAIL, "Getting info...")
-	logger_module.log(LOG_DETAIL, "Python and Discord versions...")
 	python_version = sys.version.split()[0]
 	discord_version = discord.__version__
 
-	logger_module.log(LOG_DETAIL, "System info...")
 	system_os = platform.platform()
 	system_uname = platform.uname()
 	system_arch = platform.machine()
 	system_processor = platform.processor()
 
-	logger_module.log(LOG_DETAIL, "CPU...")
 	cpu_usage = utils_module.get_cpu_usage()
-	logger_module.log(LOG_DETAIL, "Mem...")
 	memory_usage = utils_module.get_memory_usage()
-	logger_module.log(LOG_DETAIL, "Swap...")
 	swap_memory_usage = utils_module.get_swap_memory_usage()
-	logger_module.log(LOG_DETAIL, "Disk...")
-	disk_usage = utils_module.get_disk_usage()
+	if check_disk_usage:
+		volume_usage = utils_module.get_disk_usage()
+	else:
+		volume_usage = "Not checked"
 	
-	logger_module.log(LOG_DETAIL, "Collating...")
 	discord_info = f"Number of Servers: {len(utils_module.discord_bot.guilds)}\n"
 	code_info = f"[GitHub Repository](https://github.com/your-repo-link)\nPython Version: {python_version}\nDiscord.py Version: {discord_version}"
-	system_info = f"OS: {system_os}\nSystem: {system_uname.system}\nNode Name: {system_uname.node}\nRelease: {system_uname.release}\nVersion: {system_uname.version}\nArchitecture: {system_arch}\nProcessor: {system_processor}\nDisk Usage: {disk_usage}"
-	nas_info = f"CPU Usage: {cpu_usage}\nMemory Usage: {memory_usage}\nSwap Usage: {swap_memory_usage}"
+	system_info = f"OS: {system_os}\nSystem: {system_uname.system}\nNode Name: {system_uname.node}\nRelease: {system_uname.release}\nVersion: {system_uname.version}\nArchitecture: {system_arch}\nProcessor: {system_processor}"
+	nas_info = f"CPU Usage: {cpu_usage}\nMemory Usage: {memory_usage}\nSwap Usage: {swap_memory_usage}\nVolume Usage: {volume_usage}"
 
-	logger_module.log(LOG_DETAIL, "Building embed...")
 	embed = discord.Embed(title="Bot Info", colour=0xffffff)
 	embed.add_field(name="Discord Info", value=discord_info, inline=False)
 	embed.add_field(name="Code Info", value=code_info, inline=False)
-	embed.add_field(name="System Info", value=system_info, inline=False)
-	embed.add_field(name="NAS Info", value=nas_info, inline=False)
+	embed.add_field(name="System Specs", value=system_info, inline=False)
+	embed.add_field(name="System Info", value=nas_info, inline=False)
 
-	logger_module.log(LOG_DETAIL, "Getting owner and setting footer...")
 	owner = await utils_module.discord_bot.fetch_user(utils_module.owner_id)
-	embed.set_footer(text=f"{owner} ({owner.id})")
+	embed.set_footer(text=f"Owner: {owner} ({owner.id})")
 	
-	logger_module.log(LOG_DETAIL, "Sending...")
 	await interaction.followup.send(embed=embed)
 
 # Owner
@@ -335,7 +326,7 @@ async def train_game(interaction:discord.Interaction, number, target, use_power,
 async def train_game_rules(interaction:discord.Interaction):
 	rules = "In each car for every train, there is a four digit number.\n"
 	rules += "We break down the number into four separate digits, and perform simple arithmetic operations to reach a specified target.\n"
-	rules += "In general, the target number is 10 (but you can also use any other positive integer).\n"
+	rules += "In general, the target number is 10 (but you can also use any other integer).\n"
 	rules += "By default, the operations are: addition (+), subtraction (-), multiplication (*), and division (/).\n"
 	rules += "Optionally, you can also use power/exponentiation (^), and modulo (%).\n"
 
