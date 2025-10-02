@@ -32,3 +32,24 @@ def log(level:int, message):
 	
 	with open(current_log_file_path, "a") as log_file:
 		log_file.write(f"{now} - [{level}] {function_name}: {message}\n")
+
+def copy_log_file(destination_path:str) -> bool:
+	global current_log_file_path
+	try:
+		if os.path.exists(current_log_file_path):
+			with open(current_log_file_path, "r") as src_file:
+				with open(destination_path, "w") as dest_file:
+					dest_file.write(src_file.read())
+			log(LOG_INFO, f"Copied log file to {destination_path}")
+			return True
+	except Exception as e:
+		log(LOG_INFO, f"Error copying log file: {e}")
+	return False
+
+def clear_log_file():
+	global current_log_file_path
+	try:
+		if os.path.exists(current_log_file_path):
+			open(current_log_file_path, "w").close()
+	except Exception as e:
+		log(LOG_INFO, f"Error clearing log file: {e}")

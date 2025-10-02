@@ -1,6 +1,7 @@
 import sys
 import asyncio
 import discord
+import psutil
 
 import handlers.utils as utils_module
 import handlers.logger as logger_module
@@ -103,9 +104,10 @@ async def add_todo(interaction:discord.Interaction, item:str):
 
 @utils_module.discord_bot.tree.command(description="[Owner] Get bot info")
 @owner_only()
-async def get_bot_info(interaction:discord.Interaction):
+async def info(interaction:discord.Interaction):
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	await interaction.response.defer(ephemeral=True)
+	logger_module.log(LOG_DETAIL, "After defer, before command mnodule")
 	await commands_module.get_bot_info(interaction)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Send message as Skye-net")
@@ -256,7 +258,7 @@ async def get_all_bingo_templates(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Get bingo templates for this guild")
-@admin_only()
+@owner_only()
 async def get_bingo_templates(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -267,7 +269,7 @@ async def get_bingo_templates(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Create a bingo template")
-@admin_only()
+@owner_only()
 async def create_bingo_template(interaction:discord.Interaction, bingo_name:str, free_space:bool, items_csv:str="", items_message_id:str=""):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -292,7 +294,7 @@ async def create_bingo_template(interaction:discord.Interaction, bingo_name:str,
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Delete a bingo template")
-@admin_only()
+@owner_only()
 async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -303,6 +305,7 @@ async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str)
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="Get a bingo card")
+@owner_only()
 async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -313,6 +316,7 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="Reset a bingo card")
+@owner_only()
 async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -323,6 +327,7 @@ async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="Recreate a bingo card (new items)")
+@owner_only()
 async def recreate_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -333,6 +338,7 @@ async def recreate_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="Get the list of your bingo card items")
+@owner_only()
 async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -592,7 +598,8 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching...", type=discord.ActivityType.watching))
 	await utils_module.discord_bot.tree.sync()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
-	await tasks_module.tasks_on_ready()
+	_ = psutil.cpu_percent(percpu=True) # first call is always 0.0, so call it once to get actual data next time
+	tasks_module.tasks_on_ready()
 
 @utils_module.discord_bot.event
 async def on_message(message):

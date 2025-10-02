@@ -42,23 +42,52 @@ async def set_debug_level(interaction:discord.Interaction, level:int):
 	await interaction.followup.send(f"Debug level set to {level}")
 
 # Owner
-async def get_bot_info(interaction:discord.Interaction):
+async def get_bot_info(interaction:discord.Interaction=None):
+	logger_module.log(LOG_DETAIL, "In command module")
+
 	if not utils_module.is_owner(interaction):
+		logger_module.log(LOG_DETAIL, "Not owner")
 		await interaction.followup.send(nice_try)
 		return
+
+	logger_module.log(LOG_DETAIL, "Getting info...")
+	logger_module.log(LOG_DETAIL, "Python and Discord versions...")
 	python_version = sys.version.split()[0]
 	discord_version = discord.__version__
-	os_info = platform.platform()
-	owner = await utils_module.discord_bot.fetch_user(utils_module.owner_id)
-	embed = discord.Embed(title="Bot Info", colour=0xffffff)
 
+	logger_module.log(LOG_DETAIL, "System info...")
+	system_os = platform.platform()
+	system_uname = platform.uname()
+	system_arch = platform.machine()
+	system_processor = platform.processor()
+
+	logger_module.log(LOG_DETAIL, "CPU...")
+	cpu_usage = utils_module.get_cpu_usage()
+	logger_module.log(LOG_DETAIL, "Mem...")
+	memory_usage = utils_module.get_memory_usage()
+	logger_module.log(LOG_DETAIL, "Swap...")
+	swap_memory_usage = utils_module.get_swap_memory_usage()
+	logger_module.log(LOG_DETAIL, "Disk...")
+	disk_usage = utils_module.get_disk_usage()
+	
+	logger_module.log(LOG_DETAIL, "Collating...")
 	discord_info = f"Number of Servers: {len(utils_module.discord_bot.guilds)}\n"
-	code_info = f"[GitHub Repository](https://github.com/your-repo-link)\nPython Version: {python_version}\nDiscord.py Version: {discord_version}\nOperating System: {os_info}"
+	code_info = f"[GitHub Repository](https://github.com/your-repo-link)\nPython Version: {python_version}\nDiscord.py Version: {discord_version}"
+	system_info = f"OS: {system_os}\nSystem: {system_uname.system}\nNode Name: {system_uname.node}\nRelease: {system_uname.release}\nVersion: {system_uname.version}\nArchitecture: {system_arch}\nProcessor: {system_processor}\nDisk Usage: {disk_usage}"
+	nas_info = f"CPU Usage: {cpu_usage}\nMemory Usage: {memory_usage}\nSwap Usage: {swap_memory_usage}"
 
+	logger_module.log(LOG_DETAIL, "Building embed...")
+	embed = discord.Embed(title="Bot Info", colour=0xffffff)
 	embed.add_field(name="Discord Info", value=discord_info, inline=False)
 	embed.add_field(name="Code Info", value=code_info, inline=False)
+	embed.add_field(name="System Info", value=system_info, inline=False)
+	embed.add_field(name="NAS Info", value=nas_info, inline=False)
 
+	logger_module.log(LOG_DETAIL, "Getting owner and setting footer...")
+	owner = await utils_module.discord_bot.fetch_user(utils_module.owner_id)
 	embed.set_footer(text=f"{owner} ({owner.id})")
+	
+	logger_module.log(LOG_DETAIL, "Sending...")
 	await interaction.followup.send(embed=embed)
 
 # Owner

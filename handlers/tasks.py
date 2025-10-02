@@ -1,3 +1,4 @@
+import os
 from datetime import datetime as dt
 from datetime import timezone, time, timedelta
 from discord.ext import tasks
@@ -10,15 +11,20 @@ import handlers.database as database_module
 
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
+running_task_log_string = "Running task."
+
+backup_logs_start_time = time(0, 0) # utc time
 trusted_roles_start_time = time(19, 0) # utc time
 audit_log_start_time = time(20, 0) # utc time
 
-async def tasks_on_ready():
+def tasks_on_ready():
 	logger_module.log(LOG_SETUP, "Ensuring tasks are running.")
 	if not add_trusted_roles_task.is_running():
 		add_trusted_roles_task.start()
 	if not audit_log_task.is_running():
 		audit_log_task.start()
+	if not backup_logs_task.is_running():
+		backup_logs_task.start()
 
 @tasks.loop(time=trusted_roles_start_time)
 async def add_trusted_roles_task():
@@ -30,7 +36,7 @@ async def add_trusted_roles_task():
 				If they have been in the server for more than utils_module.trusted_time_days days:
 					Add the trusted role to the member
 	'''
-	logger_module.log(LOG_SETUP, "Running task.")
+	logger_module.log(LOG_SETUP, running_task_log_string)
 
 	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
 	if not utils_module.guild_id:
@@ -101,7 +107,7 @@ async def audit_log_task(days_to_check:int=1):
 					If the action was performed by the member:
 						Print the action with details on the action
 	'''
-	logger_module.log(LOG_SETUP, "Running task.")
+	logger_module.log(LOG_SETUP, running_task_log_string)
 
 	guild = utils_module.discord_bot.get_guild(utils_module.guild_id)
 	if not utils_module.guild_id:
@@ -170,3 +176,33 @@ async def audit_log_task(days_to_check:int=1):
 
 	except Exception as e:
 		print(f"audit_log_task: {e}")
+
+@tasks.loop(time=backup_logs_start_time)
+async def backup_logs_task():
+	'''
+		Backup the logs from utils_module.log_file_path to a dated file in the same directory
+		Stucture should be:
+			<log_file_path>/YYYY/MM/DD.log
+	'''
+	logger_module.log(LOG_SETUP, running_task_log_string)
+	try:
+		# make year and month directories if they don't exist
+		now = dt.now(utils_module.timezone_syd)
+		year_dir = now.strftime("%Y")
+		month_dir = now.strftime("%m")
+		full_path = os.path.join(os.path.dirname(utils_module.log_file_path), year_dir, month_dir)
+
+		if not os.path.exists(full_path):
+			os.makedirs(full_path)
+			
+		day_file = now.strftime("%d.log")
+		full_path = os.path.join(full_path, day_file)
+
+		copy_success = logger_module.copy_log_file(full_path)
+		if copy_success:
+			logger_module.clear_log_file()
+			logger_module.log(LOG_SETUP, f"Logs backed up to {full_path}")
+		else:
+			logger_module.log(LOG_INFO, "Couldn't copy log file.")
+	except Exception as e:
+		logger_module.log(LOG_INFO, f"Error backing up logs: {e}")

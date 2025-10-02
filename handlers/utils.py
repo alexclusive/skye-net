@@ -1,5 +1,6 @@
 import os
 import discord
+import psutil
 import pytz
 from datetime import datetime as dt
 
@@ -20,7 +21,7 @@ load_dotenv(dotenv_path="/volume1/documents/git/skye-net/.env")
 # Verification
 token = str(os.getenv("TOKEN"))
 client_id = str(os.getenv("CLIENT_ID"))
-ownerid = int(os.getenv("OWNER"))
+owner_id = int(os.getenv("OWNER"))
 
 # File locations
 base_path = str(os.getenv("BASE_PATH"))
@@ -47,7 +48,7 @@ initial_prompt = "You're a helpful anti-billionaire person named 'Skye-net' that
 current_prompt = initial_prompt
 
 def is_owner(interaction:discord.Interaction):
-	return interaction.user.id == ownerid
+	return interaction.user.id == owner_id
 
 def is_admin(interaction:discord.Interaction):
 	return is_owner(interaction) or interaction.user.guild_permissions.administrator
@@ -64,18 +65,23 @@ def get_timestamp_now_formatted():
 def get_timestamp_now_ymd_hms():
 	return dt.now(timezone_syd).strftime("%Y-%m-%d %H:%M:%S")
 
+def get_cpu_usage():
+	current_usage = psutil.cpu_percent(percpu=True)
+	if current_usage:
+		return ", ".join(f"{x}%" for x in list[current_usage])
+	return "Unknown%"
 
+def get_memory_usage():
+	mem = psutil.virtual_memory()
+	return f"{mem.used}/{mem.total} ({mem.percent}%)"
 
+def get_swap_memory_usage():
+	swap = psutil.swap_memory()
+	return f"{swap.used}/{swap.total} ({swap.percent}%)"
 
-
-
-
-
-
-
-
-
-
+def get_disk_usage():
+	disk = psutil.disk_usage('~')
+	return f"{disk.used}/{disk.total} ({disk.percent}%)"
 
 
 
