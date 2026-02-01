@@ -5,13 +5,13 @@ import handlers.utils as utils_module
 import handlers.logger as logger_module
 import handlers.database as database_module
 
-from handlers.logger import LOG_INFO, LOG_DETAIL
+from handlers.logger import LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 colour_green = 0x00ff00
 colour_white = 0xffffff
 
 free_space_item = "FREE SPACE"
-not_your_bingo = "This isn't your bingo board!"
+not_your_bingo = "This isn't your bingo card!"
 
 # Helpers
 
@@ -22,18 +22,21 @@ def is_item_checked(item:str) -> bool:
 	return item.startswith("~~") and item.endswith("~~") or item == free_space_item
 
 def check_bingo_item(item:str) -> str:
+	logger_module.log(LOG_EXTRA_DETAIL, f"Checking bingo item: {item}")
 	if item == free_space_item or is_item_checked(item):
 		return item
 	else:
 		return f"~~{item}~~"
 
 def uncheck_bingo_item(item:str) -> str:
+	logger_module.log(LOG_EXTRA_DETAIL, f"Unchecking bingo item: {item}")
 	if item == free_space_item or not is_item_checked(item):
 		return item
 	else:
 		return item[2:-2]
 
 def get_bingo_grid(card_items:list) -> str:
+	logger_module.log(LOG_EXTRA_DETAIL, f"Getting bingo grid for items: {','.join([item for sublist in card_items for item in sublist])}")
 	grid = ""
 	for row in card_items:
 		row_string = ""
@@ -62,6 +65,7 @@ def is_winning_bingo(card_items:list) -> bool:
 # Get Bingo Card Command
 
 def get_bingo_card(guild_id:int, bingo_name:str, user_id:int) -> tuple:
+	logger_module.log(LOG_INFO, f"Fetching bingo card for user {user_id} in guild {guild_id} for template '{bingo_name}'.")
 	embed = create_bingo_embed(guild_id, user_id, bingo_name)
 
 	if not does_bingo_card_exist(guild_id, bingo_name, user_id):
@@ -69,7 +73,13 @@ def get_bingo_card(guild_id:int, bingo_name:str, user_id:int) -> tuple:
 	
 	items = split_bingo_card_items(database_module.get_bingo_card(guild_id, bingo_name, user_id))
 
-	embed = update_bingo_embed_items(embed, items)
+	embed.description = get_bingo_grid(items)
+
+	if is_winning_bingo(items):
+		embed.colour = colour_green
+	else:
+		embed.colour = colour_white
+
 	view = BingoView(guild_id, bingo_name, user_id, items)
 	return embed, view
 
@@ -104,22 +114,12 @@ def create_bingo_embed(guild_id:int, user_id:int, bingo_name:str) -> discord.Emb
 	embed.set_footer(text=f"User ID: {user_id} | Guild ID: {guild_id}")
 	return embed
 
-def update_bingo_embed_items(embed:discord.Embed, items:list) -> discord.Embed:
-	embed.description = get_bingo_grid(items)
-
-	if is_winning_bingo(items):
-		embed.colour = colour_green  # Green for winning bingo
-	else:
-		embed.colour = colour_white  # Default color
-
-	return embed
-
 def get_complete_bingo_embed(guild_id:int, user_id:int, bingo_name:str, items:list) -> discord.Embed:
 	embed = create_bingo_embed(guild_id, user_id, bingo_name)
-	embed = update_bingo_embed_items(embed, items)
+	embed.description = get_bingo_grid(items)
 	return embed
 
-def toggle_bingo_item(guild_id: int, bingo_name: str, user_id: int, row: int, col: int) -> list:
+def toggle_bingo_item(guild_id:int, bingo_name:str, user_id:int, row:int, col:int) -> list:
 	card = database_module.get_bingo_card(guild_id, bingo_name, user_id)
 	items_2d = split_bingo_card_items(card)
 
@@ -144,14 +144,20 @@ class BingoButton(discord.ui.Button):
 		self.bingo_name = bingo_name
 		self.card_owner_id = card_owner_id
 
-	async def callback(self, interaction: discord.Interaction):
-		if interaction.user.id != self.card_owner_id:
+	async def callback(self, interaction:discord.Interaction):
+		if interaction.user.id != self.card_owner_id and interaction.user.id != utils_module.owner_id:
 			await interaction.response.send_message(not_your_bingo, ephemeral=True)
 			return
 
 		items = toggle_bingo_item(self.guild_id, self.bingo_name, self.card_owner_id, self.row_idx, self.col_idx)
 		view = BingoView(self.guild_id, self.bingo_name, self.card_owner_id, items)
 		embed = get_complete_bingo_embed(self.guild_id, self.card_owner_id, self.bingo_name, items)
+
+		if is_winning_bingo(items):
+			embed.colour = colour_green
+			await interaction.response.send_message("BINGO! We have a winner!")
+		else:
+			embed.colour = colour_white
 
 		await interaction.response.edit_message(embed=embed, view=view)
 
@@ -220,6 +226,14 @@ def delete_bingo_template(guild_id:int, bingo_name:str) -> bool:
 	logger_module.log(LOG_INFO, f"Deleted bingo template '{bingo_name}' for guild {guild_id}.")
 	return True
 
+def update_bingo_template(guild_id:int, bingo_name:str, items:str) -> bool:
+	if not database_module.does_bingo_template_exist(guild_id, bingo_name):
+		return False
+
+	database_module.update_bingo_template(guild_id, bingo_name, items)
+	logger_module.log(LOG_INFO, f"Updated bingo template '{bingo_name}' for guild {guild_id}.")
+	return True
+
 def reset_bingo_card(guild_id: int, bingo_name: str, user_id: int):
 	items = split_bingo_card_items(database_module.get_bingo_card(guild_id, bingo_name, user_id))
 	for r in range(5):
@@ -237,7 +251,8 @@ def get_bingo_card_items_embed(guild_id:int, bingo_name:str, user_id:int) -> dis
 		return embed
 
 	items = split_bingo_card_items(database_module.get_bingo_card(guild_id, bingo_name, user_id))
-	embed = update_bingo_embed_items(embed, items)
+	embed.description = get_bingo_grid(items)
+	embed.colour = colour_white
 
 	for row in range(len(items)):
 		first = f":one: {items[row][0]}"

@@ -42,7 +42,7 @@ async def set_debug_level(interaction:discord.Interaction, level:int):
 	await interaction.followup.send(f"Debug level set to {level}")
 
 # Owner
-async def get_bot_info(interaction:discord.Interaction, check_disk_usage:bool):
+async def get_bot_info(interaction:discord.Interaction):
 
 	if not utils_module.is_owner(interaction):
 		logger_module.log(LOG_DETAIL, "Not owner")
@@ -60,21 +60,21 @@ async def get_bot_info(interaction:discord.Interaction, check_disk_usage:bool):
 	cpu_usage = utils_module.get_cpu_usage()
 	memory_usage = utils_module.get_memory_usage()
 	swap_memory_usage = utils_module.get_swap_memory_usage()
-	if check_disk_usage:
-		volume_usage = utils_module.get_disk_usage()
-	else:
-		volume_usage = "Not checked"
+
+	drive_usage = utils_module.get_disk_usage()
 	
 	discord_info = f"Number of Servers: {len(utils_module.discord_bot.guilds)}\n"
 	code_info = f"[GitHub Repository](https://github.com/your-repo-link)\nPython Version: {python_version}\nDiscord.py Version: {discord_version}"
 	system_info = f"OS: {system_os}\nSystem: {system_uname.system}\nNode Name: {system_uname.node}\nRelease: {system_uname.release}\nVersion: {system_uname.version}\nArchitecture: {system_arch}\nProcessor: {system_processor}"
-	nas_info = f"CPU Usage: {cpu_usage}\nMemory Usage: {memory_usage}\nSwap Usage: {swap_memory_usage}\nVolume Usage: {volume_usage}"
+	nas_info = f"CPU Usage: {cpu_usage}\nMemory Usage: {memory_usage}\nSwap Usage: {swap_memory_usage}"
+	drive_info = f"{drive_usage}"
 
 	embed = discord.Embed(title="Bot Info", colour=0xffffff)
 	embed.add_field(name="Discord Info", value=discord_info, inline=False)
 	embed.add_field(name="Code Info", value=code_info, inline=False)
 	embed.add_field(name="System Specs", value=system_info, inline=False)
 	embed.add_field(name="System Info", value=nas_info, inline=False)
+	embed.add_field(name="Drive Info", value=drive_info, inline=False)
 
 	owner = await utils_module.discord_bot.fetch_user(utils_module.owner_id)
 	embed.set_footer(text=f"Owner: {owner} ({owner.id})")
@@ -94,28 +94,19 @@ async def send_as_bot(interaction:discord.Interaction, channel:discord.TextChann
 		await interaction.followup.send(f"Error sending message: {e}")
 
 # Admin
-async def get_opt_out_users(interaction:discord.Interaction):
-	if not utils_module.is_owner(interaction):
-		await interaction.followup.send(nice_try)
-		return
-	opted_out_users = database_module.get_all_opt_out_users()
-	await interaction.followup.send(f"Opted out users: {opted_out_users}")
-	print(f"{interaction.user.name} requested opted out users: {opted_out_users}")
-
-# Admin
 async def force_trusted_roles(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
 	await tasks_module.add_trusted_roles_task()
-	await interaction.followup.send("Forced daily tasks")
+	await interaction.followup.send("Forced trusted roles task")
 
 async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
 	await tasks_module.audit_log_task(days_to_check)
-	await interaction.followup.send("Forced audit tasks")
+	await interaction.followup.send("Forced audit log task")
 
 # To Do List
 async def get_todo(interaction:discord.Interaction):
@@ -173,7 +164,10 @@ async def reset_prompt(interaction:discord.Interaction):
 	await interaction.followup.send("Prompt reset")
 
 async def set_prompt(interaction:discord.Interaction, new_prompt):
-	utils_module.current_prompt = new_prompt
+	if not utils_module.is_owner(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	utils_module.set_current_prompt(new_prompt)
 	database_module.insert_prompt(new_prompt, interaction.user.id)
 	await interaction.followup.send(f"Prompt set to '{new_prompt}'")
 
@@ -182,9 +176,16 @@ async def get_opt_out_users(interaction:discord.Interaction):
 	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
-	opted_out_users = database_module.get_all_opt_out_users()
-	await interaction.followup.send(f"Opted out users: {opted_out_users}")
-	print(f"{interaction.user.name} requested opted out users: {opted_out_users}")
+	opted_out_user_ids = database_module.get_all_opt_out_users()
+	opted_out_user_objs:list[discord.User] = []
+	for user_id in opted_out_user_ids:
+		try:
+			user = await utils_module.discord_bot.fetch_user(user_id)
+			if user:
+				opted_out_user_objs.append(user)
+		except Exception:
+			continue
+	await interaction.followup.send(f"Opted out users: {', '.join(user.name for user in opted_out_user_objs)}")
 
 async def force_opt_out_reactions(interaction:discord.Interaction, user_id:str):
 	database_module.opt_out(user_id)
@@ -257,6 +258,25 @@ async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str)
 	else:
 		await interaction.followup.send(f"Failed to delete bingo template '{bingo_name}'. It may not exist.")
 
+async def update_bingo_template(interaction:discord.Interaction, bingo_name:str, items:list):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	
+	updated = bingo_module.update_bingo_template(interaction.guild.id, bingo_name, "\n".join(items))
+	if updated:
+		await interaction.followup.send(f"Bingo template '{bingo_name}' updated successfully.")
+	else:
+		await interaction.followup.send(f"Failed to update bingo template '{bingo_name}'. It may not exist.")
+
+async def update_bingo_template_through_message(interaction:discord.Interaction, bingo_name:str, items_message:discord.Message):
+	items = items_message.content.split("\n")
+	await update_bingo_template(interaction, bingo_name, items)
+
+async def update_bingo_template_through_csv(interaction:discord.Interaction, bingo_name:str, items_csv:str):
+	items = items_csv.split(",")
+	await update_bingo_template(interaction, bingo_name, items)
+
 async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	embed, view = bingo_module.get_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
 	await interaction.followup.send(embed=embed, view=view)
@@ -265,7 +285,7 @@ async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	bingo_module.reset_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
 	await get_bingo_card(interaction, bingo_name)
 
-async def recreate_bingo_card(interaction:discord.Interaction, bingo_name:str):
+async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	database_module.delete_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
 	await get_bingo_card(interaction, bingo_name)
 

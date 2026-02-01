@@ -144,19 +144,29 @@ async def audit_log_task(days_to_check:int=1):
 		]
 		
 		for entry in audit_logs:
-			if entry.user.roles:
-				if bot_role in entry.user.roles:
+			if entry.user is None:
+				continue
+			if entry.action.name in ignored_actions:
+				continue
+			
+			acting_member = guild.get_member(entry.user.id)
+			if acting_member is None:
+				try:
+					acting_member = await guild.fetch_member(entry.user.id)
+				except Exception:
 					continue
-				if entry.action.name in ignored_actions:
-					continue
-				if admin_role in entry.user.roles:
-					admin_logs.append(entry)
-		
+				
+			if bot_role in acting_member.roles:
+				continue
+			if admin_role in acting_member.roles:
+				admin_logs.append(entry)
+
 		admin_logs.sort(key=lambda log: log.created_at)
 		logger_module.log(LOG_DETAIL, f"Found {len(admin_logs)} admin logs.")
 
 		for admin in [member for member in guild.members if admin_role in member.roles]:
-			this_admin_logs = [log for log in admin_logs if log.user == admin]
+			# log.user may be a User object; compare by id to be safe
+			this_admin_logs = [log for log in admin_logs if log.user and getattr(log.user, 'id', None) == admin.id]
 			if len(this_admin_logs) == 0:
 				continue
 			details = [f"Audit logs for admin: {admin.name}:"]
@@ -165,7 +175,7 @@ async def audit_log_task(days_to_check:int=1):
 				timestamp = int(log.created_at.timestamp())
 				detail_text = f"\n- `{log.action.name}` on {log.target} at <t:{timestamp}:f> (<t:{timestamp}:R>)"
 				if log.action.value:
-					detail_text += f"\Value: {log.action.value}"
+					detail_text += f"\nValue: {log.action.value}"
 				if log.reason:
 					detail_text += f"\nDetails: {log.reason}"
 				details.append(detail_text)
@@ -187,7 +197,7 @@ async def backup_logs_task():
 	logger_module.log(LOG_SETUP, running_task_log_string)
 	try:
 		# make year and month directories if they don't exist
-		now = dt.now(utils_module.timezone_syd)
+		now = dt.now(utils_module.timezone_here)
 		year_dir = now.strftime("%Y")
 		month_dir = now.strftime("%m")
 		full_path = os.path.join(os.path.dirname(utils_module.log_file_path), year_dir, month_dir)

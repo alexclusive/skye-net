@@ -48,7 +48,7 @@ async def openai_chat(message:discord.Message):
 		await message.reply("Nice try bozo, you ain't gonna reset me like that!", mention_author=False)
 		return
 	
-	contents = [{"role": "system", "content": utils_module.current_prompt}]
+	contents = [{"role": "system", "content": utils_module.current_prompt + " also don't refer to yourself or others like a chat log (i.e. 'Skye-net: <message>') in your responses."}]
 	messages = [message]
 
 	if message.reference:

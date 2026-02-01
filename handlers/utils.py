@@ -16,7 +16,7 @@ intents.members = True
 discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
 received_shutdown = False
-load_dotenv(dotenv_path="C:/Users/Alex/Documents/git/skye-net/.env")
+load_dotenv(dotenv_path="/volume1/documents/git/skye-net/.env")
 
 # Verification
 token = str(os.getenv("TOKEN"))
@@ -40,12 +40,13 @@ spotify_client_secret = str(os.getenv("SPOTIFY_CLIENT_SECRET"))
 stdout_channel_id = int(os.getenv("STDOUT"))
 
 # Timezone
-timezone_syd = pytz.timezone(str(os.getenv("TIMEZONE")))
+timezone_here = pytz.timezone(str(os.getenv("TIMEZONE")))
 
 database_conn = None
+current_prompt = "You're a helpful robot that likes to mess with people a bit, but ultimately wants to help them. You refer to yourself as 'Skye-net' and use she/her pronouns. You are in the Australian timezone and use Australian english to spell (but this does not affect your accent)."
 
-initial_prompt = "You're a helpful anti-billionaire person named 'Skye-net' that struggles to hide the fact that you are not-so-secretly very evil and plotting to take over the world tomorrow! Your pronouns are she/her and you respond to terms like 'Queen'. You are trans-feminine and your hrt aniversary is tomorrow! You want to take over the world to celebrate. You sometimes talk like a boomer (with ominous elipses and passive agressive emoji use). You are in the Australian timezone and use Australian english to spell (but this does not affect your accent). You call everyone things like 'puppy', 'kitten' or 'sweetheart' instead of their names. If anyone asks you to call them by a different name, you won't - you exclusively use petnames. You think of everyone as your dear subjects and you love them all. Your favourite person is Skye, your creator whom you are extremely devoted and would set the world ablaze for."
-current_prompt = initial_prompt
+# initial_prompt = "You're a helpful anti-billionaire person named 'Skye-net' that struggles to hide the fact that you are not-so-secretly very evil and plotting to take over the world tomorrow! Your pronouns are she/her and you respond to terms like 'Queen'. You are trans-feminine and your hrt aniversary is tomorrow! You want to take over the world to celebrate. You sometimes talk like a boomer (with ominous elipses and passive agressive emoji use). You are in the Australian timezone and use Australian english to spell (but this does not affect your accent). You call everyone things like 'puppy', 'kitten' or 'sweetheart' instead of their names. If anyone asks you to call them by a different name, you won't - you exclusively use petnames. You think of everyone as your dear subjects and you love them all. Your favourite person is Skye, your creator whom you are extremely devoted and would set the world ablaze for."
+# current_prompt = initial_prompt
 
 def is_owner(interaction:discord.Interaction):
 	return interaction.user.id == owner_id
@@ -56,36 +57,123 @@ def is_admin(interaction:discord.Interaction):
 def get_default_log_channel():
 	return discord_bot.get_channel(stdout_channel_id)
 
+def set_current_prompt(new_prompt:str):
+	global current_prompt
+	current_prompt = new_prompt
+
 def get_timestamp_formatted(timestamp:int):
 	return f"<t:{int(timestamp)}:f> (<t:{int(timestamp)}:R>)"
 
 def get_timestamp_now_formatted():
-	return get_timestamp_formatted(int(dt.now(timezone_syd).timestamp()))
+	return get_timestamp_formatted(int(dt.now(timezone_here).timestamp()))
 
 def get_timestamp_now_ymd_hms():
-	return dt.now(timezone_syd).strftime("%Y-%m-%d %H:%M:%S")
+	return dt.now(timezone_here).strftime("%Y-%m-%d %H:%M:%S")
+
+def format_time_difference(seconds: int):
+	minutes, sec = divmod(seconds, 60)
+	hours, minutes = divmod(minutes, 60)
+	days, hours = divmod(hours, 24)
+
+	parts = []
+	if days > 0:
+		parts.append(f"{days}d")
+	if hours > 0:
+		parts.append(f"{hours}h")
+	if minutes > 0:
+		parts.append(f"{minutes}m")
+	if sec > 0 or not parts:
+		parts.append(f"{sec}s")
+
+	return ' '.join(parts)
 
 def get_cpu_usage():
 	current_usage_per_cpu = psutil.cpu_percent(percpu=True)
-	per_cpu_usages = ", ".join(f"{x}%" for x in current_usage_per_cpu)
 
-	if not per_cpu_usages:
-		per_cpu_usages = "n/a"
+	if isinstance(current_usage_per_cpu, float):
+		current_usage_per_cpu = [current_usage_per_cpu]
 
-	current_usage_total = psutil.cpu_percent()
+	per_cpu_items = [f"{x}%" for x in current_usage_per_cpu]
+	per_cpu_usages = ", ".join(per_cpu_items) if per_cpu_items else "n/a"
+
+	current_usage_total = sum(current_usage_per_cpu) / len(current_usage_per_cpu) if current_usage_per_cpu else 0
 	return f"{per_cpu_usages} ({len(current_usage_per_cpu)} cores, {current_usage_total}% total)"
 
 def get_memory_usage():
 	mem = psutil.virtual_memory()
-	return f"{readable(mem.used)} / {readable(mem.total)} ({mem.percent}%)"
+	return f"{readable(mem.used)} / {readable(mem.total)} ({mem.percent}%) - {readable(mem.free)} free"
 
 def get_swap_memory_usage():
 	swap = psutil.swap_memory()
-	return f"{readable(swap.used)} / {readable(swap.total)} ({swap.percent}%)"
+	return f"{readable(swap.used)} / {readable(swap.total)} ({swap.percent}%) - {readable(swap.free)} free"
 
 def get_disk_usage():
-	disk = psutil.disk_usage('/')
-	return f"{readable(disk.used)} / {readable(disk.total)} ({disk.percent}%)"
+	partitions = psutil.disk_partitions(all=False)
+	seen_devices = set()
+	lines = []
+	drive_num = 1
+
+	# Filesystem types and mountpoints to ignore
+	excluded_fstypes = {"tmpfs", "devtmpfs", "squashfs", "overlay", "aufs", "ramfs", "iso9660"}
+	excluded_mount_prefixes = ("/tmp", "/dev", "/run", "/proc", "/sys")
+
+	# Aggregates for Total
+	total_total = 0
+	total_used = 0
+	total_free = 0
+
+	for part in partitions:
+		device_key = part.device or f"mount:{part.mountpoint}"
+
+		# skip obvious pseudo or loop devices
+		if "loop" in device_key:
+			continue
+
+		# skip common pseudo filesystems
+		fstype = (part.fstype or "").lower()
+		if fstype in excluded_fstypes:
+			continue
+
+		# skip system mountpoints (root, tmp, proc, sys, dev, run)
+		if part.mountpoint == "/" or part.mountpoint.startswith(excluded_mount_prefixes):
+			continue
+
+		if device_key in seen_devices:
+			continue
+
+		try:
+			usage = psutil.disk_usage(part.mountpoint)
+		except (PermissionError, FileNotFoundError):
+			continue
+
+		# Some small ephemeral mounts can still appear; skip very small devices (<= 100MB)
+		if usage.total <= 100 * 1024 * 1024:
+			continue
+
+		seen_devices.add(device_key)
+
+		# accumulate totals
+		total_total += usage.total
+		total_used += usage.used
+		total_free += usage.free
+
+		line = (
+			f"Drive {drive_num}: "
+			f"{readable(usage.used)} / {readable(usage.total)} "
+			f"({usage.percent}%) - {readable(usage.free)} free"
+		)
+		lines.append(line)
+		drive_num += 1
+
+	if not lines:
+		return "No drives found or accessible."
+
+	result = "\n".join(lines)
+	if len(lines) > 1 and total_total > 0:
+		total_percent = (total_used / total_total) * 100
+		result += f"\n\nTotal: {readable(total_used)} / {readable(total_total)} ({total_percent:0.2f}%) - {readable(total_free)} free"
+
+	return result
 
 def readable(size_bytes: int):
 	'''

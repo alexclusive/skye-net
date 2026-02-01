@@ -62,7 +62,6 @@ async def force_trusted_roles(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
-		await interaction.response.defer(ephemeral=True)
 		await commands_module.force_trusted_roles(interaction)
 	except Exception as e:
 		print(f"Error forcing trusted roles: {e}")
@@ -113,12 +112,12 @@ async def remove_todo(interaction:discord.Interaction, item_num:int):
 		print(f"Error removing to do item: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(description="[Owner] Get bot info - Checking disk usage can be slow on some machines")
+@utils_module.discord_bot.tree.command(description="[Owner] Get bot info and system specs")
 @owner_only()
-async def info(interaction:discord.Interaction, check_disk_usage:bool=True):
+async def info(interaction:discord.Interaction):
 	logger_module.log(LOG_DETAIL, command_called_log_string)
-	await interaction.response.defer(ephemeral=True)
-	await commands_module.get_bot_info(interaction, check_disk_usage)
+	await interaction.response.defer()
+	await commands_module.get_bot_info(interaction)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Send message as Skye-net")
 @owner_only()
@@ -196,7 +195,6 @@ async def get_opt_out_users(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
-		await interaction.response.defer(ephemeral=True)
 		await commands_module.get_opt_out_users(interaction)
 	except Exception as e:
 		print(f"Error getting opt-out users: {e}")
@@ -268,7 +266,7 @@ async def get_bingo_templates(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Create a bingo template")
-@owner_only()
+@admin_only()
 async def create_bingo_template(interaction:discord.Interaction, bingo_name:str, free_space:bool, items_csv:str="", items_message_id:str=""):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -286,14 +284,14 @@ async def create_bingo_template(interaction:discord.Interaction, bingo_name:str,
 				message = await utils_module.discord_bot.get_channel(interaction.channel_id).fetch_message(items_message_id)
 				await commands_module.create_bingo_template_through_message(interaction, bingo_name, free_space, message)
 			except discord.NotFound:
-				await interaction.followup.send(f"Message with ID {items_message_id} not found. Make sure the message is in the same channel as this command.")
+				await interaction.followup.send(f"Message with ID {items_message_id} not found. Make sure the message is in the same channel as this command and the bot has access to the channel.")
 				return
 	except Exception as e:
 		print(f"Error creating bingo template: {e}")
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Delete a bingo template")
-@owner_only()
+@admin_only()
 async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -303,8 +301,32 @@ async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str)
 		print(f"Error deleting bingo template: {e}")
 		await interaction.followup.send(something_went_wrong)
 
+@utils_module.discord_bot.tree.command(description="[Admin] Update a bingo template")
+@admin_only()
+async def update_bingo_template(interaction:discord.Interaction, bingo_name:str, items_csv:str="", items_message_id:str=""):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		if len(items_csv) == 0 and len(items_message_id) == 0:
+			await interaction.followup.send("You must provide either a CSV of items or a message ID.")
+			return
+		if len(items_csv) > 0 and len(items_message_id) > 0:
+			await interaction.followup.send("You must provide either a CSV of items or a message ID, not both.")
+			return
+		if len(items_csv) > 0:
+			await commands_module.update_bingo_template_through_csv(interaction, bingo_name, items_csv)
+		elif len(items_message_id) > 0:
+			try:
+				message = await utils_module.discord_bot.get_channel(interaction.channel_id).fetch_message(items_message_id)
+				await commands_module.update_bingo_template_through_message(interaction, bingo_name, message)
+			except discord.NotFound:
+				await interaction.followup.send(f"Message with ID {items_message_id} not found. Make sure the message is in the same channel as this command and the bot has access to the channel.")
+				return
+	except Exception as e:
+		print(f"Error updating bingo template: {e}")
+		await interaction.followup.send(something_went_wrong)
+
 @utils_module.discord_bot.tree.command(description="Get a bingo card")
-@owner_only()
 async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -314,8 +336,17 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		print(f"Error getting bingo card: {e}")
 		await interaction.followup.send(something_went_wrong)
 
+@utils_module.discord_bot.tree.command(description="Create a bingo card (new card)")
+async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await commands_module.create_bingo_card(interaction, bingo_name)
+	except Exception as e:
+		print(f"Error recreating bingo card: {e}")
+		await interaction.followup.send(something_went_wrong)
+
 @utils_module.discord_bot.tree.command(description="Reset a bingo card")
-@owner_only()
 async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -325,19 +356,7 @@ async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		print(f"Error resetting bingo card: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(description="Recreate a bingo card (new items)")
-@owner_only()
-async def recreate_bingo_card(interaction:discord.Interaction, bingo_name:str):
-	await interaction.response.defer()
-	logger_module.log(LOG_DETAIL, command_called_log_string)
-	try:
-		await commands_module.recreate_bingo_card(interaction, bingo_name)
-	except Exception as e:
-		print(f"Error recreating bingo card: {e}")
-		await interaction.followup.send(something_went_wrong)
-
 @utils_module.discord_bot.tree.command(description="Get the list of your bingo card items")
-@owner_only()
 async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -675,10 +694,10 @@ def send_output_to_discord(message:str):
 					send_message(channel, message)
 
 async def run_bot():
-	utils_module.current_prompt = database_module.get_most_recent_prompt()
 	logger_module.set_log_file(utils_module.log_file_path)
-	logger_module.set_debug_level(database_module.get_debug_level())
 	database_module.init_db()
+	logger_module.set_debug_level(database_module.get_debug_level())
+	utils_module.set_current_prompt(database_module.get_most_recent_prompt())
 	utils_module.fill_banned_users()
 	utils_module.fill_emojis()
 	spotify_module.setup_spotify_credentials()

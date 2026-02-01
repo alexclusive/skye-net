@@ -111,6 +111,13 @@ def delete_bingo_template(guild_id:str, bingo_name:str):
 	utils_module.database_conn.execute("DELETE FROM bingo_cards WHERE guild_id = ? AND bingo_name = ?", (guild_id, bingo_name))
 	utils_module.database_conn.close()
 
+def update_bingo_template(guild_id:str, bingo_name:str, items:str):
+	bingo_name = bingo_name.lower()
+	logger_module.log(LOG_INFO, f"Updating bingo template '{bingo_name}' for guild {guild_id}.")
+	utils_module.database_conn = duckdb.connect(utils_module.database_name)
+	utils_module.database_conn.execute("UPDATE bingo_template SET items = ? WHERE guild_id = ? AND bingo_name = ?", (items, guild_id, bingo_name))
+	utils_module.database_conn.close()
+
 def create_bingo_card(guild_id:str, bingo_name:str, user_id:str):
 	'''
 		Create a bingo card in the database

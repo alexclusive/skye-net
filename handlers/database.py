@@ -31,7 +31,7 @@ def db_initial_setup():
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 
-	utils_module.database_conn.execute("INSERT INTO prompts VALUES (?, ?, ?)", (datetime.now(), utils_module.owner_id, utils_module.initial_prompt))
+	# utils_module.database_conn.execute("INSERT INTO prompts VALUES (?, ?, ?)", (datetime.now(), utils_module.owner_id, utils_module.initial_prompt))
 	utils_module.database_conn.execute("INSERT OR REPLACE INTO debug_level VALUES (?)", (logger_module.debug_level,))
 
 	utils_module.database_conn.close()

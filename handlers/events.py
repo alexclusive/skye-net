@@ -131,9 +131,28 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 				if e.status == 404 and e.code == 0:
 					embeds[0].add_field(name="Attachments", value="Attachment/s not found (not cached before deletion)")
 
+		# Add the original sent time to the first embed if possible
+		try:
+			if hasattr(message, "created_at") and message.created_at is not None and len(embeds) > 0:
+				# use the same formatter as other handlers
+				created_timestamp = int(message.created_at.timestamp())
+				now_timestamp = int(dt.now(utils_module.timezone_here).timestamp())
+				time_between = now_timestamp - created_timestamp
+
+				created_timestamp_formatted = utils_module.get_timestamp_formatted(created_timestamp)
+				now_timestamp_formatted = utils_module.get_timestamp_now_formatted()
+				time_between_formatted = utils_module.format_time_difference(time_between)
+
+				formatted = f"Sent {created_timestamp_formatted}\nDeleted {now_timestamp_formatted}\nUp Time {time_between_formatted}"
+
+				embeds[0].add_field(name="Sent At", value=formatted, inline=False)
+		except Exception:
+			# non-fatal: if timestamp formatting fails, skip adding the field
+			pass
+
 		for embed in embeds:
 			embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
-			embed.timestamp = dt.now(utils_module.timezone_syd)
+			embed.timestamp = dt.now(utils_module.timezone_here)
 			embed.set_footer(text=f"Message ID: {message.id}")
 			await log_channel.send(embed=embed)
 	except OSError as e:
@@ -157,14 +176,14 @@ async def channel_create(channel:discord.abc.GuildChannel):
 				return
 
 		embed = discord.Embed(
-			title=f"Channel Created {channel.mention}",
+			title=f"Channel Created in {channel.guild.name}: {channel.mention}",
 			colour=0x00ff00
 		)
 		embed.add_field(name="Type", value=channel.type)
 		embed.add_field(name="Category", value=channel.category.mention if channel.category else "None")
 		embed.add_field(name="Position", value=channel.position)
 
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"channel_create: {e}")
@@ -181,14 +200,14 @@ async def channel_delete(channel:discord.abc.GuildChannel):
 				return
 
 		embed = discord.Embed(
-			title=f"Channel Deleted {channel.name} {channel.mention}",
+			title=f"Channel Deleted in {channel.guild.name}: `{channel.name}`",
 			colour=0xff0000
 		)
 		embed.add_field(name="Type", value=channel.type)
 		embed.add_field(name="Category", value=channel.category.mention if channel.category else "None")
 		embed.add_field(name="Position", value=channel.position)
 
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"channel_delete: {e}")
@@ -210,7 +229,7 @@ async def role_create(role:discord.Role):
 		)
 		embed.add_field(name="Permissions", value="\n".join([permission[0] for permission in role.permissions if permission[1]]))
 
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"role_create: {e}")
@@ -232,7 +251,7 @@ async def role_delete(role:discord.Role):
 		)
 		embed.add_field(name="Permissions", value="\n".join([permission[0] for permission in role.permissions if permission[1]]))
 
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"role_delete: {e}")
@@ -257,7 +276,7 @@ async def member_join(member:discord.Member):
 		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]), inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
-		embed.timestamp = dt.now(utils_module.timezone_syd)	  
+		embed.timestamp = dt.now(utils_module.timezone_here)	  
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_join: {e}")
@@ -283,7 +302,7 @@ async def member_remove(member:discord.Member):
 		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]), inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_remove: {e}")
@@ -332,7 +351,7 @@ async def member_update(before:discord.Member, after:discord.Member):
 			return
 
 		embed.set_author(name=before.name, icon_url=before.display_avatar.url)
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_update: {e}")
@@ -359,7 +378,7 @@ async def member_ban(member:discord.Member):
 		embed.add_field(name="Banned By", value=member.guild.me.mention, inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
-		embed.timestamp = dt.now(utils_module.timezone_syd)
+		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_ban: {e}")

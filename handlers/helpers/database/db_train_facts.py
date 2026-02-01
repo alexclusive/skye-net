@@ -26,7 +26,7 @@ def get_random_train_fact():
 
 def get_all_train_facts():
 	'''
-		Return a list of all train facts
+		Return a discord.Embed containing all train facts
 	'''
 	utils_module.database_conn = duckdb.connect(utils_module.database_name)
 	result = utils_module.database_conn.execute("SELECT fact_num, fact FROM train_facts").fetchall()
@@ -34,8 +34,15 @@ def get_all_train_facts():
 	embed = discord.Embed(title="Train Facts", colour=0xffffff)
 	for row in result:
 		embed.add_field(name=f"Fact {row[0]}", value=row[1], inline=False)
-	embed.set_author(name="SkyeNet", icon_url=utils_module.discord_bot.user.display_avatar.url)
-	return result
+	# If the bot user exists, set its avatar as the author icon
+	try:
+		embed.set_author(name="SkyeNet", icon_url=utils_module.discord_bot.user.display_avatar.url)
+	except Exception:
+		# Ignore if discord bot/user isn't available in this context
+		pass
+	if len(result) == 0:
+		embed.description = "No train facts available."
+	return embed
 
 def insert_train_fact(fact):
 	'''
