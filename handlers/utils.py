@@ -188,21 +188,6 @@ def readable(size_bytes: int):
 		i += 1
 	return f"{size_bytes:.2f}{units[i]}"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Discord outputs
 message_log_channel_id = int(os.getenv("MESSAGE_LOGGING"))
 member_log_channel_id = int(os.getenv("MEMBER_LOGGING"))
@@ -231,28 +216,28 @@ def fill_emojis():
 	all_emojis["NOT_FAR"] = int(os.getenv('NOT_FAR'))
 	all_emojis["AUTISM_CREATURE"] = int(os.getenv('AUTISM_CREATURE'))
 	
-	all_emojis["VTM_ANARCH"] = int(os.getenv('VTM_ANARCH'))
-	all_emojis["VTM_BANU_HAQIM"] = int(os.getenv('VTM_BANU_HAQIM'))
-	all_emojis["VTM_BOOK_OF_NOD"] = int(os.getenv('VTM_BOOK_OF_NOD'))
-	all_emojis["VTM_BRUJAH"] = int(os.getenv('VTM_BRUJAH'))
-	all_emojis["VTM_CAMARILLA"] = int(os.getenv('VTM_CAMARILLA'))
-	all_emojis["VTM_GANGREL"] = int(os.getenv('VTM_GANGREL'))
-	all_emojis["VTM_HECATA"] = int(os.getenv('VTM_HECATA'))
-	all_emojis["VTM_LASOMBRA"] = int(os.getenv('VTM_LASOMBRA'))
-	all_emojis["VTM_MALKAVIAN"] = int(os.getenv('VTM_MALKAVIAN'))
-	all_emojis["VTM_MINISTRY"] = int(os.getenv('VTM_MINISTRY'))
-	all_emojis["VTM_NOSFERATU"] = int(os.getenv('VTM_NOSFERATU'))
-	all_emojis["VTM_RAVNOS"] = int(os.getenv('VTM_RAVNOS'))
-	all_emojis["VTM_SABBAT"] = int(os.getenv('VTM_SABBAT'))
-	all_emojis["VTM_TOREADOR"] = int(os.getenv('VTM_TOREADOR'))
-	all_emojis["VTM_TREMERE"] = int(os.getenv('VTM_TREMERE'))
-	all_emojis["VTM_TZIMISCE"] = int(os.getenv('VTM_TZIMISCE'))
-	all_emojis["VTM_VENTRUE"] = int(os.getenv('VTM_VENTRUE'))
-	all_emojis["VTM"] = int(os.getenv('VTM'))
-	
 	all_emojis["POINT"] = int(os.getenv('POINT'))
 	all_emojis["NUH_UH"] = int(os.getenv('NUH_UH'))
 	all_emojis["WAGGING_FINGER"] = int(os.getenv('WAGGING_FINGER'))
 	all_emojis["LESBIAN_BRICK"] = int(os.getenv('LESBIAN_BRICK'))
 	all_emojis["CHOMP"] = int(os.getenv('CHOMP'))
 	all_emojis["HEADPAT"] = int(os.getenv('HEADPAT'))
+
+def is_user_banned(user_id:int):
+	return user_id in all_banned_users
+
+def is_user_in_guild(interaction:discord.Interaction):
+	if interaction.guild_id is None or interaction.user is None:
+		return False
+	
+	if is_user_banned(interaction.user.id):
+		return False
+	
+	guild = discord_bot.get_guild(interaction.guild_id)
+	if guild is None:
+		return False
+	
+	user = guild.get_member(interaction.user.id)
+	if user is None:
+		return False
+	return True

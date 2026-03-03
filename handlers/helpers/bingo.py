@@ -153,13 +153,13 @@ class BingoButton(discord.ui.Button):
 		view = BingoView(self.guild_id, self.bingo_name, self.card_owner_id, items)
 		embed = get_complete_bingo_embed(self.guild_id, self.card_owner_id, self.bingo_name, items)
 
-		if is_winning_bingo(items):
-			embed.colour = colour_green
-			await interaction.response.send_message("BINGO! We have a winner!")
-		else:
-			embed.colour = colour_white
+		winner = is_winning_bingo(items)
+		embed.colour = colour_green if winner else colour_white
 
 		await interaction.response.edit_message(embed=embed, view=view)
+
+		if winner:
+			await interaction.followup.send(f"BINGO! We have a winner, congratulations <@{self.card_owner_id}>!")
 
 class BingoView(discord.ui.View):
 	def __init__(self, guild_id:int, bingo_name:str, card_owner_id:int, items:list):

@@ -38,19 +38,19 @@ async def message(message:discord.Message):
 			for link in spotify_tracks:
 				embed = spotify_module.get_spotify_track_embed(link)
 				if embed:
-					await message.reply(embed=embed)
+					await message.reply(embed=embed, mention_author=False)
 					message_sent = True
 	
 			for link in spotify_albums:
 				embed = spotify_module.get_spotify_album_embed(link)
 				if embed:
-					await message.reply(embed=embed)
+					await message.reply(embed=embed, mention_author=False)
 					message_sent = True
 	
 			for link in spotify_playlists:
 				embed = spotify_module.get_spotify_playlist_embed(link)
 				if embed:
-					await message.reply(embed=embed)
+					await message.reply(embed=embed, mention_author=False)
 					message_sent = True
 	
 	except Exception as e:

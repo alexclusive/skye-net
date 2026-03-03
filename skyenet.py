@@ -17,6 +17,7 @@ from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 command_called_log_string = "Command called"
 event_triggered_log_string = "Event triggered"
 something_went_wrong = "Something went wrong :("
+must_be_guild_member = "You must be a server member to use this command."
 
 '''
 	Commands
@@ -146,7 +147,7 @@ async def get_banned_users(interaction:discord.Interaction):
 		print(f"Error getting banned users: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(description="[Admin] Ban a user from openai interactions")
+@utils_module.discord_bot.tree.command(description="[Admin] Ban a user from certain bot interactions")
 @admin_only()
 async def ban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
@@ -157,7 +158,7 @@ async def ban_user(interaction:discord.Interaction, user:discord.User):
 		print(f"Error banning user: {e}")
 		await interaction.followup.send(something_went_wrong)
 
-@utils_module.discord_bot.tree.command(description="[Admin] Unban a user from openai interactions")
+@utils_module.discord_bot.tree.command(description="[Admin] Unban a user from certain bot interactions")
 @admin_only()
 async def unban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
@@ -330,6 +331,10 @@ async def update_bingo_template(interaction:discord.Interaction, bingo_name:str,
 async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
+	if not utils_module.is_user_in_guild(interaction):
+		await interaction.followup.send(must_be_guild_member)
+		logger_module.log(LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
+		return
 	try:
 		await commands_module.get_bingo_card(interaction, bingo_name)
 	except Exception as e:
@@ -340,6 +345,10 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
+	if not utils_module.is_user_in_guild(interaction):
+		await interaction.followup.send(must_be_guild_member)
+		logger_module.log(LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
+		return
 	try:
 		await commands_module.create_bingo_card(interaction, bingo_name)
 	except Exception as e:
@@ -350,6 +359,10 @@ async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
 async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
+	if not utils_module.is_user_in_guild(interaction):
+		await interaction.followup.send(must_be_guild_member)
+		logger_module.log(LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
+		return
 	try:
 		await commands_module.reset_bingo_card(interaction, bingo_name)
 	except Exception as e:
@@ -360,7 +373,11 @@ async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
-	try:
+	if not utils_module.is_user_in_guild(interaction):
+		await interaction.followup.send(must_be_guild_member)
+		logger_module.log(LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
+		return
+	try:		
 		await commands_module.get_bingo_card_items(interaction, bingo_name)
 	except Exception as e:
 		print(f"Error getting bingo card items: {e}")
@@ -459,153 +476,6 @@ async def etymology(interaction:discord.Interaction, argument:str):
 	except Exception as e:
 		print(f"Error getting etymology: {e}")
 		await interaction.followup.send(something_went_wrong)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Stickers
-# @utils_module.discord_bot.tree.command(description="[Owner] Get a list of all stickers in all guilds")
-# @owner_only()
-# async def get_all_stickers(interaction:discord.Interaction):
-# 	await interaction.response.defer(ephemeral=True)
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.get_stickers(interaction)
-# 	except Exception as e:
-# 		print(f"Error getting stickers: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Get a list of all stickers for this guild")
-# @admin_only()
-# async def get_stickers(interaction:discord.Interaction):
-# 	await interaction.response.defer(ephemeral=True)
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.get_stickers_for_guild(interaction)
-# 	except Exception as e:
-# 		print(f"Error getting stickers: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Add a sticker")
-# @admin_only()
-# async def add_sticker(interaction:discord.Interaction, sticker_id:str):
-# 	await interaction.response.defer(ephemeral=True)
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.add_sticker(interaction, sticker_id)
-# 	except Exception as e:
-# 		print(f"Error adding sticker: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Remove a sticker")
-# @admin_only()
-# async def remove_sticker(interaction:discord.Interaction, sticker_id:str):
-# 	await interaction.response.defer(ephemeral=True)
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.remove_sticker(interaction, sticker_id)
-# 	except Exception as e:
-# 		print(f"Error removing sticker: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# # Logging
-# @utils_module.discord_bot.tree.command(description="[Admin] Get logging channels")
-# @admin_only()
-# async def get_logging_channels(interaction:discord.Interaction):
-# 	await interaction.response.defer()
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.get_log_channels(interaction)
-# 	except Exception as e:
-# 		print(f"Error getting log channels: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Set logging channel")
-# @admin_only()
-# async def set_logging_channel(interaction:discord.Interaction, message_channel:discord.TextChannel=None, member_channel:discord.TextChannel=None, role_channel:discord.TextChannel=None):
-# 	await interaction.response.defer()
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.set_log_channels(interaction, message_channel, member_channel, role_channel)
-# 	except Exception as e:
-# 		print(f"Error setting log channels: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Get important roles")
-# @admin_only()
-# async def get_roles(interaction:discord.Interaction):
-# 	await interaction.response.defer()
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.get_important_roles(interaction)
-# 	except Exception as e:
-# 		print(f"Error getting important roles: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Set important roles")
-# @admin_only()
-# async def set_roles(interaction:discord.Interaction, welcomed:discord.Role=None, trusted:discord.Role=None, trusted_time_days:int=14):
-# 	await interaction.response.defer()
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.set_important_roles(interaction, welcomed, trusted, trusted_time_days)
-# 	except Exception as e:
-# 		print(f"Error setting important roles: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# # Reaction Triggers
-# @utils_module.discord_bot.tree.command(description="[Admin] Get the list of reactions")
-# @admin_only()
-# async def get_reactions(interaction:discord.Interaction):
-# 	await interaction.response.defer()
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.get_reactions(interaction)
-# 	except Exception as e:
-# 		print(f"Error getting reactions: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Insert a reaction trigger")
-# @admin_only()
-# async def insert_reaction(interaction:discord.Interaction, trigger:str, emoji_1:str, emoji_2:str="", emoji_3:str=""):
-# 	await interaction.response.defer()
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.insert_reaction(interaction, trigger, emoji_1, emoji_2, emoji_3)
-# 	except Exception as e:
-# 		print(f"Error inserting reaction: {e}")
-# 		await interaction.followup.send(something_went_wrong)
-
-# @utils_module.discord_bot.tree.command(description="[Admin] Remove a reaction trigger")
-# @admin_only()
-# async def remove_reaction(interaction:discord.Interaction, trigger:str):
-# 	await interaction.response.defer()
-# 	logger_module.log(LOG_DETAIL, command_called_log_string)
-# 	try:
-# 		await commands_module.remove_reaction(interaction, trigger)
-# 	except Exception as e:
-# 		print(f"Error removing reaction: {e}")
-# 		await interaction.followup.send(something_went_wrong)
 
 '''
 	Events
