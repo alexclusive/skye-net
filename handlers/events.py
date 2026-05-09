@@ -1,7 +1,6 @@
-from discord.errors import Forbidden
 import discord
-from datetime import datetime as dt
 import re
+from datetime import datetime as dt
 
 import handlers.utils as utils_module
 import handlers.logger as logger_module
@@ -65,7 +64,7 @@ async def message(message:discord.Message):
 		await triggers_module.handle_reactions(message, utils_module.all_emojis)
 		if not message_sent:
 			await triggers_module.handle_triggers(message, utils_module.all_emojis)
-	except Forbidden as e:
+	except discord.errors.Forbidden as e:
 		if e.code == 90001: # blocked
 			print(f"on_message: I was blocked by user {message.author} :(")
 			logger_module.log(LOG_EXTRA_DETAIL, f"User {message.author.name} blocked Skyenet :(")
@@ -291,9 +290,35 @@ async def member_remove(member:discord.Member):
 			log_channel = utils_module.get_default_log_channel()
 			if log_channel is None:
 				return
+			
+		leave_type = "left"
+		try:
+			# Check audit logs to see kicks and bans (requires View Audit Log permission)
+			async for entry in member.guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
+				if entry.target.id == member.id:
+					leave_type = "kicked"
+					break
+			if leave_type == "left":
+				async for entry in member.guild.audit_logs(limit=5, action=discord.AuditLogAction.ban):
+					if entry.target.id == member.id:
+						leave_type = "banned"
+						break
+		except discord.errors.Forbidden:
+			# No permission to view audit logs, check the ban list (requires Ban Members permission)
+			try:
+				banned_users = await member.guild.bans()
+				for ban_entry in banned_users:
+					if ban_entry.user.id == member.id:
+						leave_type = "banned"
+						break
+			except Exception as _:
+				# No permission to view bans
+				pass
+		except Exception as e:
+			print(f"member_remove: error checking audit logs {e}")
 
 		embed = discord.Embed(
-			title=f"Member Remove {member.name} {member.mention}",
+			title = f"{member.guild.name}: {member.name} ({member.display_name}) {leave_type} the server",
 			colour=0xff0000,
 		)
 		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()), inline=False)

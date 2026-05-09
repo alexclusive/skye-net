@@ -11,8 +11,32 @@ all_banned_users = []
 all_emojis = {}
 all_stickers = {}
 
-intents = discord.Intents.all()
-intents.members = True
+def get_all_intents() -> discord.Intents:
+	intents = discord.Intents.all() # Don't believe this actually works
+	intents.guilds = True
+	intents.members = True
+	intents.moderation = True
+	intents.expressions = True
+	intents.integrations = True
+	intents.webhooks = True
+	intents.invites = True
+	intents.voice_states = True
+	intents.presences = True
+	intents.guild_messages = True
+	intents.dm_messages = True
+	intents.guild_reactions = True
+	intents.dm_reactions = True
+	intents.guild_typing = True
+	intents.dm_typing = True
+	intents.message_content = True
+	intents.guild_scheduled_events = True
+	intents.auto_moderation_configuration = True
+	intents.auto_moderation_execution = True
+	intents.guild_polls = True
+	intents.dm_polls = True
+	return intents
+
+intents = get_all_intents()
 discord_bot = commands.Bot(command_prefix="!", intents=intents)
 
 received_shutdown = False

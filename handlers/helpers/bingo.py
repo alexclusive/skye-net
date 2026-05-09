@@ -69,6 +69,11 @@ def get_bingo_card(guild_id:int, bingo_name:str, user_id:int) -> tuple:
 	embed = create_bingo_embed(guild_id, user_id, bingo_name)
 
 	if not does_bingo_card_exist(guild_id, bingo_name, user_id):
+		# check whether template exists separately so we can give a better message
+		if not database_module.does_bingo_template_exist(guild_id, bingo_name):
+			embed.description = f"Bingo template '{bingo_name}' does not exist."
+		else:
+			embed.description = f"You have no bingo card for the {bingo_name} bingo"
 		return embed, None
 	
 	items = split_bingo_card_items(database_module.get_bingo_card(guild_id, bingo_name, user_id))
@@ -106,7 +111,7 @@ def does_bingo_card_exist(guild_id:int, bingo_name:str, user_id:int) -> bool:
 def create_bingo_embed(guild_id:int, user_id:int, bingo_name:str) -> discord.Embed:
 	user = utils_module.discord_bot.get_user(user_id)
 	if user:
-		embed_title = f"{user.name}'s {bingo_name} Bingo Card"
+		embed_title = f"{user.display_name}'s {bingo_name} Bingo Card"
 	else:
 		embed_title = f"Unknown user's {bingo_name} Bingo Card"
 

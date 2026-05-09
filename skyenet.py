@@ -19,6 +19,8 @@ event_triggered_log_string = "Event triggered"
 something_went_wrong = "Something went wrong :("
 must_be_guild_member = "You must be a server member to use this command."
 
+owner_commands = ["die", "set_debug_level", "force_trusted_roles", "force_audit_log", "get_todo", "add_todo", "remove_todo", "info", "send_as_bot",  "get_opt_out_users", "get_all_bingo_templates", "get_bingo_templates"]
+
 '''
 	Commands
 	[Owner] is for just the bot owner
@@ -36,6 +38,7 @@ def admin_only():
 
 # Generic Owner Only Commands
 @utils_module.discord_bot.tree.command(description="[Owner] Shutdown the bot")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def die(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -47,6 +50,7 @@ async def die(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Set debug level (0-3)")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def set_debug_level(interaction:discord.Interaction, level:int):
 	await interaction.response.defer(ephemeral=True)
@@ -58,6 +62,7 @@ async def set_debug_level(interaction:discord.Interaction, level:int):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Force trusted roles task")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def force_trusted_roles(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -69,6 +74,7 @@ async def force_trusted_roles(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Force audit log check")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 	await interaction.response.defer(ephemeral=True)
@@ -81,6 +87,7 @@ async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 
 # To Do List
 @utils_module.discord_bot.tree.command(description="[Owner] Get to do list")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def get_todo(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -92,6 +99,7 @@ async def get_todo(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Add to do item")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def add_todo(interaction:discord.Interaction, item:str):
 	await interaction.response.defer(ephemeral=True)
@@ -103,6 +111,7 @@ async def add_todo(interaction:discord.Interaction, item:str):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Remove to do item")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def remove_todo(interaction:discord.Interaction, item_num:int):
 	await interaction.response.defer(ephemeral=True)
@@ -114,6 +123,7 @@ async def remove_todo(interaction:discord.Interaction, item_num:int):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Get bot info and system specs")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def info(interaction:discord.Interaction):
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -121,6 +131,7 @@ async def info(interaction:discord.Interaction):
 	await commands_module.get_bot_info(interaction)
 
 @utils_module.discord_bot.tree.command(description="[Owner] Send message as Skye-net")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def send_as_bot(interaction:discord.Interaction, channel_id:str, server_id:str, message:str):
 	logger_module.log(LOG_DETAIL, command_called_log_string)
@@ -136,7 +147,8 @@ async def send_as_bot(interaction:discord.Interaction, channel_id:str, server_id
 	await commands_module.send_as_bot(interaction, channel, message)
 
 # Open AI
-@utils_module.discord_bot.tree.command(description="[Admin] Get openai banned users")
+@utils_module.discord_bot.tree.command(description="[Admin] Get users banned from certain bot interactions")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def get_banned_users(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -148,6 +160,7 @@ async def get_banned_users(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Ban a user from certain bot interactions")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def ban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
@@ -159,6 +172,7 @@ async def ban_user(interaction:discord.Interaction, user:discord.User):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Unban a user from certain bot interactions")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def unban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
@@ -191,6 +205,7 @@ async def set_prompt(interaction:discord.Interaction, prompt:str):
 
 # Reaction Opt-in / Opt-out
 @utils_module.discord_bot.tree.command(description="[Owner] Get list of user IDs that have opted out of reactions")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def get_opt_out_users(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -202,6 +217,7 @@ async def get_opt_out_users(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Opt a user out of reactions")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def opt_out_user(interaction:discord.Interaction, user_id:int):
 	await interaction.response.defer(ephemeral=True)
@@ -213,6 +229,7 @@ async def opt_out_user(interaction:discord.Interaction, user_id:int):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Opt a user in to reactions")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def opt_in_user(interaction:discord.Interaction, user_id:int):
 	await interaction.response.defer(ephemeral=True)
@@ -245,6 +262,7 @@ async def opt_in(interaction:discord.Interaction):
 
 # Bingo
 @utils_module.discord_bot.tree.command(description="[Owner] Get all bingo templates")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def get_all_bingo_templates(interaction:discord.Interaction):
 	await interaction.response.defer(ephemeral=True)
@@ -256,6 +274,7 @@ async def get_all_bingo_templates(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Get bingo templates for this guild")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
 async def get_bingo_templates(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -267,6 +286,7 @@ async def get_bingo_templates(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Create a bingo template")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def create_bingo_template(interaction:discord.Interaction, bingo_name:str, free_space:bool, items_csv:str="", items_message_id:str=""):
 	await interaction.response.defer()
@@ -292,6 +312,7 @@ async def create_bingo_template(interaction:discord.Interaction, bingo_name:str,
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Delete a bingo template")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str):
 	await interaction.response.defer()
@@ -303,6 +324,7 @@ async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str)
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Update a bingo template")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def update_bingo_template(interaction:discord.Interaction, bingo_name:str, items_csv:str="", items_message_id:str=""):
 	await interaction.response.defer()
@@ -352,7 +374,7 @@ async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	try:
 		await commands_module.create_bingo_card(interaction, bingo_name)
 	except Exception as e:
-		print(f"Error recreating bingo card: {e}")
+		print(f"Error creating bingo card: {e}")
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="Reset a bingo card")
@@ -385,6 +407,7 @@ async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 
 # Train Facts
 @utils_module.discord_bot.tree.command(description="[Admin] Enter train fact")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def enter_train_fact(interaction:discord.Interaction, fact:str):
 	await interaction.response.defer()
@@ -396,6 +419,7 @@ async def enter_train_fact(interaction:discord.Interaction, fact:str):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Remove train fact")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def remove_train_fact(interaction:discord.Interaction, fact_num:int):
 	await interaction.response.defer()
@@ -407,6 +431,7 @@ async def remove_train_fact(interaction:discord.Interaction, fact_num:int):
 		await interaction.followup.send(something_went_wrong)
 
 @utils_module.discord_bot.tree.command(description="[Admin] Get the list of train facts")
+@discord.app_commands.default_permissions(administrator=True)
 @admin_only()
 async def get_train_facts(interaction:discord.Interaction):
 	await interaction.response.defer()
@@ -480,11 +505,33 @@ async def etymology(interaction:discord.Interaction, argument:str):
 '''
 	Events
 '''
+async def ensure_correct_permissions():
+	for guild in utils_module.discord_bot.guilds:
+		for cmd in await utils_module.discord_bot.tree.fetch_commands(guild=guild):
+			if cmd.name in owner_commands:
+				perm = discord.app_commands.PermissionOverwrite(
+					id=utils_module.owner_id,
+					type=discord.app_commands.PermissionType.user,
+					permission=True
+				)
+				await cmd.edit_permissions(guild=guild, permissions=[perm])
+
+	die.dm_permission = False
+	set_debug_level.dm_permission = False
+	force_trusted_roles.dm_permission = False
+	force_audit_log.dm_permission = False
+	get_todo.dm_permission = False
+	add_todo.dm_permission = False
+	remove_todo.dm_permission = False
+	info.dm_permission = False
+	send_as_bot.dm_permission = False
+
 @utils_module.discord_bot.event
 async def on_ready():
 	logger_module.log(LOG_DETAIL, event_triggered_log_string)
 	await utils_module.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching...", type=discord.ActivityType.watching))
 	await utils_module.discord_bot.tree.sync()
+	await ensure_correct_permissions() # gotta be after sync, cause sync updates which guilds we're in
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
 	_ = psutil.cpu_percent(percpu=True) # first call is always 0.0, so call it once to get actual data next time
 	tasks_module.tasks_on_ready()
@@ -543,25 +590,38 @@ async def on_member_ban(member:discord.Member):
 '''
 	Discord handling
 '''
+def _log_send_exception(task:asyncio.Task) -> None:
+	try:
+		task.result()
+	except Exception as e:
+		logger_module.log(LOG_INFO, f"Discord send failed: {e}")
+
+async def _send_message_async(channel:discord.abc.Messageable, message:str) -> None:
+	try:
+		await channel.send(message)
+	except discord.HTTPException as e:
+		if getattr(e, 'code', None) == 32:
+			await asyncio.sleep(0.5)
+			await channel.send(message)
+		else:
+			raise
+
 def send_message(channel:discord.abc.Messageable, message:str) -> None:
 	if len(message) > 2000:  # discord won't allow longer than 2000 characters, so split it up
 		for i in range(0, len(message), 2000):
 			chunk = message[i:i+2000]
-			_ = asyncio.ensure_future(channel.send(chunk))
+			task = asyncio.ensure_future(_send_message_async(channel, chunk))
+			task.add_done_callback(_log_send_exception)
 	else:
-		_ = asyncio.ensure_future(channel.send(message))
+		task = asyncio.ensure_future(_send_message_async(channel, message))
+		task.add_done_callback(_log_send_exception)
 
 def send_output_to_discord(message:str):
 	message = message.strip()
 	if message:
 		channel = utils_module.discord_bot.get_channel(utils_module.stdout_channel_id)
 		if channel:
-			try: # catch error code 32: broken pipe
-				send_message(channel, message)
-			except discord.HTTPException as e:
-				if e.code == 32:
-					asyncio.sleep(0.5) # wait for a bit and try again
-					send_message(channel, message)
+			send_message(channel, message)
 
 async def run_bot():
 	logger_module.set_log_file(utils_module.log_file_path)

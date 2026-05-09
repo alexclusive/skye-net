@@ -279,7 +279,11 @@ async def update_bingo_template_through_csv(interaction:discord.Interaction, bin
 
 async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	embed, view = bingo_module.get_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
-	await interaction.followup.send(embed=embed, view=view)
+	# view may be None if the card could not be generated (e.g. template missing)
+	if view is not None:
+		await interaction.followup.send(embed=embed, view=view)
+	else:
+		await interaction.followup.send(embed=embed)
 
 async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	bingo_module.reset_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
@@ -322,6 +326,7 @@ async def train_fact(interaction:discord.Interaction):
 	fact = database_module.get_random_train_fact()
 	if fact is None:
 		await interaction.followup.send("No train facts found :(")
+		return
 	embed = discord.Embed(title="Train Fact", description=fact, colour=0xffffff)
 	await interaction.followup.send(embed=embed)
 
