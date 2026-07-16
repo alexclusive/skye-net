@@ -52,10 +52,13 @@ async def die(interaction:discord.Interaction):
 @utils_module.discord_bot.tree.command(description="[Owner] Set debug level (0-3)")
 @discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
-async def set_debug_level(interaction:discord.Interaction, level:int):
+async def set_debug_level(interaction:discord.Interaction, level:int = 0):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
+		if not 0 <= level <= 3:
+			await interaction.followup.send("Debug level must be between 0 and 3")
+			return
 		await commands_module.set_debug_level(interaction, level)
 	except Exception as e:
 		print(f"Error setting debug level: {e}")
@@ -453,20 +456,22 @@ async def train_fact(interaction:discord.Interaction):
 		await interaction.followup.send(something_went_wrong)
 
 # Train Game
+@discord.app_commands.describe(
+	number="The starting number for the game - four digits",
+	target="The target number to reach - default 10",
+	strict_mode="Only use basic operations (+-*/), and do not permutate the numbers - default False"
+)
 @utils_module.discord_bot.tree.command(description="Train game - get to [target] using (+-*/) and optionally (^%)")
 async def train_game(
 	interaction:discord.Interaction,
-	number:int,  # The starting number for the game - four digits
-	target:int = 10,  # The target number to reach - default 10
-	use_power:str = "True",  # Allow usage of the power (^) operation - default True
-	use_modulo:str = "True",  # Allow usage of the modulo (%) operation - default True
+	number:int,
+	target:int = 10,
+	strict_mode:bool = False,
 ):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
-		use_power_bool = "true" in use_power.lower()
-		use_modulo_bool = "true" in use_modulo.lower()
-		await commands_module.train_game(interaction, number, target, use_power_bool, use_modulo_bool)
+		await commands_module.train_game(interaction, number, target, strict_mode)
 	except Exception as e:
 		print(f"Error getting train game: {e}")
 		await interaction.followup.send(something_went_wrong)

@@ -331,7 +331,7 @@ async def train_fact(interaction:discord.Interaction):
 	await interaction.followup.send(embed=embed)
 
 # Train Game
-async def train_game(interaction:discord.Interaction, number, target, use_power, use_modulo):
+async def train_game(interaction:discord.Interaction, number, target, strict_mode):
 	try:
 		target = int(target)
 		number_str = str(number)
@@ -346,14 +346,14 @@ async def train_game(interaction:discord.Interaction, number, target, use_power,
 		print(f"Train game: error converting. {e}")
 		await interaction.followup.send("Sorry! Unable to compute.")
 		return
-	await train_game_module.attempt_train_game(interaction, number, a, b, c, d, target, use_power, use_modulo)
+	await train_game_module.train_game(interaction, number, a, b, c, d, target, strict_mode)
 
 async def train_game_rules(interaction:discord.Interaction):
 	rules = "In each car for every train, there is a four digit number.\n"
 	rules += "We break down the number into four separate digits, and perform simple arithmetic operations to reach a specified target.\n"
 	rules += "In general, the target number is 10 (but you can also use any other integer).\n"
 	rules += "By default, the operations are: addition (+), subtraction (-), multiplication (*), and division (/).\n"
-	rules += "Optionally, you can also use power/exponentiation (^), and modulo (%).\n"
+	rules += "Optionally, with strict_mode you can also use power/exponentiation (^), and modulo (%). This also disallows permutation of the digits.\n"
 
 	embed = discord.Embed(title="Train Game Rules", colour=0xffffff, description=rules)
 

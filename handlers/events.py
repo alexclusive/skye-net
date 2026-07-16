@@ -128,7 +128,12 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 			except discord.NotFound as e:
 				logger_module.log(LOG_DETAIL, f"Error attempting to retrieve message attachments from a message that was deleted. Error: {e}")
 				if e.status == 404 and e.code == 0:
-					embeds[0].add_field(name="Attachments", value="Attachment/s not found (not cached before deletion)")
+					attachment_urls = "\n".join([attachment.url for attachment in message.attachments])
+					if attachment_urls:
+						embed_message = "Attachment/s could not be retrieved normally, using direct URLs:\n" + attachment_urls
+						embeds[0].add_field(name="Attachments", value=embed_message, inline=False)
+					else:
+						embeds[0].add_field(name="Attachments", value="Attachment/s could not be retrieved after deletion", inline=False)
 
 		# Add the original sent time to the first embed if possible
 		try:
