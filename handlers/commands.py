@@ -11,6 +11,7 @@ import handlers.tasks as tasks_module
 import handlers.helpers.train_game as train_game_module
 import handlers.helpers.etymology as etymology_module
 import handlers.helpers.bingo as bingo_module
+import handlers.helpers.train_info as train_info_module
 
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
@@ -330,18 +331,22 @@ async def train_fact(interaction:discord.Interaction):
 	embed = discord.Embed(title="Train Fact", description=fact, colour=0xffffff)
 	await interaction.followup.send(embed=embed)
 
+async def reread_train_info_html(interaction:discord.Interaction):
+	train_info_module.convert_html_to_csv()
+	train_info_module.read_csv_into_trains()
+	await interaction.followup.send("Finished rereading train info html and updating train sets")
+
 # Train Game
 async def train_game(interaction:discord.Interaction, number, target, strict_mode):
 	try:
 		target = int(target)
-		number_str = str(number)
-		if len(number_str) != 4:
-			await interaction.followup.send("`" + number_str + "` is not valid for the train game. Please give a four digit number (0000-9999).")
+		if len(number) != 4:
+			await interaction.followup.send("`" + number + "` is not valid for the train game. Please give a four digit number (0000-9999).")
 			return
-		a = int(number_str[0]) # these will raise an exception if they can't convert
-		b = int(number_str[1])
-		c = int(number_str[2])
-		d = int(number_str[3])
+		a = int(number[0]) # these will raise an exception if they can't convert
+		b = int(number[1])
+		c = int(number[2])
+		d = int(number[3])
 	except Exception as e:
 		print(f"Train game: error converting. {e}")
 		await interaction.followup.send("Sorry! Unable to compute.")
@@ -428,7 +433,7 @@ async def remove_sticker(interaction:discord.Interaction, sticker_id:str):
 	database_module.remove_sticker(interaction.guild_id, sticker_id)
 	await interaction.followup.send(f"Sticker with ID {sticker_id} removed")
 
-# Loogging
+# Logging
 async def get_log_channels(interaction:discord.Interaction):
 	if not utils_module.is_admin(interaction):
 		await interaction.followup.send(nice_try)

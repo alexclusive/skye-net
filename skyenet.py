@@ -36,7 +36,21 @@ def admin_only():
 		return utils_module.is_admin(interaction)
 	return discord.app_commands.check(predicate)
 
-# Generic Owner Only Commands
+# Owner Only Commands
+@utils_module.discord_bot.tree.command(description="[Owner] Run a test command")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
+@owner_only()
+async def run_test(interaction:discord.Interaction):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		# Put test command here, so you don't have to restart discord every time to test a new function
+		commands_module.train_info_module.print_all_train_set_names()
+		await interaction.followup.send("No test command set up - DONE")
+	except Exception as e:
+		print(f"Error running test: {e}")
+		await interaction.followup.send(something_went_wrong)
+
 @utils_module.discord_bot.tree.command(description="[Owner] Shutdown the bot")
 @discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
@@ -92,6 +106,18 @@ async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 		await commands_module.force_audit_log(interaction, days_to_check)
 	except Exception as e:
 		print(f"Error forcing audit log: {e}")
+		await interaction.followup.send(something_went_wrong)
+
+@utils_module.discord_bot.tree.command(description="[Owner] Reread train info html")
+@discord.app_commands.default_permissions() # No perms, set up in on_ready
+@owner_only()
+async def reread_train_info(interaction:discord.Interaction):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await commands_module.reread_train_info_html(interaction)
+	except Exception as e:
+		print(f"Error rereading train info: {e}")
 		await interaction.followup.send(something_went_wrong)
 
 # To Do List
@@ -528,7 +554,7 @@ async def train_fact(interaction:discord.Interaction):
 @utils_module.discord_bot.tree.command(description="Train game - get to [target] using (+-*/) and optionally (^%)")
 async def train_game(
 	interaction:discord.Interaction,
-	number:int,
+	number:str,
 	target:int = 10,
 	strict_mode:bool = False,
 ):
@@ -604,6 +630,7 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching...", type=discord.ActivityType.watching))
 	await utils_module.discord_bot.tree.sync()
 	await ensure_correct_permissions() # gotta be after sync, cause sync updates which guilds we're in
+	commands_module.train_info_module.read_csv_into_trains()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
 	_ = psutil.cpu_percent(percpu=True) # first call is always 0.0, so call it once to get actual data next time
 	tasks_module.tasks_on_ready()

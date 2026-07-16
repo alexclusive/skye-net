@@ -1,6 +1,7 @@
 import itertools
 import discord
 
+import handlers.helpers.train_info as train_info_module
 import handlers.helpers.paginator as pagination_module
 
 async def train_game(interaction:discord.Interaction, number, a, b, c, d, target, strict_mode):
@@ -40,7 +41,8 @@ async def train_game(interaction:discord.Interaction, number, a, b, c, d, target
 	response = sorted(solutions)
 	num_of_solutions = len(response)
 	if num_of_solutions == 0:
-		await interaction.followup.send("There are no solutions for `" + str(number) + "` to get to target " + str(target))
+		await interaction.followup.send("There are no solutions for `" + number + "` to get to target " + str(target))
+		await show_train_info(interaction, number)
 		return
 
 	try:
@@ -55,10 +57,25 @@ async def train_game(interaction:discord.Interaction, number, a, b, c, d, target
 		response_title, response_subtitle = get_response_start(number, target, num_of_solutions, strict_mode)
 		paginator.set(response_title, response_subtitle, formatted_list)
 		await paginator.send(interaction)
+		await show_train_info(interaction, number)
 	except Exception as e:
 		print(f"Train game: error in pagination. {e}")
 		await interaction.followup.send("Sorry! Something went wrong while displaying the results.")
 
+async def show_train_info(interaction:discord.Interaction, number):
+	car_search = train_info_module.find_car(number)
+	if car_search:
+		train_set, train, full_car_number = car_search
+
+		response = f"The train number {full_car_number} is a set {train_set.train_set_name} train ({train.train_set_num})."
+
+		train_note = train.train_notes
+		if train_set.train_set_name == "Sydney Metro":
+			response += f"\n{train_info_module.get_metro_car_note(number)}"
+		elif len(train_note) > 0:
+			response += f"\n{train_note}"
+
+		await interaction.followup.send(response)
 
 def get_response_start(number, target, num_of_solutions, strict_mode):
 	title = f"**Results for train game with number {number} and target {target}**"
