@@ -12,6 +12,7 @@ import handlers.helpers.train_game as train_game_module
 import handlers.helpers.etymology as etymology_module
 import handlers.helpers.bingo as bingo_module
 import handlers.helpers.train_info as train_info_module
+import handlers.helpers.number_fact as number_fact_module
 
 from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
@@ -363,6 +364,34 @@ async def train_game_rules(interaction:discord.Interaction):
 	embed = discord.Embed(title="Train Game Rules", colour=0xffffff, description=rules)
 
 	await interaction.followup.send(embed=embed)
+
+# Number Facts
+async def update_number_fact(interaction:discord.Interaction, number:int, fact:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.update_number_fact(number, fact)
+	await interaction.followup.send(f"Fact for number {number} updated to {fact}")
+
+async def append_number_fact(interaction:discord.Interaction, number:int, fact:str):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	database_module.append_number_fact(number, fact)
+	await interaction.followup.send(f"Fact appended for number {number}! Fact is now: {database_module.get_number_fact(number)}")
+
+async def remove_number_fact(interaction:discord.Interaction, number:int):
+	if not utils_module.is_admin(interaction):
+		await interaction.followup.send(nice_try)
+		return
+	fact = database_module.remove_number_fact(number)
+	if fact is None:
+		await interaction.followup.send(f"Fact for number {number} not found")
+	else:
+		await interaction.followup.send(f"Fact removed for number {number}\n{fact}")
+
+async def number_fact(interaction:discord.Interaction, number:int):
+	await number_fact_module.print_number_fact(interaction, number)
 
 # Misc
 async def ping(interaction:discord.Interaction):

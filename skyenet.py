@@ -576,6 +576,65 @@ async def train_game_rules(interaction:discord.Interaction):
 		print(f"Error getting train game rules: {e}")
 		await interaction.followup.send(something_went_wrong)
 
+# Number Facts
+@discord.app_commands.describe(
+	number="Number to update the fun fact for"
+)
+@utils_module.discord_bot.tree.command(description="[Admin] Update the fun fact for a number")
+@discord.app_commands.default_permissions(administrator=True)
+@admin_only()
+async def update_number_fact(interaction:discord.Interaction, number:int, fact:str):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await commands_module.update_number_fact(interaction, number, fact)
+	except Exception as e:
+		print(f"Error updating number fact: {e}")
+		await interaction.followup.send(something_went_wrong)
+
+@discord.app_commands.describe(
+	number="Number to append the fun fact for"
+)
+@utils_module.discord_bot.tree.command(description="[Admin] Append to the fun fact for a number")
+@discord.app_commands.default_permissions(administrator=True)
+@admin_only()
+async def append_number_fact(interaction:discord.Interaction, number:int, fact:str):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await commands_module.append_number_fact(interaction, number, fact)
+	except Exception as e:
+		print(f"Error appending number fact: {e}")
+		await interaction.followup.send(something_went_wrong)
+
+@discord.app_commands.describe(
+	number="Number to remove the fun fact for"
+)
+@utils_module.discord_bot.tree.command(description="[Admin] Remove the fun fact for a number")
+@discord.app_commands.default_permissions(administrator=True)
+@admin_only()
+async def remove_number_fact(interaction:discord.Interaction, number:int):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await commands_module.remove_number_fact(interaction, number)
+	except Exception as e:
+		print(f"Error removing number fact: {e}")
+		await interaction.followup.send(something_went_wrong)
+
+@discord.app_commands.describe(
+	number="Number to find a fun fact about"
+)
+@utils_module.discord_bot.tree.command(description="Get a fun fact about a number")
+async def number_fact(interaction:discord.Interaction, number:int):
+	await interaction.response.defer()
+	logger_module.log(LOG_DETAIL, command_called_log_string)
+	try:
+		await commands_module.number_fact(interaction, number)
+	except Exception as e:
+		print(f"Error getting number fact: {e}")
+		await interaction.followup.send(something_went_wrong)
+
 # Misc
 @utils_module.discord_bot.tree.command(description="Check the bot's ping")
 async def ping(interaction:discord.Interaction):

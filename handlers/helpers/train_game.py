@@ -1,8 +1,12 @@
 import itertools
 import discord
 
+import handlers.logger as logger_module
 import handlers.helpers.train_info as train_info_module
 import handlers.helpers.paginator as pagination_module
+import handlers.helpers.number_fact as number_fact_module
+
+from handlers.logger import LOG_SETUP, LOG_INFO, LOG_DETAIL, LOG_EXTRA_DETAIL
 
 async def train_game(interaction:discord.Interaction, number, a, b, c, d, target, strict_mode):
 	solutions = set()
@@ -42,12 +46,13 @@ async def train_game(interaction:discord.Interaction, number, a, b, c, d, target
 	num_of_solutions = len(response)
 	if num_of_solutions == 0:
 		await interaction.followup.send("There are no solutions for `" + number + "` to get to target " + str(target))
-		await show_train_info(interaction, number)
+		await show_extra_info(interaction, number)
 		return
 
 	try:
 		formatted_list = solve_and_format(response, target)
 	except Exception as e:
+		logger_module.log(LOG_INFO, f"Train game: error in solving and forming solution list. {e}")
 		print(f"Train game: error in solving and forming solution list. {e}")
 		await interaction.followup.send("Sorry! Unable to compute.")
 		return
@@ -57,12 +62,33 @@ async def train_game(interaction:discord.Interaction, number, a, b, c, d, target
 		response_title, response_subtitle = get_response_start(number, target, num_of_solutions, strict_mode)
 		paginator.set(response_title, response_subtitle, formatted_list)
 		await paginator.send(interaction)
-		await show_train_info(interaction, number)
+		
+		logger_module.log(LOG_INFO, f"Train game: showing train info for number {number}")
+		await show_extra_info(interaction, number)
 	except Exception as e:
+		logger_module.log(LOG_INFO, f"Train game: error in pagination. {e}")
 		print(f"Train game: error in pagination. {e}")
 		await interaction.followup.send("Sorry! Something went wrong while displaying the results.")
 
-async def show_train_info(interaction:discord.Interaction, number):
+async def show_extra_info(interaction:discord.Interaction, number:int):
+	train_info = get_train_info(number)
+	number_fact = number_fact_module.get_number_fact(int(number))
+
+	full_fact = ""
+
+	if len(train_info) != 0 and len(number_fact) != 0:
+		full_fact = f"{train_info}\n{number_fact}"
+	elif len(train_info) != 0:
+		full_fact = train_info
+	elif len(number_fact) != 0:
+		full_fact = number_fact
+
+	if len(full_fact) != 0:
+		await interaction.followup.send(f"Extra info for {number}:\n{full_fact}")
+
+	logger_module.log(LOG_DETAIL, f"Train game: showing extra info for number {number}. Train info: '{train_info}', Number fact: '{number_fact}'")
+
+def get_train_info(number) -> str:
 	car_search = train_info_module.find_car(number)
 	if car_search:
 		train_set, train, full_car_number = car_search
@@ -75,7 +101,8 @@ async def show_train_info(interaction:discord.Interaction, number):
 		elif len(train_note) > 0:
 			response += f"\n{train_note}"
 
-		await interaction.followup.send(response)
+		return response
+	return ""
 
 def get_response_start(number, target, num_of_solutions, strict_mode):
 	title = f"**Results for train game with number {number} and target {target}**"

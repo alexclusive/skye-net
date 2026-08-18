@@ -1,7 +1,4 @@
 import duckdb
-import discord
-from datetime import datetime
-from typing import Optional
 
 import handlers.utils as utils_module
 import handlers.logger as logger_module
@@ -13,6 +10,7 @@ from handlers.helpers.database.db_daily_tasks import *
 from handlers.helpers.database.db_debug_level import *
 from handlers.helpers.database.db_important_roles import *
 from handlers.helpers.database.db_logging_channels import *
+from handlers.helpers.database.db_number_fact import *
 from handlers.helpers.database.db_prompts import *
 from handlers.helpers.database.db_reaction_opt_out import *
 from handlers.helpers.database.db_reactions import *
@@ -47,6 +45,7 @@ def set_up_tables():
 			debug_level
 			important_roles
 			logging_channels
+			number_facts
 			prompts
 			react_opt_out
 			reactions
@@ -114,6 +113,14 @@ def set_up_tables():
 		member_channel_id TEXT,
 		guild_channel_id TEXT,
 		PRIMARY KEY (guild_id)
+	)
+	''')
+
+	utils_module.database_conn.execute('''
+	CREATE TABLE IF NOT EXISTS number_facts (
+		number INTEGER,
+		fact TEXT,
+		PRIMARY KEY (number)
 	)
 	''')
 

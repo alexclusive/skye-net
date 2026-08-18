@@ -19,6 +19,9 @@ async def message(message:discord.Message):
 		if message.author == utils_module.discord_bot.user:
 			return
 
+		if message.webhook_id is not None:
+			return
+
 		message_sent = False
 		if utils_module.discord_bot.user in message.mentions:
 			await openai_module.handle_bot_ping(message)
@@ -166,6 +169,12 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 			else:
 				print(f"message_deleted (after retry): {e}")
 	except Exception as e:
+		if e.errno == 400:  # Bad Request
+			if not retrying:
+				await message_deleted(message, retrying=True)
+				# try again but this time send attachments in separate message
+			else:
+				print(f"message_deleted (after retry): {e}")
 		print(f"message_deleted: {e}")
 
 async def channel_create(channel:discord.abc.GuildChannel):
@@ -301,12 +310,12 @@ async def member_remove(member:discord.Member):
 			# Check audit logs to see kicks and bans (requires View Audit Log permission)
 			async for entry in member.guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
 				if entry.target.id == member.id:
-					leave_type = "kicked"
+					leave_type = "was kicked from"
 					break
 			if leave_type == "left":
 				async for entry in member.guild.audit_logs(limit=5, action=discord.AuditLogAction.ban):
 					if entry.target.id == member.id:
-						leave_type = "banned"
+						leave_type = "was banned from"
 						break
 		except discord.errors.Forbidden:
 			# No permission to view audit logs, check the ban list (requires Ban Members permission)
@@ -314,7 +323,7 @@ async def member_remove(member:discord.Member):
 				banned_users = await member.guild.bans()
 				for ban_entry in banned_users:
 					if ban_entry.user.id == member.id:
-						leave_type = "banned"
+						leave_type = "was banned from"
 						break
 			except Exception as _:
 				# No permission to view bans
@@ -326,12 +335,14 @@ async def member_remove(member:discord.Member):
 			title = f"{member.guild.name}: {member.name} ({member.display_name}) {leave_type} the server",
 			colour=0xff0000,
 		)
+		embed.add_field(name="", value=f"{member.mention}", inline=False)
 		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()), inline=False)
 		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()), inline=False)
 		embed.add_field(name="Left At", value=utils_module.get_timestamp_now_formatted(), inline=False)
 		embed.add_field(name="Roles", value="\n".join([role.name for role in member.roles]), inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+		embed.set_thumbnail(url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:
@@ -356,6 +367,7 @@ async def member_update(before:discord.Member, after:discord.Member):
 			title=f"Member Updated: {display_name}",
 			colour=0x0000ff
 		)
+		
 		if before.nick != after.nick:
 			embed.add_field(name="Nickname", value=f"*Before:* {before.nick}\n*After:* {after.nick}", inline=False)
 		if before.roles != after.roles:
@@ -379,6 +391,8 @@ async def member_update(before:discord.Member, after:discord.Member):
 
 		if not embed.fields:
 			return
+		
+		embed.add_field(name="", value=f"{after.mention}", inline=False)
 
 		embed.set_author(name=before.name, icon_url=before.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_here)
@@ -401,6 +415,7 @@ async def member_ban(member:discord.Member):
 			title=f"Member Banned {member.mention}",
 			colour=0xff0000
 		)
+		embed.add_field(name="", value=f"{member.mention}", inline=False)
 		embed.add_field(name=joined, value=utils_module.get_timestamp_formatted(member.joined_at.timestamp()), inline=False)
 		embed.add_field(name=created, value=utils_module.get_timestamp_formatted(member.created_at.timestamp()), inline=False)
 		embed.add_field(name="Banned At", value=utils_module.get_timestamp_now_formatted(), inline=False)
@@ -408,6 +423,7 @@ async def member_ban(member:discord.Member):
 		embed.add_field(name="Banned By", value=member.guild.me.mention, inline=False)
 
 		embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+		embed.set_thumbnail(url=member.display_avatar.url)
 		embed.timestamp = dt.now(utils_module.timezone_here)
 		await log_channel.send(embed=embed)
 	except Exception as e:

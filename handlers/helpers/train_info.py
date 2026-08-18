@@ -104,7 +104,7 @@ def get_metro_car_note(car_num:str) -> str:
 def convert_html_to_csv():
 	'''
 		Code taken from https://gist.github.com/erd0s/2d0593332c88bfb13dadbaa87d26cd9d
-		Translated from js to py and modified a bit for what I wanted. Other converters didn't take rowspan into account and ended up with misaligned cells
+		Translated from js to py and modified a lot for what I wanted. Other converters didn't take rowspan into account and ended up with misaligned cells
 		To set up: Copy the html table from https://nswtrains.fandom.com/wiki/List_of_Sydney_Trains/NSW_TrainLink_fleets and put into train_info.html
 	'''
 	source_file_path = html_file
