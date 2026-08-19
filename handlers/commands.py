@@ -141,7 +141,7 @@ async def remove_todo(interaction:discord.Interaction, todo_id:int):
 
 # Open AI
 async def get_banned_users(interaction:discord.Interaction):
-	if not utils_module.is_admin(interaction):
+	if not utils_module.is_owner(interaction):
 		await interaction.followup.send(nice_try)
 		return
 	banned_users = database_module.get_all_banned_users()
@@ -160,10 +160,6 @@ async def unban_user(interaction:discord.Interaction, user_id:int):
 		return
 	database_module.unban_user(user_id)
 	await interaction.followup.send(f"User {user_id} unbanned")
-
-async def reset_prompt(interaction:discord.Interaction):
-	utils_module.current_prompt = utils_module.initial_prompt
-	await interaction.followup.send("Prompt reset")
 
 async def set_prompt(interaction:discord.Interaction, new_prompt):
 	if not utils_module.is_owner(interaction):

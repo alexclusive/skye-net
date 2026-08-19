@@ -69,7 +69,7 @@ async def die(interaction:discord.Interaction):
 @utils_module.discord_bot.tree.command(description="[Owner] Set debug level (0-3)")
 @discord.app_commands.default_permissions() # No perms, set up in on_ready
 @owner_only()
-async def set_debug_level(interaction:discord.Interaction, level:int = 0):
+async def set_debug_level(interaction:discord.Interaction, level:int=0):
 	await interaction.response.defer(ephemeral=True)
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
@@ -211,11 +211,11 @@ async def get_banned_users(interaction:discord.Interaction):
 @utils_module.discord_bot.tree.command(description="[Admin] Ban a user from certain bot interactions")
 @discord.app_commands.default_permissions(administrator=True)
 @admin_only()
-async def ban_user(interaction:discord.Interaction, user_id:discord.User):
+async def ban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
-		await commands_module.ban_user(interaction, user_id)
+		await commands_module.ban_user(interaction, user)
 	except Exception as e:
 		print(f"Error banning user: {e}")
 		await interaction.followup.send(something_went_wrong)
@@ -226,23 +226,13 @@ async def ban_user(interaction:discord.Interaction, user_id:discord.User):
 @utils_module.discord_bot.tree.command(description="[Admin] Unban a user from certain bot interactions")
 @discord.app_commands.default_permissions(administrator=True)
 @admin_only()
-async def unban_user(interaction:discord.Interaction, user_id:discord.User):
+async def unban_user(interaction:discord.Interaction, user:discord.User):
 	await interaction.response.defer()
 	logger_module.log(LOG_DETAIL, command_called_log_string)
 	try:
-		await commands_module.unban_user(interaction, user_id)
+		await commands_module.unban_user(interaction, user)
 	except Exception as e:
 		print(f"Error unbanning user: {e}")
-		await interaction.followup.send(something_went_wrong)
-
-@utils_module.discord_bot.tree.command(description="Reset the bot's prompt")
-async def reset_prompt(interaction:discord.Interaction):
-	await interaction.response.defer()
-	logger_module.log(LOG_DETAIL, command_called_log_string)
-	try:
-		await commands_module.reset_prompt(interaction)
-	except Exception as e:
-		print(f"Error resetting prompt: {e}")
 		await interaction.followup.send(something_went_wrong)
 
 @discord.app_commands.describe(
@@ -689,7 +679,6 @@ async def on_ready():
 	await utils_module.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching...", type=discord.ActivityType.watching))
 	await utils_module.discord_bot.tree.sync()
 	await ensure_correct_permissions() # gotta be after sync, cause sync updates which guilds we're in
-	commands_module.train_info_module.read_csv_into_trains()
 	print(f"{utils_module.discord_bot.user} is ready and online :P")
 	_ = psutil.cpu_percent(percpu=True) # first call is always 0.0, so call it once to get actual data next time
 	tasks_module.tasks_on_ready()

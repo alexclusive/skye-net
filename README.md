@@ -21,181 +21,180 @@
 | TRUSTED_TIME_DAYS | Number of days a user must be in the server before being given the 'trusted' role (only if they have the 'welcomed' role) |
 | BANNED_USER_x | User id of user that is banned from using openai interactions (replace x with anything), can have multiple |
 
-### emojis
-Put in all emoji ids from discord for what you want to use for reactions and triggers
+### Emojis
+Put in all emoji ids from discord for what you want to use for reactions and triggers (ones that would need nitro)
 
-### banned users
+### Banned users
 All banned users - disallows each banned user from using openai messaging  
 Field in the form of `BANNED_USER_.*`  
 e.g. `BANNED_USER_1`
 
-## events
-### on_message
-- React to the message with different emojis for different trigger words
-- If no openai interaction, respond to the message for specific triggers
-#### openai interaction
+## Events
+Not all discord events are tracked, and those that are aren't really looked at too hard. The following are what have implementations:
+ - on_message
+ - on_message_delete
+ - on_guild_channel_create
+ - on_guild_channel_delete
+ - on_guild_role_create
+ - on_guild_role_delete
+ - on_member_join
+ - on_member_remove
+ - on_member_update
+ - on_member_ban
+ - guild_join
+ - guild_remove
+
+Most of these just log basic data upon an event, the only one that really has any depth is `on_message`.  
+
+On a message, the bot will check a few things:
+ - are there any phrases that trigger a reaction?
+ - were there any spotify links that could be cleaned up?
+
+Other than that, if the bot has been pinged it will trigger an open ai interaction.  
 | Context | Description |
 |---------|-------------|
-| Pings bot<br>not replying | Check the last few messages (default 10) and have openai respond to the message with context |
-| Pings bot<br> replying | Check the replied message and have openai respond to the original message |
-| Doesn't ping bot | Check triggers to see if there is content to respond with |
+| Normal ping | Check the last few messages (default 10) and have openai respond to the message with context |
+| Pings bot through reply | Check the replied message and have openai respond with the original message as context |
 
-### message_deleted
-Log deleted message with link to any attachments (expiring link)
+## Commands
+Some commands are designated as only for the owner of the bot, or admins. Owner-only `[Owner]` commands can only be run by the bot owner as determined by `OWNER` in the `.env`. Admin-only `[Admin]` can only be run by the owner and anyone with administrator privileges for whatever guild the command is being run in.  
 
-### channel_create
-Log channel name, type, category, and position
+There are a few sets of commands for different groups of tasks:
+ - Bot Admin
+ - To Do List
+ - Open AI
+ - Reactions
+ - Bingo
+ - Train Facts
+ - Train Game
+ - Number Facts
+ - Misc
 
-### channel_delete
-Log channel name, type, category, and position
+### Bot Admin
+ - die [Owner]
+ - set_debug_level [Owner]
+ - send_as_bot [Owner]
+ - info [Owner]
+ - force_trusted_roles [Owner]
+ - force_audit_log [Owner]
+ - force_train_html [Owner]
+ - force_reread_train_info [Owner]
+ - run_test [Owner]
 
-### role_create
-Log role name and permissions
+These are just for the bot owner to do tasks that mainly are just bot maintenance things.  
+`die` kill the bot
+`set_debug_level` sets the current debug level (more info in Logs section)  
+`send_as_bot` allows the owner to send a message in a channel as the bot  
+`info` shows info of the machine the bot is running on (e.g. CPU/Mem)  
+`force_*` forces a task to run even if the time for the task to run is not now (more info in Tasks section)  
+`run_test` placeholder command for testing new commands so that the owner doesn't need to restart discord to be able to run a new command
 
-### role_delete
-Log role name and permissions
+### To Do List
+ - get_todo [Owner]
+ - add_todo [Owner]
+ - remove_todo [Owner]
 
-### member_join
-Log member name, joined at date, created at date, and roles
+A limited todo list for the owner to keep track of tasks they may want to implement into the bot.  
+`get_todo` show the current list of todo items  
+`add_todo` add a new todo item (will be n+1 where n is the highest current todo item num)  
+`remove_todo` remove todo item by item num
 
-### member_remove
-Log member name, joined at date, created at date, roles, and left at date
+### Open AI
+ - set_prompt
+ - ban_user [Admin]
+ - unban_user [Admin]
+ - get_banned_users [Owner]
 
-### member_ban
-Log member name, joined at date, created at date, roles, and banned at date
+When the bot is pinged, it responds using open ai interactions. Here users can set a prompt for the personality of the bot. If some users are misusing these interactions, and admin can ban them from being able to talk to the bot through this.  
+`set_prompt` set a new prompt  
+`ban_user` restrict a user from openai interactions  
+`unban_user` unrestrict a user from openai interactions  
+`get_banned_users` get a full list of all banned users
 
-## commands
-### [Owner] kill
-Shutdown the bot
+### Reactions
+ - opt_out
+ - opt_in
+ - opt_out_user [Admin]
+ - opt_in_user [Admin]
+ - get_opt_out_users [Owner]
 
-### [Owner] set_debug_level
-Set the debug level for logging
+When a user sends a message, the bot may react with emoji/s based on triggers in the message.  
+`opt_out` opt out of the bot reacts  
+`opt_in` opt in to the bot reacts  
+`opt_out_user` force a particular user to opt out of bot reacts  
+`opt_in_user` force a particular user to opt in to bot reacts  
+`get_opt_out_users` get a full list of all opted out users
 
-### [Owner] get_opt_out_users
-Get a list of all users who have opted out of reactions
+### Bingo
+ - create_bingo_card
+ - get_bingo_card
+ - get_bingo_card_items
+ - reset_bingo_card
+ - create_bingo_template [Admin]
+ - update_bingo_template [Admin]
+ - delete_bingo_template [Admin]
+ - get_bingo_templates [Admin]
+ - get_all_bingo_templates [Owner]
 
-### [Owner] force_trusted_roles
-Force the trusted roles task
+Allows for a 5x5 bingo grid of user-made tiles using discord embed and buttons. A template is a category of bingo card, and a card is a bingo card that uses the tiles from its category.  
+`create_bingo_card` create or recreate and display a bingo card for a particular template  
+`get_bingo_card` show the user's current bingo card  
+`get_bingo_card_items` show the user's current bingo card (items only)  
+`reset_bingo_card` clear items for the current bingo card  
+`create_bingo_template` create a new bingo template  
+`update_bingo_template` update an existing bingo template  
+`delete_bingo_template` delete an existing bingo template  
+`get_bingo_templates` see bingo templates for the current guild  
+`get_all_bingo_templates` see all bingo templates for all guilds
 
-### [Owner] force_audit_log
-Force the audit log task
+### Train Facts
+ - train_fact
+ - enter_train_fact [Admin]
+ - remove_train_fact [Admin]
+ - get_train_facts [Admin]
 
-### [Owner] get_all_stickers
-Get a list of all stickers that are being used for triggers in each server
+The bot can hold a database of train facts for if users want to see a random one.  
+`train_fact` display a train fact  
+`enter_train_fact` add a new train fact  
+`remove_train_fact` remove a train fact  
+`get_train_facts` get a list of all train facts  
 
-### [Owner] get_todo
-Get a list of all todo items
+### Train Game
+ - train_game
+ - train_game_rules
 
-### [Owner] add_todo
-Add to the todo list
+Train number game to get to 10 with a train car's 4 digits.  
+`train_game` play the game  
+`train_game_rules` show the rules of the game  
 
-### [Owner] remove_todo
-Remove from the todo list
+### Number Facts
+ - number_fact
+ - update_number_fact [Admin]
+ - append_number_fact [Admin]
+ - remove_number_fact [Admin]
 
-### [Owner] get_all_bingo_templates
-Remove all bingo templates
+Show different fun tidbits for different numbers.  
+`number_fact` get a number fact  
+`update_number_fact` add or update a number fact  
+`append_number_fact` append to a number's fact  
+`remove_number_fact` remove a number's fact
 
-### [Admin] enter_train_fact
-Enter a train fact
+### Misc
+ - ping
+ - etymology
 
-### [Admin] remove_train_fact
-Remove a train fact
+`ping` ping the bot  
+`etymology` get the etymology of a word or phrase
 
-### [Admin] get_train_facts
-Get all train facts
+ ## Tasks
 
-### [Admin] get_reactions
-Get all reactions
+ There are a few tasks the bot runs periodically. 
+ | Task | Time | Description |
+ |------|------|-------------|
+ | Trusted Roles | 19:00 UTC Daily | Specific to GUILD_ID from .env. Add a 'trusted' role to new users as configured through .env variables |
+ | Audit Log | 20:00 UTC Daily | Gather and display any new logs from the audit log from admins of the GUILD_ID |
+ | Backup Logs | 00:00 UTC Daily | Backup the daily logs into dated directories |
+ | Read Train Info | 21:00 UTC Daily | Re-grab the HTML data of NSW trains for train facts in the train game |
 
-### [Admin] insert_reaction
-Insert a reaction
-
-### [Admin] remove_reaction
-Remove a reaction
-
-### [Admin] get_logging_channels
-Get the logging channels
-
-### [Admin] set_logging_channel
-Set the logging channels
-
-### [Admin] get_banned_users
-Get all banned users
-
-### [Admin] ban_user
-Ban a user
-
-### [Admin] unban_user
-Unban a user
-
-### [Admin] get_roles
-Get important roles
-
-### [Admin] set_roles
-Set important roles
-
-### [Admin] get_stickers
-Get all stickers for current guild
-
-### [Admin] add_sticker
-Add a sticker to be used for the current guild
-
-### [Admin] remove_sticker
-Remove a sticker from use in the current guild
-
-### [Admin] opt_out_user
-Opt a user out of reactions
-
-### [Admin] opt_in_user
-Opt a user in to reactions
-
-### [Admin] get_bingo_templates_for_guild
-Get all bingo templates for the current guild
-
-### [Admin] create_bingo_template
-Create a new bingo template
-
-### [Admin] delete_bingo_template
-Delete a new bingo template
-
-### ping
-Check the bots ping
-
-### train_game
-Play the train game
-
-### train_game_rules
-Show the train game rules
-
-### train_fact
-Show a train fact
-
-### reset_prompt
-Reset the AI prompt
-
-### set_prompt
-Set the AI prompt
-
-### etymology
-See the etymology of a word
-
-### opt_out
-Opt out of reactions
-
-### opt_in
-Opt in to reactions
-
-### create_bingo_card
-Create a new bingo card (overwriting any existing)
-
-### get_bingo_card
-Get a bingo card
-
-### get_bing_card_minimal
-Get a bingo card - only showing the emoji representation
-
-### bingo_check
-Check off an item in a bingo card
-
-### bingo_help
-Get a list of bingo commands
+ ## Logs
+ When events or commands are triggered, a log entry is made. The logs show the datetime, log level, and log detail. Log levels are SETUP (0), INFO (1), DETAIL (2), and EXTRA_DETAIL (3).

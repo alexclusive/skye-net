@@ -428,3 +428,41 @@ async def member_ban(member:discord.Member):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_ban: {e}")
+
+async def guild_join(guild:discord.Guild):
+	try:
+		log_channel = utils_module.get_default_log_channel()
+		if log_channel is None:
+			return
+
+		embed = discord.Embed(
+			title=f"Bot Added to Guild: {guild.name}",
+			colour=0x00ff00
+		)
+		embed.add_field(name="Guild ID", value=guild.id, inline=False)
+		embed.add_field(name="Member Count", value=guild.member_count, inline=False)
+		embed.add_field(name="Owner", value=guild.owner.mention if guild.owner else "Unknown", inline=False)
+
+		embed.timestamp = dt.now(utils_module.timezone_here)
+		await log_channel.send(embed=embed)
+	except Exception as e:
+		print(f"guild_join: {e}")
+
+async def guild_remove(guild:discord.Guild):
+	try:
+		log_channel = utils_module.get_default_log_channel()
+		if log_channel is None:
+			return
+
+		embed = discord.Embed(
+			title=f"Bot Removed from Guild: {guild.name}",
+			colour=0xff0000
+		)
+		embed.add_field(name="Guild ID", value=guild.id, inline=False)
+		embed.add_field(name="Member Count", value=guild.member_count, inline=False)
+		embed.add_field(name="Owner", value=guild.owner.mention if guild.owner else "Unknown", inline=False)
+
+		embed.timestamp = dt.now(utils_module.timezone_here)
+		await log_channel.send(embed=embed)
+	except Exception as e:
+		print(f"guild_remove: {e}")
