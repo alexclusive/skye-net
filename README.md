@@ -19,15 +19,15 @@
 | WELCOMED_ROLE | Role id for the 'welcomed' role |
 | TRUSTED_ROLE | Role id for the 'trusted' role |
 | TRUSTED_TIME_DAYS | Number of days a user must be in the server before being given the 'trusted' role (only if they have the 'welcomed' role) |
-| BANNED_USER_x | User id of user that is banned from using openai interactions (replace x with anything), can have multiple |
+| BLOCKED_USER_x | User id of user that is blocked from using openai interactions (replace x with anything), can have multiple |
 
 ### Emojis
 Put in all emoji ids from discord for what you want to use for reactions and triggers (ones that would need nitro)
 
-### Banned users
-All banned users - disallows each banned user from using openai messaging  
-Field in the form of `BANNED_USER_.*`  
-e.g. `BANNED_USER_1`
+### Blocked users
+All blocked users - disallows each blocked user from using openai messaging  
+Field in the form of `BLOCKED_USER_.*`  
+e.g. `BLOCKED_USER_1`
 
 ## Events
 Not all discord events are tracked, and those that are aren't really looked at too hard. The following are what have implementations:
@@ -77,7 +77,6 @@ There are a few sets of commands for different groups of tasks:
  - info [Owner]
  - force_trusted_roles [Owner]
  - force_audit_log [Owner]
- - force_train_html [Owner]
  - force_reread_train_info [Owner]
  - run_test [Owner]
 
@@ -101,15 +100,15 @@ A limited todo list for the owner to keep track of tasks they may want to implem
 
 ### Open AI
  - set_prompt
- - ban_user [Admin]
- - unban_user [Admin]
- - get_banned_users [Owner]
+ - block_user [Admin]
+ - unblock_user [Admin]
+ - get_blocked_users [Owner]
 
-When the bot is pinged, it responds using open ai interactions. Here users can set a prompt for the personality of the bot. If some users are misusing these interactions, and admin can ban them from being able to talk to the bot through this.  
+When the bot is pinged, it responds using open ai interactions. Here users can set a prompt for the personality of the bot. If some users are misusing these interactions, and admin can block them from being able to talk to the bot through this.  
 `set_prompt` set a new prompt  
-`ban_user` restrict a user from openai interactions  
-`unban_user` unrestrict a user from openai interactions  
-`get_banned_users` get a full list of all banned users
+`block_user` restrict a user from openai interactions  
+`unblock_user` unrestrict a user from openai interactions  
+`get_blocked_users` get a full list of all blocked users
 
 ### Reactions
  - opt_out
@@ -160,12 +159,12 @@ The bot can hold a database of train facts for if users want to see a random one
 `get_train_facts` get a list of all train facts  
 
 ### Train Game
- - train_game
  - train_game_rules
+ - train_game
 
 Train number game to get to 10 with a train car's 4 digits.  
-`train_game` play the game  
 `train_game_rules` show the rules of the game  
+`train_game` play the game
 
 ### Number Facts
  - number_fact
