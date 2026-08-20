@@ -44,7 +44,12 @@ def send_output_to_discord(message:str):
 			send_message(channel, message)
 
 async def run_bot():
-	utils.init()
+	logger.set_log_file(utils.log_file_path)
+	database.init_db()
+	logger.set_debug_level(database.get_debug_level())
+	utils.set_current_prompt(database.get_most_recent_prompt())
+	utils.fill_blocked_users()
+	utils.fill_emojis()
 	spotify_handler.setup_spotify_credentials()
 	sys.stdout.write = send_output_to_discord
 	sys.stderr.write = send_output_to_discord

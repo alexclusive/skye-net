@@ -6,9 +6,6 @@ from datetime import datetime as dt
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from . import database_module as database
-from . import logger
-
 all_blocked_users = []
 all_emojis = {}
 
@@ -105,14 +102,6 @@ def fill_blocked_users():
 				all_blocked_users.append(int(value))
 			except Exception as _:
 				pass
-
-def init():
-	logger.set_log_file(log_file_path)
-	database.init_db()
-	logger.set_debug_level(database.get_debug_level())
-	set_current_prompt(database.get_most_recent_prompt())
-	fill_blocked_users()
-	fill_emojis()
 
 def is_user_in_guild(interaction:discord.Interaction):
 	if interaction.guild_id is None\
