@@ -188,7 +188,7 @@ async def force_reread_train_info(interaction:discord.Interaction):
 		return
 
 	try:
-		tasks.read_train_info_task()
+		await tasks.read_train_info_task()
 		await interaction.followup.send("Finished rereading train info html and updating train sets")
 	except Exception as e:
 		print(f"Error forcing reread train info: {e}")

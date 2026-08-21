@@ -1,38 +1,32 @@
-import bs4
 import csv
 import discord
-import os
 import re
 
 from typing import Dict
 
 from .. import database_module as database
+from .. import utils
 
-# TODO: fix up this whole file. read html into csv from the website directly, don't need html file.
-# TODO: show train types instead of just the set letter
-
-async def print_number_fact(interaction:discord.Interaction, number:int):
-	fact = get_number_fact(number)
-	if len(fact) == 0:
-		await interaction.followup.send(f"No fact found for {number}.\nYou can find facts at https://oeis.org/search?q={number}&language=english&go=Search")
-	else:
-		await interaction.followup.send(f"Fact for {number}: {fact}\nMore facts can be found at https://oeis.org/search?q={number}&language=english&go=Search")
-
-def get_number_fact(number:int) -> str:
-	fact = database.get_number_fact(number)
-	if fact is None or len(fact) == 0:
-		return ""
-	else:
-		return fact
-
-helpers_dir = os.path.dirname(os.path.abspath(__file__))
-csv_file = os.path.join(helpers_dir, "database", "train_info.csv")
-html_file = os.path.join(helpers_dir, "database", "train_info.html")
+sydney_metro_depot = "Marrickville"
 sydney_metro_set_name = "Sydney Metro"
+
+train_set_names = {
+	"A": "Waratah A Set",
+	"B": "Waratah B Set",
+	"H": "OSCAR H Set",
+	"M": "Millennium M Set",
+	"T": "Tangara T Set",
+	"K": "K Set",
+	"N": "Endeavour N Set",
+	"J": "Hunter J Set",
+	"D": "Mariyung D Set",
+	"SM": sydney_metro_set_name,
+}
 
 class Train:
 	def __init__(self):
 		self.train_set_num = ""
+		self.train_set_full_name = ""
 		self.train_consist = []
 		self.train_builder = ""
 		self.train_depot = ""
@@ -45,32 +39,8 @@ class TrainSet:
 
 train_sets:Dict[str,TrainSet] = {}
 
-def find_car(car_num:str):
-	'''
-		Searches every Train in every TrainSet for a consist entry matching car_num
-		(digits only, e.g. "2863" matches consist entry "TE2863").
-		Returns a (TrainSet, Train, full_car_number) tuple, or None if not found.
-	'''
-	for train_set in train_sets.values():
-		for train in train_set.trains.values():
-			for car in train.train_consist:
-				if re.sub(r'^\D+', '', car) == car_num:
-					return train_set, train, car
-	return None
-
-def print_all_train_set_names():
-	for train_set in train_sets.values():
-		print(train_set.train_set_name)
-		if train_set.train_set_name == sydney_metro_set_name:
-			for train in train_set.trains.values():
-				print(f"  {train.train_set_num}: {train.train_consist}")
-
-def get_set_from_field(set_field:str) -> str:
-	match = re.match(r'^[A-Za-z]+', set_field)
-	return match.group(0) if match else set_field
-
-def read_csv_into_trains():
-	with open(csv_file, 'r', encoding='utf-8') as f:
+def read_csv_train_info():
+	with open(utils.csv_file, 'r', encoding='utf-8') as f:
 		reader = csv.reader(f)
 		for row in reader:
 			if len(row) < 2:
@@ -78,18 +48,23 @@ def read_csv_into_trains():
 
 			train = Train()
 			train.train_set_num = row[0]  # Set
-			train.train_consist = [car.strip() for car in row[1].split(" - ")]  # Consist
-			if len(row) >= 3:
-				train.train_builder = row[2]  # Builder
-				if len(row) >= 4:
-					train.train_depot = row[3]  # Depot
-					if len(row) >= 5:
-						train.train_notes = row[4]  # Notes
-
 			set_name = get_set_from_field(train.train_set_num)
-			train_set = train_sets.setdefault(set_name, TrainSet(set_name))
+			train.train_set_full_name = train_set_names[set_name]
+			train.train_consist = [car.strip() for car in row[1].split(" - ")] # Consist
+			if len(row) >= 3:
+				train.train_builder = row[2] # Builder
+				if len(row) >= 4:
+					train.train_depot = row[3] # Depot
+					if len(row) >= 5:
+						train.train_notes = row[4] # Notes
+
+			train_set = train_sets.setdefault(set_name, TrainSet(train.train_set_full_name))
 			train_set.trains[train.train_set_num] = train
 	generate_metro_sets() # No table needed, these numbers are predictable and can be generated programmatically
+
+def get_set_from_field(set_field:str) -> str:
+	match = re.match(r'^[A-Za-z]+', set_field)
+	return match.group(0) if match else set_field
 
 def generate_metro_sets():
 	suffixes = ["01", "03", "05", "06", "04", "02"]
@@ -97,11 +72,29 @@ def generate_metro_sets():
 		set_str = f"{set_num:02d}"
 		train = Train()
 		train.train_set_num = f"SM{set_str}" # Sydney Metro
+		set_name = get_set_from_field(train.train_set_num)
+		train.train_set_full_name = train_set_names[set_name]
 		train.train_consist = [set_str + suffix for suffix in suffixes]
 		train.train_builder = "Alstom"
-		train.train_depot = "Marrickville"
-		train_set = train_sets.setdefault(sydney_metro_set_name, TrainSet(sydney_metro_set_name))
+		train.train_depot = sydney_metro_depot
+		train_set = train_sets.setdefault(set_name, TrainSet(train.train_set_full_name))
 		train_set.trains[train.train_set_num] = train
+
+def find_car(car_num:str):
+	'''
+		Searches every Train in every TrainSet for a consist entry matching car_num
+		(digits only, e.g. "2863" matches consist entry "TE2863").
+		Returns a (TrainSet, Train, full_car_number, metro_note) tuple, or None if not found.
+		metro_note may be empty if the train is not a metro
+	'''
+	for train_set in train_sets.values():
+		for train in train_set.trains.values():
+			for car in train.train_consist:
+				if re.sub(r'^\D+', '', car) == car_num:
+					if train_set.train_set_name == sydney_metro_set_name:
+						return train_set, train, car, get_metro_car_note(car_num)
+					return train_set, train, car, None
+	return None
 
 def get_metro_car_note(car_num:str) -> str:
 	car_num_int = int(car_num) % 100
@@ -122,62 +115,37 @@ def get_metro_car_note(car_num:str) -> str:
 			other_car = car_num[:3] + '6'
 		return f"This is one of the middle two cars on the metro. This car is one of the four cars with a motor, along with {car_num[:3]}3, {car_num[:3]}4, and {other_car}"
 
-def convert_html_to_csv():
-	'''
-		Code taken from https://gist.github.com/erd0s/2d0593332c88bfb13dadbaa87d26cd9d
-		Translated from js to py and modified a lot for what I wanted. Other converters didn't take rowspan into account and ended up with misaligned cells
-		To set up: Copy the html table from https://nswtrains.fandom.com/wiki/List_of_Sydney_Trains/NSW_TrainLink_fleets and put into train_info.html
-	'''
-	source_file_path = html_file
-	dest_file_path = csv_file
+def get_train_info(number) -> str:
+	car_search = find_car(number)
+	if car_search:
+		train_set, train, full_car_number, metro_note = car_search
+		response = f"The train number {full_car_number} is a {train_set.train_set_name} train ({train.train_set_num})."
 
-	def clean_text(cell):
-		return " ".join(cell.get_text(" ", strip=True).replace("\u00a0", " ").split())
+		train_note = train.train_notes
+		if train_set.train_set_name == sydney_metro_set_name and metro_note is not None:
+			response += f"\n{metro_note}"
+		elif len(train_note) > 0:
+			response += f"\n{train_note}"
 
-	with open(source_file_path, 'r', encoding='utf-8') as source_file:
-		soup = bs4.BeautifulSoup(source_file.read(), 'html.parser')
+		return response
+	return ""
 
-	rows = [row for row in soup.select("table.wikitable > tbody > tr") if not row.select("th")]
-	records = []
+async def print_number_fact(interaction:discord.Interaction, number:int):
+	num_fact = get_number_fact(number)
+	train_fact = get_train_info(number)
 
-	# A <td rowspan="N"> "belongs" to its column for the next N-1 rows too, so
-	# those rows won't have a <td> of their own for that column. carried_over
-	# tracks, per column, how many rows are still owed that cell's text.
-	carried_over = {}  # col -> [rows_left, text]
+	if len(num_fact) == 0 and len(train_fact) == 0:
+		await interaction.followup.send(f"No facts found for {number}.\nYou can find number facts at https://oeis.org/search?q={number}&language=english&go=Search")
+	elif len(num_fact) == 0 and len(train_fact) != 0:
+		await interaction.followup.send(f"{train_fact}\nNo number fact found for {number}.\nYou can find number facts at https://oeis.org/search?q={number}&language=english&go=Search")
+	elif len(num_fact) != 0 and len(train_fact) == 0:
+		await interaction.followup.send(f"Number fact for {number}: {num_fact}\nMore number facts can be found at https://oeis.org/search?q={number}&language=english&go=Search")
+	else:
+		await interaction.followup.send(f"{train_fact}\nNumber fact for {number}: {num_fact}\nMore number facts can be found at https://oeis.org/search?q={number}&language=english&go=Search")
 
-	for i, row in enumerate(rows):
-		cells = iter(row.select("td"))
-		record = []
-		col = 0
-
-		while True:
-			if col in carried_over:
-				rows_left, text = carried_over[col]
-				if rows_left == 1:
-					del carried_over[col]
-				else:
-					carried_over[col][0] -= 1
-			else:
-				cell = next(cells, None)
-				if cell is None:
-					break  # no carried-over cell and no more <td>s: row is done
-				text = clean_text(cell)
-				rowspan = int(cell.get('rowspan', 1))
-				if rowspan > 1:
-					carried_over[col] = [rowspan - 1, text]
-
-			record.append(text)
-			col += 1
-
-		# Pad rows that are shorter than the expected column count so the CSV stays aligned.
-		while len(record) < 5:
-			record.append('')
-
-		records.append(record)
-
-	with open(dest_file_path, 'w', encoding='utf-8', newline='') as dest_file:
-		writer = csv.writer(dest_file, lineterminator='\n')
-		for record in records:
-			while record and record[-1] == '':
-				record.pop()
-			writer.writerow(record)
+def get_number_fact(number:int) -> str:
+	fact = database.get_number_fact(number)
+	if fact is None or len(fact) == 0:
+		return ""
+	else:
+		return fact

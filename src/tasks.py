@@ -1,5 +1,9 @@
 import asyncio
+import bs4
+import csv
+import io
 import os
+import urllib.request
 
 from datetime import datetime as dt
 from datetime import timezone, time, timedelta
@@ -9,6 +13,7 @@ from discord.ext import tasks
 from . import database_module as database
 from . import logger
 from . import utils
+from .handlers import facts
 
 running_task_log_string = "Running task."
 
@@ -16,20 +21,52 @@ running_task_log_string = "Running task."
 backup_logs_start_time = time(0, 0)
 trusted_roles_start_time = time(19, 0)
 audit_log_start_time = time(20, 0)
-read_train_info_start_time = time(21, 0)
 
 csv_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database", "train_info.csv")
 
 def tasks_on_ready():
 	logger.log(logger.LOG_SETUP, "Ensuring tasks are running.")
+	if not backup_logs_task.is_running():
+		backup_logs_task.start()
+
 	if not add_trusted_roles_task.is_running():
 		add_trusted_roles_task.start()
 	if not audit_log_task.is_running():
 		audit_log_task.start()
-	if not backup_logs_task.is_running():
-		backup_logs_task.start()
 	if not read_train_info_task.is_running():
 		read_train_info_task.start()
+
+	facts.read_csv_train_info()
+
+@tasks.loop(time=backup_logs_start_time)
+async def backup_logs_task():
+	'''
+		Backup the logs from utils_module.log_file_path to a dated file in the same directory
+		Stucture should be:
+			<log_file_path>/YYYY/MM/DD.log
+	'''
+	logger.log(logger.LOG_SETUP, running_task_log_string)
+	try:
+		# make year and month directories if they don't exist
+		now = dt.now(utils.timezone_here)
+		year_dir = now.strftime("%Y")
+		month_dir = now.strftime("%m")
+		full_path = os.path.join(os.path.dirname(utils.log_file_path), year_dir, month_dir)
+
+		if not os.path.exists(full_path):
+			os.makedirs(full_path)
+			
+		day_file = now.strftime("%d.log")
+		full_path = os.path.join(full_path, day_file)
+
+		copy_success = logger.copy_log_file(full_path)
+		if copy_success:
+			logger.clear_log_file()
+			logger.log(logger.LOG_SETUP, f"Logs backed up to {full_path}")
+		else:
+			logger.log(logger.LOG_INFO, "Couldn't copy log file.")
+	except Exception as e:
+		logger.log(logger.LOG_INFO, f"Error backing up logs: {e}")
 
 @tasks.loop(time=trusted_roles_start_time)
 async def add_trusted_roles_task():
@@ -192,37 +229,7 @@ async def audit_log_task(days_to_check:int=1):
 	except Exception as e:
 		print(f"audit_log_task: {e}")
 
-@tasks.loop(time=backup_logs_start_time)
-async def backup_logs_task():
-	'''
-		Backup the logs from utils_module.log_file_path to a dated file in the same directory
-		Stucture should be:
-			<log_file_path>/YYYY/MM/DD.log
-	'''
-	logger.log(logger.LOG_SETUP, running_task_log_string)
-	try:
-		# make year and month directories if they don't exist
-		now = dt.now(utils.timezone_here)
-		year_dir = now.strftime("%Y")
-		month_dir = now.strftime("%m")
-		full_path = os.path.join(os.path.dirname(utils.log_file_path), year_dir, month_dir)
-
-		if not os.path.exists(full_path):
-			os.makedirs(full_path)
-			
-		day_file = now.strftime("%d.log")
-		full_path = os.path.join(full_path, day_file)
-
-		copy_success = logger.copy_log_file(full_path)
-		if copy_success:
-			logger.clear_log_file()
-			logger.log(logger.LOG_SETUP, f"Logs backed up to {full_path}")
-		else:
-			logger.log(logger.LOG_INFO, "Couldn't copy log file.")
-	except Exception as e:
-		logger.log(logger.LOG_INFO, f"Error backing up logs: {e}")
-
-@tasks.loop(time=read_train_info_start_time)
+@tasks.loop(hours=7 * 24) # Once a week after first run
 async def read_train_info_task():
 	'''
 		Read train information from the nswtrains fandom page https://nswtrains.fandom.com/wiki/List_of_Sydney_Trains/NSW_TrainLink_fleets
@@ -231,9 +238,86 @@ async def read_train_info_task():
 		3) Read the csv into local data structure
 	'''
 	logger.log(logger.LOG_SETUP, running_task_log_string)
-	print("Train info task not implemented")
 
-	# TODO
-	# get html
-	# call convert_html_to_csv
-	# call read_csv_into_trains
+	try:
+		url = "https://nswtrains.fandom.com/wiki/List_of_Sydney_Trains/NSW_TrainLink_fleets"
+		request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+
+		with urllib.request.urlopen(request) as response:
+			soup = bs4.BeautifulSoup(response.read(), "html.parser")
+
+		table = soup.find("table", class_="wikitable")
+		if table is None:
+			logger.log(logger.LOG_SETUP, f"Unable to find train info table from {url}")
+			print("Could not find a wikitable on the wiki page")
+			return
+
+		html = str(table)
+		logger.log(logger.LOG_INFO, f"Successfully grabbed html table from {url}")
+
+		soup = bs4.BeautifulSoup(html, "html.parser")
+		table = soup.find("table", class_="wikitable")
+		if table is None:
+			logger.log(logger.LOG_SETUP, "Unable to parse table for train info")
+			return
+
+		def clean_text(cell):
+			return " ".join(cell.get_text(" ", strip=True).replace("\u00a0", " ").split())
+
+		rows = [row for row in table.select("tbody > tr") if not row.select("th")]
+		records = []
+		carried_over = {}
+
+		for row in rows:
+			cells = iter(row.select("td"))
+			record = []
+			column = 0
+
+			while True:
+				if column in carried_over:
+					rows_left, text = carried_over[column]
+					if rows_left == 1:
+						del carried_over[column]
+					else:
+						carried_over[column][0] -= 1
+				else:
+					cell = next(cells, None)
+					if cell is None:
+						break
+					text = clean_text(cell)
+					rowspan = int(cell.get("rowspan", 1))
+					if rowspan > 1:
+						carried_over[column] = [rowspan - 1, text]
+
+				record.append(text)
+				column += 1
+
+			while len(record) < 5:
+				record.append("")
+			records.append(record[:5])
+
+		output = io.StringIO(newline="")
+		writer = csv.writer(output, lineterminator="\n")
+		writer.writerows(records)
+		csv_data = output.getvalue()
+
+		with open(utils.csv_file, "w", encoding="utf-8", newline="") as file:
+			file.write(csv_data)
+
+		logger.log(logger.LOG_INFO, "Successfully parsed html into csv")
+	except Exception as e:
+		logger.log(logger.LOG_INFO, f"Error reading train info: {e}")
+
+	facts.read_csv_train_info()
+
+@read_train_info_task.before_loop
+async def before_read_train_info_task():
+	# Run Sundays 21:00UTC
+	await utils.discord_bot.wait_until_ready()
+	now = dt.now(timezone.utc)
+	next_run = now.replace(hour=21, minute=0, second=0, microsecond=0)
+	days_until_sunday = (6 - now.weekday()) % 7
+	next_run += timedelta(days=days_until_sunday)
+	if next_run <= now:
+		next_run += timedelta(days=7)
+	await asyncio.sleep((next_run - now).total_seconds())

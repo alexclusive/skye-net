@@ -68,7 +68,7 @@ async def train_game(interaction:discord.Interaction, number, a, b, c, d, target
 		await interaction.followup.send("Sorry! Something went wrong while displaying the results.")
 
 async def show_extra_info(interaction:discord.Interaction, number:int):
-	train_info = get_train_info(number)
+	train_info = facts_handler.get_train_info(number)
 	number_fact = facts_handler.get_number_fact(int(number))
 
 	full_fact = ""
@@ -84,22 +84,6 @@ async def show_extra_info(interaction:discord.Interaction, number:int):
 		await interaction.followup.send(f"Extra info for {number}:\n{full_fact}")
 
 	logger.log(logger.LOG_DETAIL, f"Train game: showing extra info for number {number}. Train info: '{train_info}', Number fact: '{number_fact}'")
-
-def get_train_info(number) -> str:
-	car_search = facts_handler.find_car(number)
-	if car_search:
-		train_set, train, full_car_number = car_search
-
-		response = f"The train number {full_car_number} is a set {train_set.train_set_name} train ({train.train_set_num})."
-
-		train_note = train.train_notes
-		if train_set.train_set_name == facts_handler.sydney_metro_set_name:
-			response += f"\n{facts_handler.get_metro_car_note(number)}"
-		elif len(train_note) > 0:
-			response += f"\n{train_note}"
-
-		return response
-	return ""
 
 def get_response_start(number, target, num_of_solutions, strict_mode):
 	title = f"**Results for train game with number {number} and target {target}**"
