@@ -19,7 +19,7 @@ async def member_join(member:discord.Member):
 		if member.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 
@@ -42,7 +42,7 @@ async def member_remove(member:discord.Member):
 		if member.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 			
@@ -94,7 +94,7 @@ async def member_update(before:discord.Member, after:discord.Member):
 		if after.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 			
@@ -148,7 +148,7 @@ async def member_ban(member:discord.Member):
 		if member.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 

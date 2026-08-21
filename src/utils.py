@@ -50,9 +50,6 @@ trusted_time_days = int(os.getenv("TRUSTED_TIME_DAYS"))
 current_dir = os.path.dirname(os.path.abspath(__file__))
 csv_file = os.path.join(current_dir, "database", "train_info.csv")
 
-def get_default_log_channel():
-	return discord_bot.get_channel(stdout_channel_id)
-
 def set_current_prompt(new_prompt:str):
 	global current_prompt
 	current_prompt = new_prompt

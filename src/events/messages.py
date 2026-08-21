@@ -85,7 +85,7 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 		if message.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 			

@@ -6,12 +6,9 @@ from .database.db_bingo import *
 from .database.db_blocked_users import *
 from .database.db_daily_tasks import *
 from .database.db_debug_level import *
-from .database.db_important_roles import *
-from .database.db_logging_channels import *
 from .database.db_number_fact import *
 from .database.db_prompts import *
 from .database.db_reaction_opt_out import *
-from .database.db_reactions import *
 from .database.db_todo import *
 from .database.db_train_facts import *
 
@@ -93,26 +90,6 @@ def set_up_tables():
 	''')
 
 	utils.database_conn.execute('''
-	CREATE TABLE IF NOT EXISTS important_roles (
-		guild_id TEXT,
-		welcomed_role_id TEXT,
-		trusted_role_id TEXT,
-		trusted_time_days INTEGER,
-		PRIMARY KEY (guild_id)
-	)
-	''')
-
-	utils.database_conn.execute('''
-	CREATE TABLE IF NOT EXISTS logging_channels (
-		guild_id TEXT,
-		message_channel_id TEXT,
-		member_channel_id TEXT,
-		guild_channel_id TEXT,
-		PRIMARY KEY (guild_id)
-	)
-	''')
-
-	utils.database_conn.execute('''
 	CREATE TABLE IF NOT EXISTS number_facts (
 		number INTEGER,
 		fact TEXT,
@@ -133,16 +110,6 @@ def set_up_tables():
 	CREATE TABLE IF NOT EXISTS react_opt_out (
 		user_id TEXT,
 		PRIMARY KEY (user_id)
-	)
-	''')
-
-	utils.database_conn.execute('''
-	CREATE TABLE IF NOT EXISTS reactions (
-		trigger TEXT,
-		emoji_id_1 TEXT,
-		emoji_id_2 TEXT,
-		emoji_id_3 TEXT,
-		PRIMARY KEY (trigger)
 	)
 	''')
 

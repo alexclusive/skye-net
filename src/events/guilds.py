@@ -18,7 +18,7 @@ async def channel_create(channel:discord.abc.GuildChannel):
 		if channel.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 
@@ -40,7 +40,7 @@ async def channel_delete(channel:discord.abc.GuildChannel):
 		if channel.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 
@@ -62,7 +62,7 @@ async def role_create(role:discord.Role):
 		if role.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 
@@ -82,7 +82,7 @@ async def role_delete(role:discord.Role):
 		if role.guild is None:
 			return # ignore DMs
 		
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 
@@ -99,7 +99,7 @@ async def role_delete(role:discord.Role):
 
 async def guild_join(guild:discord.Guild):
 	try:
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 
@@ -118,7 +118,7 @@ async def guild_join(guild:discord.Guild):
 
 async def guild_remove(guild:discord.Guild):
 	try:
-		log_channel = utils.get_default_log_channel()
+		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
 
