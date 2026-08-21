@@ -6,7 +6,6 @@ from datetime import datetime as dt
 from discord.ext import commands
 from dotenv import load_dotenv
 
-all_blocked_users = []
 all_emojis = {}
 
 intents = discord.Intents.all()
@@ -96,20 +95,9 @@ def fill_emojis():
 	all_emojis["CHOMP"] = int(os.getenv('CHOMP'))
 	all_emojis["HEADPAT"] = int(os.getenv('HEADPAT'))
 
-def fill_blocked_users():
-	global all_blocked_users
-	all_blocked_users = []
-	for key, value in os.environ.items():
-		if key.startswith("blocked_user_"):
-			try:
-				all_blocked_users.append(int(value))
-			except Exception as _:
-				pass
-
 def is_user_in_guild(interaction:discord.Interaction):
 	if interaction.guild_id is None\
-		or interaction.user is None\
-		or interaction.user.id in all_blocked_users:
+		or interaction.user is None:
 		return False
 	
 	guild = discord_bot.get_guild(interaction.guild_id)

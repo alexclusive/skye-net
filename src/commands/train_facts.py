@@ -16,7 +16,7 @@ from .. import utils
 async def train_fact(interaction:discord.Interaction):
 	await interaction.response.defer()
 	logger.log(logger.LOG_DETAIL, commands.command_called_log_string)
-	if not utils.is_owner(interaction):
+	if not commands.is_owner(interaction):
 		await interaction.followup.send(commands.nice_try)
 		return
 	
@@ -85,8 +85,21 @@ async def get_train_facts(interaction:discord.Interaction):
 		return
 	
 	try:
-		facts_embed = database.get_all_train_facts()
-		await interaction.followup.send(embed=facts_embed)
+		all_facts = database.get_all_train_facts()
+
+		embed = discord.Embed(title="Train Facts", colour=0xffffff)
+		for row in all_facts:
+			embed.add_field(name=f"Fact {row[0]}", value=row[1], inline=False)
+		# If the bot user exists, set its avatar as the author icon
+		try:
+			embed.set_author(name="SkyeNet", icon_url=utils.discord_bot.user.display_avatar.url)
+		except Exception:
+			# Ignore if discord bot/user isn't available in this context
+			pass
+		if len(all_facts) == 0:
+			embed.description = "No train facts available."
+
+		await interaction.followup.send(embed=embed)
 	except Exception as e:
 		print(f"Error getting train facts: {e}")
 		await interaction.followup.send(commands.something_went_wrong)

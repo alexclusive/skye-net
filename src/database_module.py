@@ -35,9 +35,9 @@ def set_up_tables():
 	'''
 		Create the database tables if they don't already exist.
 		Tables:
-			banned_users
-			bingo_template
 			bingo_cards
+			bingo_template
+			blocked
 			daily_tasks
 			debug_level
 			important_roles
@@ -52,9 +52,12 @@ def set_up_tables():
 	utils.database_conn = duckdb.connect(utils.database_name)
 
 	utils.database_conn.execute('''
-	CREATE TABLE IF NOT EXISTS banned_users (
+	CREATE TABLE IF NOT EXISTS bingo_cards (
+		guild_id TEXT,
+		bingo_name TEXT,
 		user_id TEXT,
-		PRIMARY KEY (user_id)
+		card_data TEXT,
+		PRIMARY KEY (guild_id, bingo_name, user_id)
 	)
 	''')
 
@@ -69,12 +72,9 @@ def set_up_tables():
 	''')
 
 	utils.database_conn.execute('''
-	CREATE TABLE IF NOT EXISTS bingo_cards (
-		guild_id TEXT,
-		bingo_name TEXT,
+	CREATE TABLE IF NOT EXISTS blocked_users (
 		user_id TEXT,
-		card_data TEXT,
-		PRIMARY KEY (guild_id, bingo_name, user_id)
+		PRIMARY KEY (user_id)
 	)
 	''')
 

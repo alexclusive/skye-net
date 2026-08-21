@@ -15,12 +15,12 @@ async def on_ready():
 	await ready_events.ready()
 
 @utils.discord_bot.event
-async def on_message(message):
+async def on_message(message:discord.Message):
 	logger.log(logger.LOG_EXTRA_DETAIL, event_triggered_log_string + f" by {message.author} in {message.channel}")
 	await message_events.message(message)
 
 @utils.discord_bot.event
-async def on_message_delete(message):
+async def on_message_delete(message:discord.Message):
 	logger.log(logger.LOG_DETAIL, event_triggered_log_string + f" by {message.author} in {message.channel}")
 	await message_events.message_deleted(message)
 

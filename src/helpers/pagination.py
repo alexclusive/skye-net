@@ -4,7 +4,7 @@ import math
 class Paginator(discord.ui.View):
 	current_page = 1
 	separator = 20
-	data = [] # list of strings
+	data = []
 	title:str = ""
 	subtitle:str = ""
 
@@ -55,7 +55,7 @@ class Paginator(discord.ui.View):
 		item_until = self.current_page * self.separator
 		item_from = item_until - self.separator
 		if self.current_page == 1:
-			item_from = 0 # just make sure
+			item_from = 0
 		if self.current_page > self.max_page_number():
 			item_until = len(self.data)
 		return self.data[item_from:item_until]

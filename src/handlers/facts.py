@@ -115,6 +115,26 @@ def get_metro_car_note(car_num:str) -> str:
 			other_car = car_num[:3] + '6'
 		return f"This is one of the middle two cars on the metro. This car is one of the four cars with a motor, along with {car_num[:3]}3, {car_num[:3]}4, and {other_car}"
 
+def get_facts(number:int):
+	num_fact = get_number_fact(number)
+	train_fact = get_train_info(number)
+
+	if len(num_fact) == 0 and len(train_fact) == 0:
+		return f"No facts found for {number}.\nYou can find number facts at https://oeis.org/search?q={number}&language=english&go=Search"
+	elif len(num_fact) == 0 and len(train_fact) != 0:
+		return f"{train_fact}\nNo number fact found for {number}.\nYou can find number facts at https://oeis.org/search?q={number}&language=english&go=Search"
+	elif len(num_fact) != 0 and len(train_fact) == 0:
+		return f"Number fact for {number}: {num_fact}\nMore number facts can be found at https://oeis.org/search?q={number}&language=english&go=Search"
+	else:
+		return f"{train_fact}\nNumber fact for {number}: {num_fact}\nMore number facts can be found at https://oeis.org/search?q={number}&language=english&go=Search"
+
+def get_number_fact(number:int) -> str:
+	fact = database.get_number_fact(number)
+	if fact is None or len(fact) == 0:
+		return ""
+	else:
+		return fact
+
 def get_train_info(number) -> str:
 	car_search = find_car(number)
 	if car_search:
@@ -129,23 +149,3 @@ def get_train_info(number) -> str:
 
 		return response
 	return ""
-
-async def print_number_fact(interaction:discord.Interaction, number:int):
-	num_fact = get_number_fact(number)
-	train_fact = get_train_info(number)
-
-	if len(num_fact) == 0 and len(train_fact) == 0:
-		await interaction.followup.send(f"No facts found for {number}.\nYou can find number facts at https://oeis.org/search?q={number}&language=english&go=Search")
-	elif len(num_fact) == 0 and len(train_fact) != 0:
-		await interaction.followup.send(f"{train_fact}\nNo number fact found for {number}.\nYou can find number facts at https://oeis.org/search?q={number}&language=english&go=Search")
-	elif len(num_fact) != 0 and len(train_fact) == 0:
-		await interaction.followup.send(f"Number fact for {number}: {num_fact}\nMore number facts can be found at https://oeis.org/search?q={number}&language=english&go=Search")
-	else:
-		await interaction.followup.send(f"{train_fact}\nNumber fact for {number}: {num_fact}\nMore number facts can be found at https://oeis.org/search?q={number}&language=english&go=Search")
-
-def get_number_fact(number:int) -> str:
-	fact = database.get_number_fact(number)
-	if fact is None or len(fact) == 0:
-		return ""
-	else:
-		return fact

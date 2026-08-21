@@ -30,6 +30,10 @@ async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		await interaction.followup.send(commands.must_be_guild_member)
 		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
 		return
+	if database.is_user_blocked(interaction.user.id):
+		await interaction.followup.send(commands.must_be_guild_member)
+		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is blocked from using this command, aborting")
+		return
 	
 	try:
 		database.delete_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
@@ -49,6 +53,10 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	if not utils.is_user_in_guild(interaction):
 		await interaction.followup.send(commands.must_be_guild_member)
 		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
+		return
+	if database.is_user_blocked(interaction.user.id):
+		await interaction.followup.send(commands.must_be_guild_member)
+		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is blocked from using this command, aborting")
 		return
 	
 	try:
@@ -75,6 +83,10 @@ async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 		await interaction.followup.send(commands.must_be_guild_member)
 		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
 		return
+	if database.is_user_blocked(interaction.user.id):
+		await interaction.followup.send(commands.must_be_guild_member)
+		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is blocked from using this command, aborting")
+		return
 	
 	try:		
 		embed = bingo_handler.get_bingo_card_items_embed(interaction.guild.id, bingo_name, interaction.user.id)
@@ -94,6 +106,10 @@ async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 	if not utils.is_user_in_guild(interaction):
 		await interaction.followup.send(commands.must_be_guild_member)
 		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is not in guild, aborting command")
+		return
+	if database.is_user_blocked(interaction.user.id):
+		await interaction.followup.send(commands.must_be_guild_member)
+		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is blocked from using this command, aborting")
 		return
 	
 	try:

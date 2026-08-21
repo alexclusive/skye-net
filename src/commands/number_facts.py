@@ -20,8 +20,15 @@ from ..handlers import facts as facts_handler
 async def number_fact(interaction:discord.Interaction, number:int):
 	await interaction.response.defer()
 	logger.log(logger.LOG_DETAIL, commands.command_called_log_string)
+	
+	if database.is_user_blocked(interaction.user.id):
+		await interaction.followup.send(commands.must_be_guild_member)
+		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is blocked from using this command, aborting")
+		return
+	
 	try:
-		await facts_handler.print_number_fact(interaction, number)
+		facts_response = facts_handler.get_facts(number)
+		await interaction.followup.send(facts_response)
 	except Exception as e:
 		print(f"Error getting number fact: {e}")
 		await interaction.followup.send(commands.something_went_wrong)

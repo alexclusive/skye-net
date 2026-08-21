@@ -78,7 +78,6 @@ def get_shuffled_bingo_template_items(guild_id:str, bingo_name:str) -> list: # l
 		items_list = items.split("\n")
 		random.shuffle(items_list)
 		if free_space:
-			# Add a free space in the middle of the bingo card
 			items_list = items_list[:12] + ["FREE SPACE"] + items_list[12:]
 		items_list = items_list[:25]  # Cut off any extra items
 	if not result or len(items) < 25:

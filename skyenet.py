@@ -2,11 +2,9 @@ import asyncio
 import discord
 import sys
 
-from src import commands_module as commands
 from src import database_module as database
-from src import events_module as events
+from src import events_module as events # important
 from src import logger
-from src import tasks
 from src import utils
 from src.handlers import spotify as spotify_handler
 
@@ -48,7 +46,6 @@ async def run_bot():
 	database.init_db()
 	logger.set_debug_level(database.get_debug_level())
 	utils.set_current_prompt(database.get_most_recent_prompt())
-	utils.fill_blocked_users()
 	utils.fill_emojis()
 	spotify_handler.setup_spotify_credentials()
 	sys.stdout.write = send_output_to_discord

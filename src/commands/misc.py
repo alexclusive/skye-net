@@ -1,8 +1,10 @@
 import discord
 
 from .. import commands_module as commands
+from .. import database_module as database
 from .. import logger
 from .. import utils
+from ..handlers import etymology as etymology_handler
 
 '''
  - ping
@@ -27,8 +29,14 @@ async def ping(interaction:discord.Interaction):
 async def etymology(interaction:discord.Interaction, argument:str):
 	await interaction.response.defer()
 	logger.log(logger.LOG_DETAIL, commands.command_called_log_string)
+	
+	if database.is_user_blocked(interaction.user.id):
+		await interaction.followup.send(commands.must_be_guild_member)
+		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is blocked from using this command, aborting")
+		return
+	
 	try:
-		await interaction.followup.send(etymology.get_etymology(argument))
+		await interaction.followup.send(etymology_handler.get_etymology(argument))
 	except Exception as e:
 		print(f"Error getting etymology: {e}")
 		await interaction.followup.send(commands.something_went_wrong)

@@ -19,15 +19,9 @@
 | WELCOMED_ROLE | Role id for the 'welcomed' role |
 | TRUSTED_ROLE | Role id for the 'trusted' role |
 | TRUSTED_TIME_DAYS | Number of days a user must be in the server before being given the 'trusted' role (only if they have the 'welcomed' role) |
-| BLOCKED_USER_x | User id of user that is blocked from using openai interactions (replace x with anything), can have multiple |
 
 ### Emojis
 Put in all emoji ids from discord for what you want to use for reactions and triggers (ones that would need nitro)
-
-### Blocked users
-All blocked users - disallows each blocked user from using openai messaging  
-Field in the form of `BLOCKED_USER_.*`  
-e.g. `BLOCKED_USER_1`
 
 ## Events
 Not all discord events are tracked, and those that are aren't really looked at too hard. The following are what have implementations:
@@ -75,16 +69,22 @@ There are a few sets of commands for different groups of tasks:
  - set_debug_level [Owner]
  - send_as_bot [Owner]
  - info [Owner]
+ - block_user [Admin]
+ - unblock_user [Admin]
+ - get_blocked_users [Owner]
  - force_trusted_roles [Owner]
  - force_audit_log [Owner]
  - force_reread_train_info [Owner]
  - run_test [Owner]
 
-These are just for the bot owner to do tasks that mainly are just bot maintenance things.  
+These are just for the bot owner to do tasks that mainly are just bot maintenance things. If some users are misusing interactions, an admin can block them from being able to use all the bot's features.  
 `die` kill the bot
 `set_debug_level` sets the current debug level (more info in Logs section)  
 `send_as_bot` allows the owner to send a message in a channel as the bot  
-`info` shows info of the machine the bot is running on (e.g. CPU/Mem)  
+`info` shows info of the machine the bot is running on (e.g. CPU/Mem)
+`block_user` restrict a user from interactions  
+`unblock_user` unrestrict a user from interactions  
+`get_blocked_users` get a full list of all blocked users  
 `force_*` forces a task to run even if the time for the task to run is not now (more info in Tasks section)  
 `run_test` placeholder command for testing new commands so that the owner doesn't need to restart discord to be able to run a new command
 
@@ -100,15 +100,9 @@ A limited todo list for the owner to keep track of tasks they may want to implem
 
 ### Open AI
  - set_prompt
- - block_user [Admin]
- - unblock_user [Admin]
- - get_blocked_users [Owner]
 
-When the bot is pinged, it responds using open ai interactions. Here users can set a prompt for the personality of the bot. If some users are misusing these interactions, and admin can block them from being able to talk to the bot through this.  
-`set_prompt` set a new prompt  
-`block_user` restrict a user from openai interactions  
-`unblock_user` unrestrict a user from openai interactions  
-`get_blocked_users` get a full list of all blocked users
+When the bot is pinged, it responds using open ai interactions. Here users can set a prompt for the personality of the bot.  
+`set_prompt` set a new prompt
 
 ### Reactions
  - opt_out

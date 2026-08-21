@@ -1,10 +1,7 @@
-import discord
 import duckdb
 
 from .. import logger
 from .. import utils
-
-# TODO: this shouldn't have to import discord, that should be done where these functions are called from
 
 '''
 	train_facts
@@ -29,18 +26,7 @@ def get_all_train_facts():
 	utils.database_conn = duckdb.connect(utils.database_name)
 	result = utils.database_conn.execute("SELECT fact_num, fact FROM train_facts").fetchall()
 	utils.database_conn.close()
-	embed = discord.Embed(title="Train Facts", colour=0xffffff)
-	for row in result:
-		embed.add_field(name=f"Fact {row[0]}", value=row[1], inline=False)
-	# If the bot user exists, set its avatar as the author icon
-	try:
-		embed.set_author(name="SkyeNet", icon_url=utils.discord_bot.user.display_avatar.url)
-	except Exception:
-		# Ignore if discord bot/user isn't available in this context
-		pass
-	if len(result) == 0:
-		embed.description = "No train facts available."
-	return embed
+	return result
 
 def insert_train_fact(fact):
 	'''

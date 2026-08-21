@@ -3,6 +3,7 @@ import re
 
 from openai import OpenAI
 
+from .. import database_module as database
 from .. import logger
 from .. import utils
 
@@ -36,8 +37,8 @@ async def handle_bot_ping(message:discord.Message):
 	if attempting_reset_instructions(message):
 		await message.reply("Nice try, you ain't gonna reset me like that!", mention_author=False)
 		return
-	if message.author.id in utils.all_blocked_users:
-		logger.log(logger.LOG_INFO, f"User {message.author.name} attempted to use ai bot feature but was previously banned.")
+	if database.is_user_blocked(message.author.id):
+		logger.log(logger.LOG_INFO, f"User {message.author.name} attempted to use ai bot feature but was previously blocked.")
 		await message.reply("You have lost access to this feature.", mention_author=False)
 		return
 	await openai_chat(message)
