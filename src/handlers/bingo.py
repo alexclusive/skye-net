@@ -46,21 +46,24 @@ def get_bingo_grid(card_items:list) -> str:
 	return grid
 
 def is_winning_bingo(card_items:list) -> bool:
-	# Rows
 	for row in card_items:
 		if all(is_item_checked(item) for item in row):
+			logger.log(logger.LOG_EXTRA_DETAIL, "Winner by row!")
 			return True
-	# Columns
+
 	for col in range(5):
 		if all(is_item_checked(card_items[row][col]) for row in range(5)):
+			logger.log(logger.LOG_EXTRA_DETAIL, "Winner by column!")
 			return True
-	# Diagonals
+		
 	if all(is_item_checked(card_items[i][i]) for i in range(5)) or all(is_item_checked(card_items[i][4 - i]) for i in range(5)):
+		logger.log(logger.LOG_EXTRA_DETAIL, "Winner by diagonal!")
 		return True
+	
 	return False
 
 def get_bingo_card(guild_id:int, bingo_name:str, user_id:int) -> tuple:
-	logger.log(logger.LOG_INFO, f"Fetching bingo card for user {user_id} in guild {guild_id} for template '{bingo_name}'.")
+	logger.log(logger.LOG_INFO, f"Fetching bingo card for user {user_id} in guild {guild_id} for template '{bingo_name}'")
 	embed = create_bingo_embed(guild_id, user_id, bingo_name)
 
 	if not does_bingo_card_exist(guild_id, bingo_name, user_id):
@@ -70,8 +73,8 @@ def get_bingo_card(guild_id:int, bingo_name:str, user_id:int) -> tuple:
 			embed.description = f"You have no bingo card for the {bingo_name} bingo"
 		return embed, None
 	
+	logger.log(logger.LOG_EXTRA_DETAIL, "Bingo card exists, getting items")
 	items = split_bingo_card_items(database.get_bingo_card(guild_id, bingo_name, user_id))
-
 	embed.description = get_bingo_grid(items)
 
 	if is_winning_bingo(items):
@@ -79,6 +82,7 @@ def get_bingo_card(guild_id:int, bingo_name:str, user_id:int) -> tuple:
 	else:
 		embed.colour = colour_white
 
+	logger.log(logger.LOG_EXTRA_DETAIL, "Getting bingo view")
 	view = BingoView(guild_id, bingo_name, user_id, items)
 	return embed, view
 
@@ -88,19 +92,20 @@ def does_bingo_card_exist(guild_id:int, bingo_name:str, user_id:int) -> bool:
 		Creates a card if it can.
 	'''
 	if not database.does_bingo_template_exist(guild_id, bingo_name):
-		logger.log(logger.LOG_INFO, f"Bingo template '{bingo_name}' does not exist for guild {guild_id}.")
+		logger.log(logger.LOG_INFO, f"Bingo template '{bingo_name}' does not exist for guild {guild_id}")
 		return False
 	
 	if not database.has_user_created_bingo_card(guild_id, bingo_name, user_id):
+		logger.log(logger.LOG_DETAIL, f"Auto-creating bingo card for user {user_id} in '{bingo_name}' since none exist")
 		database.create_bingo_card(guild_id, bingo_name, user_id)
-		logger.log(logger.LOG_DETAIL, f"Auto-created bingo card for user {user_id} in '{bingo_name}'.")
 		if not database.has_user_created_bingo_card(guild_id, bingo_name, user_id):
-			logger.log(logger.LOG_INFO, f"Failed to create bingo card for user {user_id} in '{bingo_name}'.")
+			logger.log(logger.LOG_INFO, f"Failed to create bingo card for user {user_id} in '{bingo_name}'")
 			return False
 		
 	return True
 
 def create_bingo_embed(guild_id:int, user_id:int, bingo_name:str) -> discord.Embed:
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Creating bingo embed for user {user_id} in guild {guild_id} for template '{bingo_name}'")
 	user = utils.discord_bot.get_user(user_id)
 	if user:
 		embed_title = f"{user.display_name}'s {bingo_name} Bingo Card"
@@ -112,6 +117,7 @@ def create_bingo_embed(guild_id:int, user_id:int, bingo_name:str) -> discord.Emb
 	return embed
 
 def get_complete_bingo_embed(guild_id:int, user_id:int, bingo_name:str, items:list) -> discord.Embed:
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Creating bingo card for user {user_id} in guild {guild_id} for template '{bingo_name}'")
 	embed = create_bingo_embed(guild_id, user_id, bingo_name)
 	embed.description = get_bingo_grid(items)
 	return embed
@@ -121,8 +127,10 @@ def toggle_bingo_item(guild_id:int, bingo_name:str, user_id:int, row:int, col:in
 	items_2d = split_bingo_card_items(card)
 
 	if is_item_checked(items_2d[row][col]):
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Unchecking item '{items_2d[row][col]}' for user {user_id} in guild {guild_id} for template '{bingo_name}'")
 		items_2d[row][col] = uncheck_bingo_item(items_2d[row][col])
 	else:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Checking item '{items_2d[row][col]}' for user {user_id} in guild {guild_id} for template '{bingo_name}'")
 		items_2d[row][col] = check_bingo_item(items_2d[row][col])
 
 	flattened = [item for sublist in items_2d for item in sublist]
@@ -141,6 +149,7 @@ class BingoButton(discord.ui.Button):
 
 	async def callback(self, interaction:discord.Interaction):
 		if interaction.user.id != self.card_owner_id and interaction.user.id != utils.owner_id:
+			logger.log(logger.LOG_EXTRA_DETAIL, f"User {interaction.user.id} attempted to interact with user {self.card_owner_id}'s card in guild {self.guild_id}")
 			await interaction.response.send_message(not_your_bingo, ephemeral=True)
 			return
 
@@ -154,10 +163,12 @@ class BingoButton(discord.ui.Button):
 		await interaction.response.edit_message(embed=embed, view=view)
 
 		if winner:
+			logger.log(logger.LOG_EXTRA_DETAIL, f"User {self.card_owner_id} has a winning bingo card in guild {self.guild_id}!")
 			await interaction.followup.send(f"BINGO! We have a winner, congratulations <@{self.card_owner_id}>!")
 
 class BingoView(discord.ui.View):
 	def __init__(self, guild_id:int, bingo_name:str, card_owner_id:int, items:list):
+		logger.log(logger.LOG_EXTRA_DETAIL, "Creating new BingoView")
 		super().__init__(timeout=None)
 		for r in range(5):
 			for c in range(5):
@@ -176,9 +187,10 @@ class BingoView(discord.ui.View):
 		return label
 
 def get_all_bingo_templates() -> Optional[discord.Embed]:
+	logger.log(logger.LOG_EXTRA_DETAIL, "Getting all bingo templates")
 	templates = database.get_all_bingo_templates()
 	if not templates:
-		logger.log(logger.LOG_INFO, "No bingo templates found.")
+		logger.log(logger.LOG_INFO, "No bingo templates found")
 		return None
 
 	embed = discord.Embed(title="Bingo Templates", colour=colour_white)
@@ -192,9 +204,10 @@ def get_all_bingo_templates() -> Optional[discord.Embed]:
 	return embed
 
 def get_bingo_templates_for_guild(guild_id:int) -> Optional[discord.Embed]:
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Getting all bingo templates for guild id {guild_id}")
 	templates = database.get_all_bingo_templates_for_guild(guild_id)
 	if not templates:
-		logger.log(logger.LOG_INFO, f"No bingo templates found for guild {guild_id}.")
+		logger.log(logger.LOG_INFO, f"No bingo templates found for guild {guild_id}")
 		return None
 
 	guild_name = utils.discord_bot.get_guild(guild_id)
@@ -207,27 +220,28 @@ def create_bingo_template(guild_id:int, bingo_name:str, free_space:bool, items_s
 	if (free_space and len(items_str.split("\n")) < 24) or (not free_space and len(items_str.split("\n")) < 25):
 		return False
 	
+	logger.log(logger.LOG_INFO, f"Creating bingo template '{bingo_name}' for guild {guild_id}")
 	database.create_bingo_template(guild_id, bingo_name, free_space, items_str)
-	logger.log(logger.LOG_INFO, f"Created bingo template '{bingo_name}' for guild {guild_id}.")
 	return True
 
 def delete_bingo_template(guild_id:int, bingo_name:str) -> bool:
 	if not database.does_bingo_template_exist(guild_id, bingo_name):
 		return False
 
+	logger.log(logger.LOG_INFO, f"Deleting bingo template '{bingo_name}' for guild {guild_id}")
 	database.delete_bingo_template(guild_id, bingo_name)
-	logger.log(logger.LOG_INFO, f"Deleted bingo template '{bingo_name}' for guild {guild_id}.")
 	return True
 
 def update_bingo_template(guild_id:int, bingo_name:str, items:str) -> bool:
 	if not database.does_bingo_template_exist(guild_id, bingo_name):
 		return False
 
+	logger.log(logger.LOG_INFO, f"Updating bingo template '{bingo_name}' for guild {guild_id}")
 	database.update_bingo_template(guild_id, bingo_name, items)
-	logger.log(logger.LOG_INFO, f"Updated bingo template '{bingo_name}' for guild {guild_id}.")
 	return True
 
 def reset_bingo_card(guild_id: int, bingo_name: str, user_id: int):
+	logger.log(logger.LOG_INFO, f"Resetting bingo card for user id {user_id}, guild id {guild_id}, and template '{bingo_name}'")
 	items = split_bingo_card_items(database.get_bingo_card(guild_id, bingo_name, user_id))
 	for r in range(5):
 		for c in range(5):
@@ -238,6 +252,7 @@ def reset_bingo_card(guild_id: int, bingo_name: str, user_id: int):
 	database.update_bingo_card(guild_id, bingo_name, user_id, flattened)
 
 def get_bingo_card_items_embed(guild_id:int, bingo_name:str, user_id:int) -> discord.Embed:
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Creating bingo embed (items only) for user {user_id} in guild {guild_id} for template '{bingo_name}'")
 	embed = create_bingo_embed(guild_id, user_id, bingo_name)	
 	if not does_bingo_card_exist(guild_id, bingo_name, user_id):
 		embed.description = f"You have no bingo card for the {bingo_name} bingo"

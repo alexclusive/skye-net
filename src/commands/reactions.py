@@ -19,10 +19,12 @@ async def opt_out(interaction:discord.Interaction):
 	logger.log(logger.LOG_DETAIL, commands.command_called_log_string)
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Opting out user {interaction.user.id}")
 		database.opt_out(interaction.user.id)
 		await interaction.followup.send("You have opted out of reactions")
 	except Exception as e:
 		print(f"Error getting opt out reactions: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting opt out reactions: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @utils.discord_bot.tree.command(description="Opt in to the bot's reactions")
@@ -31,10 +33,12 @@ async def opt_in(interaction:discord.Interaction):
 	logger.log(logger.LOG_DETAIL, commands.command_called_log_string)
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Opting in user {interaction.user.id}")
 		database.opt_in(interaction.user.id)
 		await interaction.followup.send("You have opted in to reactions")
 	except Exception as e:
 		print(f"Error getting opt in reactions: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting opt in reactions: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -51,10 +55,12 @@ async def opt_out_user(interaction:discord.Interaction, user_id:int):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Opting out user {interaction.user.id}")
 		database.opt_out(user_id)
 		await interaction.followup.send(f"{user_id} opted out of reactions")
 	except Exception as e:
 		print(f"Error forcing opt out of reactions: {e}")
+		logger.log(logger.LOG_INFO, f"Error forcing opt out of reactions: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -71,10 +77,12 @@ async def opt_in_user(interaction:discord.Interaction, user_id:int):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Opting in user {interaction.user.id}")
 		database.opt_in(user_id)
 		await interaction.followup.send(f"{user_id} opted in to reactions")
 	except Exception as e:
 		print(f"Error forcing opt in of reactions: {e}")
+		logger.log(logger.LOG_INFO, f"Error forcing opt in of reactions: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @utils.discord_bot.tree.command(description="[Owner] Get list of user IDs that have opted out of reactions")
@@ -88,7 +96,9 @@ async def get_opt_out_users(interaction:discord.Interaction):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting all opted out users")
 		opted_out_user_ids = database.get_all_opt_out_users()
+
 		opted_out_user_objs:list[discord.User] = []
 		for user_id in opted_out_user_ids:
 			try:
@@ -96,10 +106,12 @@ async def get_opt_out_users(interaction:discord.Interaction):
 				if user:
 					opted_out_user_objs.append(user)
 			except Exception:
-				continue
+				logger.log(logger.LOG_EXTRA_DETAIL, f"Error getting user from user id {user.id}, account might be deleted")
+
 		await interaction.followup.send(f"Opted out users: {', '.join(user.name for user in opted_out_user_objs)}")
 	except Exception as e:
 		print(f"Error getting opt-out users: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting opt-out users: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 		
 commands.owner_commands_names.append("get_opt_out_users")

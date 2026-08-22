@@ -37,12 +37,13 @@ def send_message(channel:discord.abc.Messageable, message:str) -> None:
 def send_output_to_discord(message:str):
 	message = message.strip()
 	if message:
+		logger.log(logger.LOG_INFO, f"Sending message to discord stdout channel: {message}")
 		channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if channel:
 			send_message(channel, message)
 
 async def run_bot():
-	logger.set_log_file(utils.log_file_path)
+	logger.set_log_file(utils.log_file)
 	database.init_db()
 	logger.set_debug_level(database.get_debug_level())
 	utils.set_current_prompt(database.get_most_recent_prompt())

@@ -34,20 +34,18 @@ ignored_phrases = [
 ]
 
 async def handle_bot_ping(message:discord.Message):
-	if attempting_reset_instructions(message):
-		await message.reply("Nice try, you ain't gonna reset me like that!", mention_author=False)
-		return
 	if database.is_user_blocked(message.author.id):
-		logger.log(logger.LOG_INFO, f"User {message.author.name} attempted to use ai bot feature but was previously blocked.")
+		logger.log(logger.LOG_INFO, f"User {message.author.name} ({message.author.id}) attempted to use ai bot feature but is blocked")
 		await message.reply("You have lost access to this feature.", mention_author=False)
+		return
+	if attempting_reset_instructions(message):
+		logger.log(logger.LOG_EXTRA_DETAIL, f"User {message.author.name} ({message.author.id}) attempted to reset ai instructions")
+		await message.reply("Nice try, you ain't gonna reset me like that!", mention_author=False)
 		return
 	await openai_chat(message)
 
 async def openai_chat(message:discord.Message):
-	if attempting_reset_instructions(message):
-		await message.reply("Nice try bozo, you ain't gonna reset me like that!", mention_author=False)
-		return
-	
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Handling ping from {message.author.name} ({message.author.id})")
 	contents = [{"role": "system", "content": utils.current_prompt + " also don't refer to yourself or others like a chat log (i.e. 'Skye-net: <message>') in your responses."}]
 	messages = [message]
 
@@ -69,11 +67,12 @@ async def openai_chat(message:discord.Message):
 		if msg.author == utils.discord_bot.user:
 			user = "assistant"
 		name = msg.author.display_name
-		# replace non a-zA-Z0-9 characters
+		# remove non a-zA-Z0-9 characters
 		name = re.sub(r'[^a-zA-Z0-9]', '', name)
 		contents.append({"role": user, "content": msg.content, "name": name})
 
 	async with message.channel.typing():
+		logger.log(logger.LOG_DETAIL, "Responding to ping")
 		response_content = openai_chat_response(contents)
 		if len(response_content) > 2000:
 			chunk_size = 1900
@@ -81,13 +80,14 @@ async def openai_chat(message:discord.Message):
 			for current_chunk_num, chunk in enumerate([response_content[i:i+chunk_size] for i in range(0, len(response_content), chunk_size)], start=1):
 				chunk_with_footer = f"z{chunk}\n\n{current_chunk_num}/{total_chunks}"
 				await message.reply(chunk_with_footer, mention_author=False)
+			return
 		await message.reply(response_content, mention_author=False)
 
 def attempting_reset_instructions(message:discord.Message):
 	content = message.content.lower()
 	for phrase in ignored_phrases:
 		if phrase in content:
-			logger.log(logger.LOG_INFO, f"User {message.author.name} attempted to reset bot instructions using phrase {phrase}.")
+			logger.log(logger.LOG_INFO, f"User {message.author.name} attempted to reset bot instructions using phrase {phrase}")
 			return True
 	return False
 
@@ -100,4 +100,5 @@ def openai_chat_response(messages):
 		)
 		return completion.choices[0].message.content
 	except Exception as e:
+		logger.log(logger.LOG_INFO, f"Error getting openai response: {e}")
 		return f"OpenAI error: {e}"

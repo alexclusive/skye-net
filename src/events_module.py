@@ -57,10 +57,20 @@ async def on_member_remove(member:discord.Member):
 @utils.discord_bot.event
 async def on_member_update(before:discord.Member, after:discord.Member):
 	# nickname / roles / guild avatar
-	logger.log(logger.LOG_DETAIL, event_triggered_log_string)
+	logger.log(logger.LOG_DETAIL, event_triggered_log_string + f" in {after.guild.name}")
 	await member_events.member_update(before, after)
 
 @utils.discord_bot.event
 async def on_member_ban(member:discord.Member):
 	logger.log(logger.LOG_DETAIL, f"Event triggered in {member.guild.name}")
 	await member_events.member_ban(member)
+
+@utils.discord_bot.event
+async def on_guild_join(guild:discord.Guild):
+	logger.log(logger.LOG_DETAIL, event_triggered_log_string + f" in {guild.name}")
+	await guild_events.guild_join(guild)
+
+@utils.discord_bot.event
+async def on_guild_remove(guild:discord.Guild):
+	logger.log(logger.LOG_DETAIL, event_triggered_log_string + f" in {guild.name}")
+	await guild_events.guild_remove(guild)

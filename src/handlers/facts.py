@@ -5,6 +5,7 @@ import re
 from typing import Dict
 
 from .. import database_module as database
+from .. import logger
 from .. import utils
 
 sydney_metro_depot = "Marrickville"
@@ -40,7 +41,8 @@ class TrainSet:
 train_sets:Dict[str,TrainSet] = {}
 
 def read_csv_train_info():
-	with open(utils.csv_file, 'r', encoding='utf-8') as f:
+	logger.log(logger.LOG_INFO, "Reading train info from csv")
+	with open(utils.train_info_file, 'r', encoding='utf-8') as f:
 		reader = csv.reader(f)
 		for row in reader:
 			if len(row) < 2:
@@ -60,13 +62,14 @@ def read_csv_train_info():
 
 			train_set = train_sets.setdefault(set_name, TrainSet(train.train_set_full_name))
 			train_set.trains[train.train_set_num] = train
-	generate_metro_sets() # No table needed, these numbers are predictable and can be generated programmatically
+	generate_metro_sets()
 
 def get_set_from_field(set_field:str) -> str:
 	match = re.match(r'^[A-Za-z]+', set_field)
 	return match.group(0) if match else set_field
 
 def generate_metro_sets():
+	logger.log(logger.LOG_INFO, "Generating metro set info")
 	suffixes = ["01", "03", "05", "06", "04", "02"]
 	for set_num in range(1, 46):
 		set_str = f"{set_num:02d}"
@@ -87,16 +90,20 @@ def find_car(car_num:str):
 		Returns a (TrainSet, Train, full_car_number, metro_note) tuple, or None if not found.
 		metro_note may be empty if the train is not a metro
 	'''
+	logger.log(logger.LOG_DETAIL, f"Searching for car with num {car_num}")
 	for train_set in train_sets.values():
 		for train in train_set.trains.values():
 			for car in train.train_consist:
 				if re.sub(r'^\D+', '', car) == car_num:
+					logger.log(logger.LOG_DETAIL, f"Found car with num {car_num}")
 					if train_set.train_set_name == sydney_metro_set_name:
 						return train_set, train, car, get_metro_car_note(car_num)
 					return train_set, train, car, None
+	logger.log(logger.LOG_DETAIL, f"No car with num {car_num} found")
 	return None
 
 def get_metro_car_note(car_num:str) -> str:
+	logger.log(logger.LOG_DETAIL, "Generating metro car note")
 	car_num_int = int(car_num) % 100
 	closest_end = "Tallawong"
 	if car_num_int % 2 == 0:
@@ -116,7 +123,9 @@ def get_metro_car_note(car_num:str) -> str:
 		return f"This is one of the middle two cars on the metro. This car is one of the four cars with a motor, along with {car_num[:3]}3, {car_num[:3]}4, and {other_car}"
 
 def get_facts(number:int):
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Getting number fact for number {number}")
 	num_fact = get_number_fact(number)
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Getting train fact for number {number}")
 	train_fact = get_train_info(number)
 
 	if len(num_fact) == 0 and len(train_fact) == 0:

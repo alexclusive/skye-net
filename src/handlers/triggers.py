@@ -1,6 +1,7 @@
 import discord
 import re
 
+from .. import logger
 from .. import utils
 
 async def handle_reactions(message:discord.Message, emojis:dict):
@@ -28,6 +29,7 @@ async def handle_reactions(message:discord.Message, emojis:dict):
 	# what!			‼️
 	# yippee		<:AutismCreature:1235124052813807658>
 	content = message.content.lower()
+	logger.log(logger.LOG_INFO, f"Checking reactions for message {content}")
 
 	# other reactions
 	if "birth in vc" in content:
@@ -84,6 +86,7 @@ async def handle_triggers(message:discord.Message, emojis:dict) -> None:
 	# nuh uh				<a:no:1300690431373217802> <a:WaggingFinger:1300743838926770186>
 	# oh.					🫥
 	content = message.content.lower()
+	logger.log(logger.LOG_INFO, f"Checking triggers for message {content}")
 
 	if "500 cigarettes" in content:
 		contents = "5️⃣0️⃣0️⃣🚬"

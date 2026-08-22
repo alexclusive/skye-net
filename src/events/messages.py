@@ -2,9 +2,9 @@ import discord
 import re
 from datetime import datetime as dt
 
-from .. import utils
-from .. import logger
 from .. import database_module as database
+from .. import logger
+from .. import utils
 from ..handlers import spotify as spotify_handler
 from ..handlers import openAI as openAI_handler
 from ..handlers import triggers as triggers_handler
@@ -27,6 +27,7 @@ async def message(message:discord.Message):
 			message_sent = True
 	except Exception as e:
 		print(f"on_message: openai interaction {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_message event (openai): {e}")
 
 	try:
 		spotify_tracks = re.findall(r"https?://open\.spotify\.com/track/[a-zA-Z0-9]+", message.content)
@@ -34,7 +35,7 @@ async def message(message:discord.Message):
 		spotify_playlists = re.findall(r"https?://open\.spotify\.com/playlist/[a-zA-Z0-9]+", message.content)
 
 		if len(spotify_tracks) > 0 or len(spotify_albums) > 0 or len(spotify_playlists) > 0:
-			logger.log(logger.LOG_EXTRA_DETAIL, f"Found spotify details - {len(spotify_tracks)} tracks, {len(spotify_albums)} albums, and {len(spotify_playlists)} playlists in message.")
+			logger.log(logger.LOG_EXTRA_DETAIL, f"Found spotify details - {len(spotify_tracks)} tracks, {len(spotify_albums)} albums, and {len(spotify_playlists)} playlists in message")
 
 			for link in spotify_tracks:
 				embed = spotify_handler.get_spotify_track_embed(link)
@@ -55,11 +56,12 @@ async def message(message:discord.Message):
 					message_sent = True
 	except Exception as e:
 		print(f"on_message: spotify embed {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_message event (spotify): {e}")
 
 	try:
 		opted_out_users = database.get_all_opt_out_users()
 		if str(message.author.id) in opted_out_users:
-			logger.log(logger.LOG_EXTRA_DETAIL, f"User {message.author.name} opted out of reactions.")
+			logger.log(logger.LOG_EXTRA_DETAIL, f"User {message.author.name} opted out of reactions")
 			return
 		
 		await triggers_handler.handle_reactions(message, utils.all_emojis)
@@ -68,15 +70,17 @@ async def message(message:discord.Message):
 	except discord.errors.Forbidden as e:
 		if e.code == 90001: # blocked
 			print(f"on_message: I was blocked by user {message.author} :(")
-			logger.log(logger.LOG_EXTRA_DETAIL, f"User {message.author.name} blocked Skyenet :(")
+			logger.log(logger.LOG_DETAIL, f"User {message.author.name} blocked Skyenet :(")
 		else:
 			print(f"on_message: reactions/triggers {e}")
+			logger.log(logger.LOG_INFO, f"Error in on_message event (reactions/triggers): {e}")
 	except discord.NotFound as e:
 		if e.status == 404 and e.code == 10008:
-			logger.log(logger.LOG_EXTRA_DETAIL, "Attempted to react to a message that was deleted.")
+			logger.log(logger.LOG_DETAIL, "Attempted to react to a message that was deleted")
 			return # message was deleted before we could react to it
 	except Exception as e:
 		print(f"on_message: reactions/triggers {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_message event (reactions/triggers): {e}")
 
 async def message_deleted(message:discord.Message, retrying:bool=False):
 	try:
@@ -135,7 +139,7 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 		# Add the original sent time to the first embed if possible
 		try:
 			if hasattr(message, "created_at") and message.created_at is not None and len(embeds) > 0:
-				# use the same formatter as other handlers
+				# TODO use the same formatter as other handlers
 				created_timestamp = int(message.created_at.timestamp())
 				now_timestamp = int(dt.now(utils.timezone_here).timestamp())
 				time_between = now_timestamp - created_timestamp
@@ -148,8 +152,7 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 
 				embeds[0].add_field(name="Sent At", value=formatted, inline=False)
 		except Exception:
-			# non-fatal: if timestamp formatting fails, just don't add the field
-			pass
+			logger.log(logger.LOG_EXTRA_DETAIL, f"Error in on_message_delete event (timestamp formatting failed): {e}")
 
 		for embed in embeds:
 			embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
@@ -157,16 +160,21 @@ async def message_deleted(message:discord.Message, retrying:bool=False):
 			embed.set_footer(text=f"Message ID: {message.id}")
 			await log_channel.send(embed=embed)
 	except OSError as e:
-		if e.errno == 32:  # Broken pipe
+		if e.errno == 32: # Broken pipe
 			if not retrying:
+				logger.log(logger.LOG_INFO, f"Error in on_message_delete event (broken pipe), attempting again: {e}")
 				await message_deleted(message, retrying=True)
 			else:
 				print(f"message_deleted (after retry): {e}")
+				logger.log(logger.LOG_INFO, f"Error in on_message_delete event (broken pipe, even after retry): {e}")
 	except Exception as e:
-		if e.errno == 400:  # Bad Request
+		if e.errno == 400: # Bad Request
 			if not retrying:
+				logger.log(logger.LOG_INFO, f"Error in on_message_delete event (bad request), attempting again with attachments in separate messages: {e}")
 				await message_deleted(message, retrying=True)
-				# try again but this time send attachments in separate message
+				# TODO try again but this time send attachments in separate message
 			else:
 				print(f"message_deleted (after retry): {e}")
+				logger.log(logger.LOG_INFO, f"Error in on_message_delete event (bad request, even after retry): {e}")
 		print(f"message_deleted: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_message_delete event: {e}")

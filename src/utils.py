@@ -9,7 +9,12 @@ from dotenv import load_dotenv
 all_emojis = {}
 
 intents = discord.Intents.all()
-discord_bot = commands.Bot(command_prefix="!", intents=intents)
+discord_bot = commands.Bot(
+	command_prefix="!",
+	intents=intents,
+	status=discord.Status.do_not_disturb,
+	activity=discord.CustomActivity("Starting up...", type=discord.ActivityType.unknown),
+)
 load_dotenv(dotenv_path="/volume1/documents/git/skye-net/.env")
 received_shutdown = False
 database_conn = None
@@ -22,8 +27,9 @@ owner_id = int(os.getenv("OWNER"))
 
 # File locations
 base_path = str(os.getenv("BASE_PATH"))
-log_file_path = base_path + "/" + str(os.getenv("LOG_FILE_PATH"))
-database_name = base_path + "/" + str(os.getenv("DATABASE_FILE_NAME"))
+log_file = os.path.join(base_path, str(os.getenv("LOG_FILE")))
+database_file = os.path.join(base_path, str(os.getenv("DATABASE_FILE")))
+train_info_file = os.path.join(base_path, str(os.getenv("TRAIN_INFO_FILE")))
 
 # Open AI
 history_limit = int(os.getenv("HISTORY_LIMIT"))
@@ -46,9 +52,6 @@ bot_role_id = int(os.getenv("BOT_ROLE"))
 welcomed_role_id = int(os.getenv("WELCOMED_ROLE"))
 trusted_role_id = int(os.getenv("TRUSTED_ROLE"))
 trusted_time_days = int(os.getenv("TRUSTED_TIME_DAYS"))
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-csv_file = os.path.join(current_dir, "database", "train_info.csv")
 
 def set_current_prompt(new_prompt:str):
 	global current_prompt

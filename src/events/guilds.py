@@ -2,6 +2,7 @@ import discord
 
 from datetime import datetime as dt
 
+from .. import logger
 from .. import utils
 
 '''
@@ -16,7 +17,8 @@ from .. import utils
 async def channel_create(channel:discord.abc.GuildChannel):
 	try:
 		if channel.guild is None:
-			return # ignore DMs
+			return
+		logger.log(logger.LOG_INFO, f"New channel created in guild {channel.guild.name}: {channel.name}")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -34,11 +36,13 @@ async def channel_create(channel:discord.abc.GuildChannel):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"channel_create: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_guild_channel_create event: {e}")
 
 async def channel_delete(channel:discord.abc.GuildChannel):
 	try:
 		if channel.guild is None:
-			return # ignore DMs
+			return
+		logger.log(logger.LOG_INFO, f"Channel deleted in guild {channel.guild.name}: {channel.name}")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -56,11 +60,13 @@ async def channel_delete(channel:discord.abc.GuildChannel):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"channel_delete: {e}")
+		logger.log(logger.LOG_INFO, f"Error on on_guild_channel_delete event: {e}")
 
 async def role_create(role:discord.Role):
 	try:
 		if role.guild is None:
-			return # ignore DMs
+			return
+		logger.log(logger.LOG_INFO, f"New role created in guild {role.guild.name}: {role.name}")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -76,11 +82,13 @@ async def role_create(role:discord.Role):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"role_create: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_guild_role_create event: {e}")
 
 async def role_delete(role:discord.Role):
 	try:
 		if role.guild is None:
-			return # ignore DMs
+			return
+		logger.log(logger.LOG_INFO, f"Role deleted in guild {role.guild.name}: {role.name}")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -96,9 +104,12 @@ async def role_delete(role:discord.Role):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"role_delete: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_guild_role_delete event: {e}")
 
 async def guild_join(guild:discord.Guild):
 	try:
+		logger.log(logger.LOG_INFO, f"Guild joined: {guild.name}")
+
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
@@ -115,9 +126,12 @@ async def guild_join(guild:discord.Guild):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"guild_join: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_guild_join event: {e}")
 
 async def guild_remove(guild:discord.Guild):
 	try:
+		logger.log(logger.LOG_INFO, f"Removed from guild: {guild.name}")
+
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
 			return
@@ -134,3 +148,4 @@ async def guild_remove(guild:discord.Guild):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"guild_remove: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_guild_remove event: {e}")

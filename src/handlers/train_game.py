@@ -34,6 +34,7 @@ async def train_game(interaction:discord.Interaction, number, a, b, c, d, target
 		if not strict_mode:
 			attempt(next_digits, current_total ** current_num, expression + "^" + str(current_num))
 	
+	logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to solve all permutations")
 	for permutation in permutations:
 		if len(permutation) == 0:
 			continue
@@ -42,30 +43,31 @@ async def train_game(interaction:discord.Interaction, number, a, b, c, d, target
 	response = sorted(solutions)
 	num_of_solutions = len(response)
 	if num_of_solutions == 0:
+		logger.log(logger.LOG_EXTRA_DETAIL, "No solutions")
 		facts_response = facts_handler.get_facts(number)
 		await interaction.followup.send(f"There are no solutions for `{number}` to get to target {str(target)}\n{facts_response}")
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Solving and formatting solutions")
 		formatted_list = solve_and_format(response, target)
 	except Exception as e:
-		logger.log(logger.LOG_INFO, f"Train game: error in solving and forming solution list. {e}")
 		print(f"Train game: error in solving and forming solution list. {e}")
+		logger.log(logger.LOG_INFO, f"Error solving and forming solution list: {e}")
 		await interaction.followup.send("Sorry! Unable to compute.")
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Paginating")
 		paginator = pagination.Paginator(timeout=None)
 		response_title, response_subtitle = get_response_start(number, target, num_of_solutions, strict_mode)
 		paginator.set(response_title, response_subtitle, formatted_list)
 		await paginator.send(interaction)
-		
-		logger.log(logger.LOG_INFO, f"Train game: showing train info for number {number}")
 		facts_response = facts_handler.get_facts(number)
 		await interaction.followup.send(facts_response)
 	except Exception as e:
-		logger.log(logger.LOG_INFO, f"Train game: error in pagination. {e}")
 		print(f"Train game: error in pagination. {e}")
+		logger.log(logger.LOG_INFO, f"Error in pagination: {e}")
 		await interaction.followup.send("Sorry! Something went wrong while displaying the results.")
 
 def get_response_start(number, target, num_of_solutions, strict_mode):
@@ -99,6 +101,8 @@ def place_brackets(expression):
 
 def solve(expression, target):
 	# ((7+1)+1)+1 -> (8+1)+1 -> 9+1 -> 10
+	logger.log(logger.LOG_INFO, f"Attempting solve for {expression} to {target}")
+
 	if len(expression) != 11:
 		print("Somehow got a solution the wrong length (" + str(len(expression)) + "): " + expression + "\nExpected the form (([num] [operation] [num]) [operation] [num]) [operation] [num]")
 		return expression
@@ -112,7 +116,8 @@ def solve(expression, target):
 		if abs(float(step_three) - float(target) > tolerance):
 			return None # incorrect solution
 	except Exception as e:
-		print(f"Train game (breakdown_expression): error in solving '{expression}'. {e}")
+		print(f"Train game: error in solving '{expression}'. {e}")
+		logger.log(logger.LOG_INFO, f"Error solving: {e}")
 		return None
 	
 	step_one_text = "(" + str(step_one) + expression[6:]
@@ -121,6 +126,7 @@ def solve(expression, target):
 	return expression + " -> " + step_one_text + " -> " + step_two_text + " -> " + step_three_text
 
 def compute(num1, op, num2):
+	logger.log(logger.LOG_INFO, f"Computing {num1} {op} {num2}")
 	operations = {
 		"+": lambda a, b: float(a) + float(b),
 		"-": lambda a, b: float(a) - float(b),
@@ -135,6 +141,9 @@ def compute(num1, op, num2):
 
 	result = operations[op](num1, num2)
 	if result == int(result):
-		return int(result)
+		result = int(result)
 	else:
-		return float("{:.3f}".format(result))
+		result = float("{:.3f}".format(result))
+
+	logger.log(logger.LOG_INFO, f"Computed {result}")
+	return result

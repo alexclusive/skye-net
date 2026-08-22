@@ -22,6 +22,7 @@ async def get_todo(interaction:discord.Interaction):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting to-do")
 		todo_items = database.get_all_todo_items()
 		if len(todo_items) != 0:
 			embed = discord.Embed(title="Todo List", colour=0xffffff)
@@ -33,6 +34,7 @@ async def get_todo(interaction:discord.Interaction):
 			await interaction.followup.send("Todo List Empty")
 	except Exception as e:
 		print(f"Error getting to do list: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting to do list: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -49,10 +51,12 @@ async def add_todo(interaction:discord.Interaction, item:str):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Inserting item into to-do list: {item}")
 		database.insert_todo_item(item)
 		await interaction.followup.send(f"Todo added: {item}")
 	except Exception as e:
 		print(f"Error adding to do item: {e}")
+		logger.log(logger.LOG_INFO, f"Error adding to do item: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -69,10 +73,12 @@ async def remove_todo(interaction:discord.Interaction, item_num:int):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Removing to-do item number {item_num}")
 		database.remove_todo_item(item_num)
 		await interaction.followup.send(f"Todo {item_num} removed")
 	except Exception as e:
 		print(f"Error removing to do item: {e}")
+		logger.log(logger.LOG_INFO, f"Error removing to do item: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 commands.owner_commands_names.append("get_todo")

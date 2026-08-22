@@ -36,10 +36,22 @@ async def create_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Deleting previous card")
 		database.delete_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
-		await get_bingo_card(interaction, bingo_name)
+
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting card")
+		bingo_card = bingo_handler.get_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+		embed, bingo_view = bingo_card
+
+		if bingo_view is not None:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Sending new card")
+			await interaction.followup.send(embed=embed, view=bingo_view)
+		else:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Card view is None, template may be missing")
+			await interaction.followup.send(embed=embed)
 	except Exception as e:
 		print(f"Error creating bingo card: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong creating bingo card: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -60,15 +72,20 @@ async def get_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting card")
 		bingo_card = bingo_handler.get_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
-		embed, view = bingo_card
+		embed, bingo_view = bingo_card
+
 		# view may be None if the card could not be generated (e.g. template missing)
-		if view is not None:
-			await interaction.followup.send(embed=embed, view=view)
+		if bingo_view is not None:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Sending new card")
+			await interaction.followup.send(embed=embed, view=bingo_view)
 		else:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Card view is None, template may be missing")
 			await interaction.followup.send(embed=embed)
 	except Exception as e:
 		print(f"Error getting bingo card: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong getting bingo card: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -88,11 +105,13 @@ async def get_bingo_card_items(interaction:discord.Interaction, bingo_name:str):
 		logger.log(logger.LOG_DETAIL, f"User {interaction.user.display_name}({interaction.user.id}) is blocked from using this command, aborting")
 		return
 	
-	try:		
+	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting card items")
 		embed = bingo_handler.get_bingo_card_items_embed(interaction.guild.id, bingo_name, interaction.user.id)
 		await interaction.followup.send(embed=embed)
 	except Exception as e:
 		print(f"Error getting bingo card items: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong getting bingo card items: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -113,10 +132,14 @@ async def reset_bingo_card(interaction:discord.Interaction, bingo_name:str):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Resetting card")
 		bingo_handler.reset_bingo_card(interaction.guild.id, bingo_name, interaction.user.id)
+
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting card")
 		await get_bingo_card(interaction, bingo_name)
 	except Exception as e:
 		print(f"Error resetting bingo card: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong resetting bingo card: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -136,10 +159,13 @@ async def create_bingo_template(interaction:discord.Interaction, bingo_name:str,
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting items")
 		items = await get_bingo_items(interaction, items_csv, items_message_id)
+		logger.log(logger.LOG_EXTRA_DETAIL, "Creating template")
 		await create_bingo_template(interaction, bingo_name, free_space, items)
 	except Exception as e:
 		print(f"Error creating bingo template: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong creating bingo template: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -158,29 +184,37 @@ async def update_bingo_template(interaction:discord.Interaction, bingo_name:str,
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting items")
 		items = await get_bingo_items(interaction, items_csv, items_message_id)
+		logger.log(logger.LOG_EXTRA_DETAIL, "Updating template")
 		await update_bingo_template(interaction, bingo_name, items)
 	except Exception as e:
 		print(f"Error updating bingo template: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong updating bingo template: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 async def get_bingo_items(interaction:discord.Interaction, items_csv:str, items_message_id:str) -> list:
 	if len(items_csv) == 0 and len(items_message_id) == 0:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Attempted to get bingo items from empty csv and message, aborting")
 		await interaction.followup.send("You must provide either a CSV of items or a message ID.")
 		return []
 
 	if len(items_csv) > 0 and len(items_message_id) > 0:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Attempted to get bingo items from both csv and message, aborting")
 		await interaction.followup.send("You must provide either a CSV of items or a message ID, not both.")
 		return []
 
 	if len(items_csv) > 0:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting items from csv")
 		return items_csv.split(",")
 
 	if len(items_message_id) > 0:
 		try:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Getting items from message")
 			message = await utils.discord_bot.get_channel(interaction.channel_id).fetch_message(items_message_id)
 			return message.content.split("\n")
 		except discord.NotFound:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Unable to get items from message")
 			await interaction.followup.send(f"Message with ID {items_message_id} not found. Make sure the message is in the same channel as this command and the bot has access to the channel.")
 
 	return []		
@@ -199,13 +233,17 @@ async def delete_bingo_template(interaction:discord.Interaction, bingo_name:str)
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to delete template")
 		deleted = bingo_handler.delete_bingo_template(interaction.guild.id, bingo_name)
 		if deleted:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Deleted template")
 			await interaction.followup.send(f"Bingo template '{bingo_name}' deleted successfully.")
 		else:
+			logger.log(logger.LOG_EXTRA_DETAIL, "Couldn't delete template")
 			await interaction.followup.send(f"Failed to delete bingo template '{bingo_name}'. It may not exist.")
 	except Exception as e:
 		print(f"Error deleting bingo template: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong deleting bingo template: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @utils.discord_bot.tree.command(description="[Admin] Get bingo templates for this guild")
@@ -219,6 +257,7 @@ async def get_bingo_templates(interaction:discord.Interaction):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Getting templates for guild {interaction.guild.name}")
 		templates_embed = bingo_handler.get_bingo_templates_for_guild(interaction.guild.id)
 		if templates_embed is None:
 			await interaction.followup.send("No bingo templates found for this guild")
@@ -227,6 +266,7 @@ async def get_bingo_templates(interaction:discord.Interaction):
 		await interaction.followup.send(embed=templates_embed)
 	except Exception as e:
 		print(f"Error getting bingo templates: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong getting bingo templates: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @utils.discord_bot.tree.command(description="[Owner] Get all bingo templates")
@@ -240,6 +280,7 @@ async def get_all_bingo_templates(interaction:discord.Interaction):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting templates for all guilds")
 		templates_embed = bingo_handler.get_all_bingo_templates()
 		if templates_embed is None:
 			await interaction.followup.send("No bingo templates found")
@@ -248,6 +289,7 @@ async def get_all_bingo_templates(interaction:discord.Interaction):
 		await interaction.followup.send(embed=templates_embed)
 	except Exception as e:
 		print(f"Error getting all bingo templates: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong getting all bingo templates: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 

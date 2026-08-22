@@ -23,9 +23,11 @@ async def set_prompt(interaction:discord.Interaction, prompt:str):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Setting prompt to {prompt}")
 		utils.set_current_prompt(prompt)
 		database.insert_prompt(prompt, interaction.user.id)
 		await interaction.followup.send(f"Prompt set to '{prompt}'")
 	except Exception as e:
 		print(f"Error setting prompt: {e}")
+		logger.log(logger.LOG_INFO, f"Error setting prompt: {e}")
 		await interaction.followup.send(commands.something_went_wrong)

@@ -10,39 +10,44 @@ spotify_creds = None
 
 def setup_spotify_credentials():
 	global spotify_creds
+	logger.log(logger.LOG_SETUP, "Setting up spotify credentials")
 	auth_manager = spotipy.oauth2.SpotifyClientCredentials(
 		client_id = utils.spotify_client_id,
 		client_secret = utils.spotify_client_secret
 	)
 	spotify_creds = spotipy.Spotify(auth_manager=auth_manager)
 
-	logger.log(logger.LOG_SETUP, "Spotify credentials set up.")
-
 def get_track(link:str):
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify track")
 		if not spotify_creds:
 			return None
 		return spotify_creds.track(link)
 	except Exception as e:
 		print(f"Error fetching track details: {e}")
+		logger.log(logger.LOG_INFO, f"Error fetching spotify track details: {e}")
 		return None
 	
 def get_album(link:str):
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify album")
 		if not spotify_creds:
 			return None
 		return spotify_creds.album(link)
 	except Exception as e:
 		print(f"Error fetching album details: {e}")
+		logger.log(logger.LOG_INFO, f"Error fetching spotify album details: {e}")
 		return None
 	
 def get_playlist(link:str):
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify playlist")
 		if not spotify_creds:
 			return None
 		return spotify_creds.playlist(link)
 	except Exception as e:
 		print(f"Error fetching playlist details: {e}")
+		logger.log(logger.LOG_INFO, f"Error fetching spotify playlist details: {e}")
 		return None
 	
 def get_title(item):
@@ -70,6 +75,7 @@ def get_all_tracks(item):
 	return item['tracks']['items']
 
 def get_all_album_track_details(album):
+	logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify album track details")
 	tracks = get_all_tracks(album)
 	details = []
 	for track in tracks:
@@ -80,6 +86,7 @@ def get_all_album_track_details(album):
 	return details
 
 def get_all_playlist_track_details(playlist):
+	logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify playlist track details")
 	tracks = get_all_tracks(playlist)
 	details = []
 	for track in tracks:
@@ -90,7 +97,7 @@ def get_all_playlist_track_details(playlist):
 	return details
 
 def get_spotify_track_embed(link: str) -> Optional[discord.Embed]:
-	logger.log(logger.LOG_DETAIL, f"Getting spotify details for link >{link}<.")
+	logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify track details")
 	track = get_track(link)
 	if not track:
 		return None
@@ -106,7 +113,7 @@ def get_spotify_track_embed(link: str) -> Optional[discord.Embed]:
 	return embed
 
 def get_spotify_album_embed(link:str) -> Optional[discord.Embed]:
-	logger.log(logger.LOG_DETAIL, f"Getting spotify details for link >{link}<.")
+	logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify album details")
 	album = get_album(link)
 	if not album:
 		return None
@@ -129,7 +136,7 @@ def get_spotify_album_embed(link:str) -> Optional[discord.Embed]:
 	return embed
 
 def get_spotify_playlist_embed(link:str) -> Optional[discord.Embed]:
-	logger.log(logger.LOG_DETAIL, f"Getting spotify details for link >{link}<.")
+	logger.log(logger.LOG_EXTRA_DETAIL, "Attempting to get spotify album details")
 	playlist = get_playlist(link)
 	if not playlist:
 		return None

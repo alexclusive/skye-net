@@ -8,7 +8,7 @@ LOG_INFO = 1
 LOG_DETAIL = 2
 LOG_EXTRA_DETAIL = 3
 
-current_log_file_path = utils.log_file_path
+current_log_file_path = utils.log_file
 debug_level = LOG_EXTRA_DETAIL
 
 def set_log_file(path:str):
@@ -43,7 +43,7 @@ def copy_log_file(destination_path:str) -> bool:
 			log(LOG_INFO, f"Copied log file to {destination_path}")
 			return True
 	except Exception as e:
-		log(LOG_INFO, f"Error copying log file: {e}")
+		log(LOG_SETUP, f"Error copying log file: {e}")
 	return False
 
 def clear_log_file():
@@ -52,4 +52,4 @@ def clear_log_file():
 		if os.path.exists(current_log_file_path):
 			open(current_log_file_path, "w").close()
 	except Exception as e:
-		log(LOG_INFO, f"Error clearing log file: {e}")
+		log(LOG_SETUP, f"Error clearing log file: {e}")

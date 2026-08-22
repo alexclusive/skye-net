@@ -15,17 +15,15 @@ from . import logger
 from . import utils
 from .handlers import facts
 
-running_task_log_string = "Running task."
+running_task_log_string = "Running task"
 
 # UTC times
 backup_logs_start_time = time(0, 0)
 trusted_roles_start_time = time(19, 0)
 audit_log_start_time = time(20, 0)
 
-csv_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database", "train_info.csv")
-
 def tasks_on_ready():
-	logger.log(logger.LOG_SETUP, "Ensuring tasks are running.")
+	logger.log(logger.LOG_SETUP, "Ensuring tasks are running")
 	if not backup_logs_task.is_running():
 		backup_logs_task.start()
 
@@ -51,7 +49,7 @@ async def backup_logs_task():
 		now = dt.now(utils.timezone_here)
 		year_dir = now.strftime("%Y")
 		month_dir = now.strftime("%m")
-		full_path = os.path.join(os.path.dirname(utils.log_file_path), year_dir, month_dir)
+		full_path = os.path.join(os.path.dirname(utils.log_file), year_dir, month_dir)
 
 		if not os.path.exists(full_path):
 			os.makedirs(full_path)
@@ -59,14 +57,16 @@ async def backup_logs_task():
 		day_file = now.strftime("%d.log")
 		full_path = os.path.join(full_path, day_file)
 
+		logger.log(logger.LOG_SETUP, f"Copying current logs to {full_path}")
 		copy_success = logger.copy_log_file(full_path)
 		if copy_success:
 			logger.clear_log_file()
 			logger.log(logger.LOG_SETUP, f"Logs backed up to {full_path}")
 		else:
-			logger.log(logger.LOG_INFO, "Couldn't copy log file.")
+			logger.log(logger.LOG_SETUP, "Couldn't copy log file")
 	except Exception as e:
 		logger.log(logger.LOG_INFO, f"Error backing up logs: {e}")
+		print(f"Error backing up logs: {e}")
 
 @tasks.loop(time=trusted_roles_start_time)
 async def add_trusted_roles_task():
@@ -82,17 +82,17 @@ async def add_trusted_roles_task():
 
 	guild = utils.discord_bot.get_guild(utils.guild_id)
 	if not utils.guild_id:
-		logger.log(logger.LOG_SETUP, "Guild not found.")
+		logger.log(logger.LOG_SETUP, "Guild not found")
 		return
 	
 	welcomed_role = guild.get_role(utils.welcomed_role_id)
 	if not welcomed_role:
-		logger.log(logger.LOG_SETUP, "Welcomed role not found.")
+		logger.log(logger.LOG_SETUP, "Welcomed role not found")
 		return
 	
 	trusted_role = guild.get_role(utils.trusted_role_id)
 	if not trusted_role:
-		logger.log(logger.LOG_SETUP, "Trusted role not found.")
+		logger.log(logger.LOG_SETUP, "Trusted role not found")
 		return
 	
 	trusted_added = 0
@@ -104,6 +104,7 @@ async def add_trusted_roles_task():
 			if welcomed_role in member.roles and trusted_role not in member.roles:
 				days_in_server = (time_now - member.joined_at).days
 				if days_in_server > utils.trusted_time_days:
+					logger.log(logger.LOG_INFO, f"Adding trusted role to {member.name} ({member.id})")
 					await member.add_roles(trusted_role)
 					print(f"Added {trusted_role.name} role to {member.name} ({member.nick})")
 					trusted_added += 1
@@ -111,15 +112,20 @@ async def add_trusted_roles_task():
 			elif welcomed_role not in member.roles and trusted_role not in member.roles:
 				days_in_server = (time_now - member.joined_at).days
 				if days_in_server > (utils.trusted_time_days // 2):
+					logger.log(logger.LOG_INFO, f"Adding welcomed role to {member.name} ({member.id})")
 					await member.add_roles(welcomed_role)
 					print(f"Added {welcomed_role.name} role to {member.name} ({member.nick})")
 					welcomed_added += 1
 					logger.log(logger.LOG_EXTRA_DETAIL, f"Added {welcomed_role.name} role to {member.name} ({member.nick}, {member.id})")
 	except Exception as e:
 		print(f"add_trusted_roles: {e}")
+		logger.log(logger.LOG_INFO, f"Error adding trusted roles: {e}")
 
-	database.insert_daily_task_time()
-	logger.log(logger.LOG_SETUP, f"Added {trusted_added} trusted roles and {welcomed_added} welcomed roles.")
+	if trusted_added > 0 or welcomed_added > 0:
+		database.insert_daily_task_time()
+		logger.log(logger.LOG_SETUP, f"Added {trusted_added} trusted roles and {welcomed_added} welcomed roles")
+	else:
+		logger.log(logger.LOG_DETAIL, "No role updates needed")
 
 @tasks.loop(time=audit_log_start_time)
 async def audit_log_task(days_to_check:int=1):
@@ -153,17 +159,17 @@ async def audit_log_task(days_to_check:int=1):
 
 	guild = utils.discord_bot.get_guild(utils.guild_id)
 	if not utils.guild_id:
-		logger.log(logger.LOG_SETUP, "Guild not found.")
+		logger.log(logger.LOG_SETUP, "Guild not found")
 		return
 
 	bot_role = guild.get_role(utils.bot_role_id)
 	if not bot_role:
-		logger.log(logger.LOG_SETUP, "Bot role not found.")
+		logger.log(logger.LOG_SETUP, "Bot role not found")
 		return
 
 	admin_role = guild.get_role(utils.admin_role_id)
 	if not admin_role:
-		logger.log(logger.LOG_SETUP, "Admin role not found.")
+		logger.log(logger.LOG_SETUP, "Admin role not found")
 		return
 
 	try:
@@ -185,6 +191,7 @@ async def audit_log_task(days_to_check:int=1):
 			"member_disconnect", "bot_add"
 		]
 		
+		logger.log(logger.LOG_DETAIL, f"Found {len(audit_logs)} over the last {days_to_check} days")
 		for entry in audit_logs:
 			if entry.user is None:
 				continue
@@ -204,7 +211,7 @@ async def audit_log_task(days_to_check:int=1):
 				admin_logs.append(entry)
 
 		admin_logs.sort(key=lambda log: log.created_at)
-		logger.log(logger.LOG_DETAIL, f"Found {len(admin_logs)} admin logs.")
+		logger.log(logger.LOG_DETAIL, f"Found {len(admin_logs)} admin logs")
 
 		for admin in [member for member in guild.members if admin_role in member.roles]:
 			# log.user may be a User object; compare by id to be safe
@@ -213,7 +220,7 @@ async def audit_log_task(days_to_check:int=1):
 				continue
 			details = [f"Audit logs for admin: {admin.name}:"]
 			for log in this_admin_logs:
-				logger.log(logger.LOG_INFO, f"Checking logs for admin {admin.name}.")
+				logger.log(logger.LOG_INFO, f"Checking logs for admin {admin.name}")
 				timestamp = int(log.created_at.timestamp())
 				detail_text = f"\n- `{log.action.name}` on {log.target} at <t:{timestamp}:f> (<t:{timestamp}:R>)"
 				if log.action.value:
@@ -224,10 +231,11 @@ async def audit_log_task(days_to_check:int=1):
 			print("".join(details))
 			await asyncio.sleep(0.2) # Avoid rate limiting
 			
-		logger.log(logger.LOG_EXTRA_DETAIL, "Checked all admin logs.")
+		logger.log(logger.LOG_EXTRA_DETAIL, "Checked all admin logs")
 
 	except Exception as e:
 		print(f"audit_log_task: {e}")
+		logger.log(logger.LOG_INFO, f"Error checking audit log: {e}")
 
 @tasks.loop(hours=7 * 24) # Once a week after first run
 async def read_train_info_task():
@@ -301,7 +309,7 @@ async def read_train_info_task():
 		writer.writerows(records)
 		csv_data = output.getvalue()
 
-		with open(utils.csv_file, "w", encoding="utf-8", newline="") as file:
+		with open(utils.train_info_file, "w", encoding="utf-8", newline="") as file:
 			file.write(csv_data)
 
 		logger.log(logger.LOG_INFO, "Successfully parsed html into csv")
@@ -320,4 +328,6 @@ async def before_read_train_info_task():
 	next_run += timedelta(days=days_until_sunday)
 	if next_run <= now:
 		next_run += timedelta(days=7)
-	await asyncio.sleep((next_run - now).total_seconds())
+	seconds_to_sleep = (next_run - now).total_seconds()
+	logger.log(logger.LOG_SETUP, f"Waiting {seconds_to_sleep}sec to ensure tasks runs on the next Sunday 21:00UTC")
+	await asyncio.sleep(seconds_to_sleep)

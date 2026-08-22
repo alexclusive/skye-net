@@ -7,14 +7,15 @@ from .. import logger
 word_classes = ["adj.", "adv.", "conj.", "n.", "prep.", "pron.", "v."]
 
 def get_etymology(word):
-	logger.log(logger.LOG_DETAIL, f"Getting etymology >{word}<.")
+	logger.log(logger.LOG_DETAIL, f"Getting etymology for {word}")
 	try:
 		url_safe_word = urllib.parse.quote(word)
 		etymonline_url = "https://etymonline.com/word/" + url_safe_word
 		etymonline_result = "No definition found"
 		images = []
 
-		# Fetch the etymonline page
+		
+		logger.log(logger.LOG_DETAIL, f"Fetching from url {etymonline_url}")
 		response = requests.get(etymonline_url)
 		if response.status_code == 200:
 			soup = bs4.BeautifulSoup(response.text, "html.parser")
@@ -45,8 +46,8 @@ def get_etymology(word):
 					images.append(result.get("src"))
 		else:
 			etymonline_result = "No result found (404 or other error)"
+			logger.log(logger.LOG_DETAIL, "No connection made")
 
-		# Format the result
 		formatted = f"Etymology for '{word}'\n"
 		formatted += f"<{etymonline_url}>\n\n{etymonline_result}\n"
 		if len(images) > 0:
@@ -54,4 +55,5 @@ def get_etymology(word):
 		
 		return formatted
 	except Exception as e:
+		logger.log(logger.LOG_INFO, f"Error getting etymology: {e}")
 		return f"Error occurred while fetching etymology for {word}.\nError: {e}"

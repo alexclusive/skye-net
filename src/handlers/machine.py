@@ -1,6 +1,8 @@
 import psutil
 
-def readable(size_bytes: int):
+from .. import logger
+
+def readable(size_bytes:int):
 	'''
 		Convert bytes to a human-readable string (B, KB, MB, GB, TB).
 	'''
@@ -17,6 +19,7 @@ def readable(size_bytes: int):
 	return f"{size_bytes:.2f}{units[i]}"
 
 def get_cpu_usage():
+	logger.log(logger.LOG_EXTRA_DETAIL, "Getting CPU usage")
 	current_usage_per_cpu = psutil.cpu_percent(percpu=True)
 
 	if isinstance(current_usage_per_cpu, float):
@@ -29,14 +32,17 @@ def get_cpu_usage():
 	return f"{per_cpu_usages} ({len(current_usage_per_cpu)} cores, {current_usage_total}% total)"
 
 def get_memory_usage():
+	logger.log(logger.LOG_EXTRA_DETAIL, "Getting MEM usage")
 	mem = psutil.virtual_memory()
 	return f"{readable(mem.used)} / {readable(mem.total)} ({mem.percent}%) - {readable(mem.free)} free"
 
 def get_swap_memory_usage():
+	logger.log(logger.LOG_EXTRA_DETAIL, "Getting Swap usage")
 	swap = psutil.swap_memory()
 	return f"{readable(swap.used)} / {readable(swap.total)} ({swap.percent}%) - {readable(swap.free)} free"
 
 def get_disk_usage():
+	logger.log(logger.LOG_EXTRA_DETAIL, "Getting Disk usage")
 	partitions = psutil.disk_partitions(all=False)
 	seen_devices = set()
 	lines = []
@@ -51,6 +57,7 @@ def get_disk_usage():
 	total_used = 0
 	total_free = 0
 
+	logger.log(logger.LOG_EXTRA_DETAIL, f"Checking {len(partitions)} partitions")
 	for part in partitions:
 		device_key = part.device or f"mount:{part.mountpoint}"
 
@@ -72,10 +79,6 @@ def get_disk_usage():
 		except (PermissionError, FileNotFoundError):
 			continue
 
-		# Some small ephemeral mounts can still appear; skip very small devices (<= 100MB)
-		if usage.total <= 100 * 1024 * 1024:
-			continue
-
 		seen_devices.add(device_key)
 
 		# accumulate totals
@@ -92,6 +95,7 @@ def get_disk_usage():
 		drive_num += 1
 
 	if not lines:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Couldn't get info on any drives")
 		return "No drives found or accessible."
 
 	result = "\n".join(lines)

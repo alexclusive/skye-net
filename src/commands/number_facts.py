@@ -27,10 +27,12 @@ async def number_fact(interaction:discord.Interaction, number:int):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Getting fact for {number}")
 		facts_response = facts_handler.get_facts(number)
 		await interaction.followup.send(facts_response)
 	except Exception as e:
 		print(f"Error getting number fact: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting number fact: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -47,10 +49,12 @@ async def update_number_fact(interaction:discord.Interaction, number:int, fact:s
 		return
 
 	try:
+		logger.log(logger.LOG_DETAIL, f"Updating fact for {number} to '{fact}'")
 		database.update_number_fact(number, fact)
 		await interaction.followup.send(f"Fact for number {number} updated to {fact}")
 	except Exception as e:
 		print(f"Error updating number fact: {e}")
+		logger.log(logger.LOG_INFO, f"Error updating number fact: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -67,10 +71,12 @@ async def append_number_fact(interaction:discord.Interaction, number:int, fact:s
 		return
 
 	try:
+		logger.log(logger.LOG_DETAIL, f"Appending '{fact}' to number {number}")
 		database.append_number_fact(number, fact)
 		await interaction.followup.send(f"Fact appended for number {number}! Fact is now: {database.get_number_fact(number)}")
 	except Exception as e:
 		print(f"Error appending number fact: {e}")
+		logger.log(logger.LOG_INFO, f"Error appending number fact: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -87,11 +93,14 @@ async def remove_number_fact(interaction:discord.Interaction, number:int):
 		return
 
 	try:
+		logger.log(logger.LOG_DETAIL, f"Deleting fact for number {number}")
 		fact = database.remove_number_fact(number)
 		if fact is None:
+			logger.log(logger.LOG_DETAIL, f"Number {number} didn't have a fact to delete")
 			await interaction.followup.send(f"Fact for number {number} not found")
 		else:
 			await interaction.followup.send(f"Fact removed for number {number}\n{fact}")
 	except Exception as e:
 		print(f"Error removing number fact: {e}")
+		logger.log(logger.LOG_INFO, f"Error removing number fact: {e}")
 		await interaction.followup.send(commands.something_went_wrong)

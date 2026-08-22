@@ -2,6 +2,7 @@ import discord
 import psutil
 
 from .. import commands_module as commands
+from .. import logger
 from .. import tasks
 from .. import utils
 
@@ -20,9 +21,19 @@ from ..commands import train_game
 '''
 
 async def ready():
-	await utils.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching...", type=discord.ActivityType.watching))
-	await utils.discord_bot.tree.sync() # need commands imported before we run this
-	await commands.ensure_correct_permissions() # gotta be after sync, cause sync updates which guilds we're in
-	_ = psutil.cpu_percent(percpu=True) # first call is always 0.0, so call it once to get actual data next time
-	tasks.tasks_on_ready()
-	print(f"{utils.discord_bot.user} is ready and online :P")
+	try:
+		logger.log(logger.LOG_SETUP, "Syncing discord bot tree")
+		await utils.discord_bot.tree.sync() # need commands imported before we run this
+
+		logger.log(logger.LOG_SETUP, "Updating command permissions")
+		await commands.ensure_correct_permissions() # gotta be after sync, cause sync updates which guilds we're in
+
+		_ = psutil.cpu_percent(percpu=True) # first call is always 0.0, so call it once to get actual data next time
+
+		logger.log(logger.LOG_SETUP, "Starting up tasks")
+		tasks.tasks_on_ready()
+
+		print(f"{utils.discord_bot.user} is ready and online :P")
+		await utils.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching.", type=discord.ActivityType.watching))
+	except Exception as e:
+		logger.log(logger.LOG_INFO, f"Error in on_ready event: {e}")

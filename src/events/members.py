@@ -2,6 +2,7 @@ import discord
 
 from datetime import datetime as dt
 
+from .. import logger
 from .. import utils
 
 '''
@@ -18,6 +19,7 @@ async def member_join(member:discord.Member):
 	try:
 		if member.guild is None:
 			return # ignore DMs
+		logger.log(logger.LOG_INFO, f"Member added to guild {member.guild.name}: {member.name} ({member.id})")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -36,11 +38,13 @@ async def member_join(member:discord.Member):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_join: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_member_join event: {e}")
 
 async def member_remove(member:discord.Member):
 	try:
 		if member.guild is None:
 			return # ignore DMs
+		logger.log(logger.LOG_INFO, f"Member removed from guild {member.guild.name}: {member.name} ({member.id})")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -71,6 +75,7 @@ async def member_remove(member:discord.Member):
 				pass
 		except Exception as e:
 			print(f"member_remove: error checking audit logs {e}")
+			logger.log(logger.LOG_INFO, f"Error in on_member_remove event (checking audit logs): {e}")
 
 		embed = discord.Embed(
 			title = f"{member.guild.name}: {member.name} ({member.display_name}) {leave_type} the server",
@@ -88,11 +93,13 @@ async def member_remove(member:discord.Member):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_remove: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_member_remove event: {e}")
 
 async def member_update(before:discord.Member, after:discord.Member):
 	try:
 		if after.guild is None:
 			return # ignore DMs
+		logger.log(logger.LOG_INFO, f"Member updated in guild {after.guild.name}: {after.name} ({after.id})")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -142,11 +149,13 @@ async def member_update(before:discord.Member, after:discord.Member):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_update: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_member_update event: {e}")
 
 async def member_ban(member:discord.Member):
 	try:
 		if member.guild is None:
 			return # ignore DMs
+		logger.log(logger.LOG_INFO, f"Member banned from guild {member.guild.name}: {member.name} ({member.id})")
 		
 		log_channel = utils.discord_bot.get_channel(utils.stdout_channel_id)
 		if log_channel is None:
@@ -169,3 +178,4 @@ async def member_ban(member:discord.Member):
 		await log_channel.send(embed=embed)
 	except Exception as e:
 		print(f"member_ban: {e}")
+		logger.log(logger.LOG_INFO, f"Error in on_member_ban event: {e}")

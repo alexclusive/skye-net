@@ -20,6 +20,7 @@ async def ping(interaction:discord.Interaction):
 		await interaction.followup.send(f"Ponged your ping in {latency}ms")
 	except Exception as e:
 		print(f"Error getting ping: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting ping: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -36,7 +37,9 @@ async def etymology(interaction:discord.Interaction, argument:str):
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Getting etymology for {argument}")
 		await interaction.followup.send(etymology_handler.get_etymology(argument))
 	except Exception as e:
 		print(f"Error getting etymology: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting etymology: {e}")
 		await interaction.followup.send(commands.something_went_wrong)

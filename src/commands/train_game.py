@@ -28,6 +28,7 @@ async def train_game_rules(interaction:discord.Interaction):
 		await interaction.followup.send(embed=embed)
 	except Exception as e:
 		print(f"Error getting train game rules: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting train game rules: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -51,6 +52,7 @@ async def train_game(
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Attempting train game with number {number} and target {target}, strict mode? {strict_mode}")
 		try:
 			target = int(target)
 			if len(number) != 4:
@@ -62,9 +64,13 @@ async def train_game(
 			d = int(number[3])
 		except Exception as e:
 			print(f"Train game: error converting. {e}")
+			logger.log(logger.LOG_INFO, f"Error getting train game (converting number to ints): {e}")
 			await interaction.followup.send("Sorry! Unable to compute.")
 			return
+		
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Successfully converted string {number} to four ints")
 		await train_game_handler.train_game(interaction, number, a, b, c, d, target, strict_mode)
 	except Exception as e:
 		print(f"Error getting train game: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting train game: {e}")
 		await interaction.followup.send(commands.something_went_wrong)

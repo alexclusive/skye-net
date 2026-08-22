@@ -40,6 +40,7 @@ async def die(interaction:discord.Interaction):
 		await interaction.followup.send("Going to sleep... Goodnight!")
 		await utils.discord_bot.close()
 		utils.received_shutdown = True
+		logger.log(logger.LOG_SETUP, "Running kill command")
 
 		if platform.system() == "Windows":
 			os.kill(os.getpid(), signal.SIGTERM)
@@ -47,6 +48,7 @@ async def die(interaction:discord.Interaction):
 			os.kill(os.getpid(), signal.SIGKILL)
 	except Exception as e:
 		print(f"Error shutting down bot: {e}")
+		logger.log(logger.LOG_SETUP, f"Something went wrong killing bot: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -67,9 +69,11 @@ async def set_debug_level(interaction:discord.Interaction, level:int=0):
 			await interaction.followup.send(f"Debug level must be between {logger.LOG_SETUP} and {logger.LOG_EXTRA_DETAIL}")
 			return
 		logger.debug_level = level
+		logger.log(logger.LOG_SETUP, f"Debug level updated to {level}")
 		await interaction.followup.send(f"Debug level set to {level}")
 	except Exception as e:
 		print(f"Error setting debug level: {e}")
+		logger.log(logger.LOG_INFO, f"Something went wrong setting debug level: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -97,9 +101,11 @@ async def send_as_bot(interaction:discord.Interaction, channel_id:str, server_id
 		return
 	
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Sending message to {channel.name} in {server.name}, content: '{message}'")
 		await channel.send(message)
 		await interaction.followup.send(f"Message sent to {channel.mention}:\n{message}")
 	except Exception as e:
+		print(f"Error sending message as bot: {e}")
 		logger.log(logger.LOG_INFO, f"Error sending message as bot: {e}")
 		await interaction.followup.send(f"Error sending message: {e}")
 
@@ -113,36 +119,44 @@ async def info(interaction:discord.Interaction):
 		await interaction.followup.send(commands.nice_try)
 		return
 
-	python_version = sys.version.split()[0]
-	discord_version = discord.__version__
+	try:
+		python_version = sys.version.split()[0]
+		discord_version = discord.__version__
 
-	system_os = platform.platform()
-	system_uname = platform.uname()
-	system_arch = platform.machine()
-	system_processor = platform.processor()
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting system info")
+		system_os = platform.platform()
+		system_uname = platform.uname()
+		system_arch = platform.machine()
+		system_processor = platform.processor()
 
-	cpu_usage = machine_handler.get_cpu_usage()
-	memory_usage = machine_handler.get_memory_usage()
-	swap_memory_usage = machine_handler.get_swap_memory_usage()
-	drive_usage = machine_handler.get_disk_usage()
-	
-	discord_info = f"Number of Servers: {len(utils.discord_bot.guilds)}\n"
-	code_info = f"[GitHub Repository](https://github.com/alexclusive/skye-net)\nPython Version: {python_version}\nDiscord.py Version: {discord_version}"
-	system_info = f"OS: {system_os}\nSystem: {system_uname.system}\nNode Name: {system_uname.node}\nRelease: {system_uname.release}\nVersion: {system_uname.version}\nArchitecture: {system_arch}\nProcessor: {system_processor}"
-	nas_info = f"CPU Usage: {cpu_usage}\nMemory Usage: {memory_usage}\nSwap Usage: {swap_memory_usage}"
-	drive_info = f"{drive_usage}"
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting usage info")
+		cpu_usage = machine_handler.get_cpu_usage()
+		memory_usage = machine_handler.get_memory_usage()
+		swap_memory_usage = machine_handler.get_swap_memory_usage()
+		drive_usage = machine_handler.get_disk_usage()
 
-	embed = discord.Embed(title="Bot Info", colour=0xffffff)
-	embed.add_field(name="Discord Info", value=discord_info, inline=False)
-	embed.add_field(name="Code Info", value=code_info, inline=False)
-	embed.add_field(name="System Specs", value=system_info, inline=False)
-	embed.add_field(name="System Info", value=nas_info, inline=False)
-	embed.add_field(name="Drive Info", value=drive_info, inline=False)
+		logger.log(logger.LOG_EXTRA_DETAIL, "Formatting info")
+		discord_info = f"Number of Servers: {len(utils.discord_bot.guilds)}\n"
+		code_info = f"[GitHub Repository](https://github.com/alexclusive/skye-net)\nPython Version: {python_version}\nDiscord.py Version: {discord_version}"
+		system_info = f"OS: {system_os}\nSystem: {system_uname.system}\nNode Name: {system_uname.node}\nRelease: {system_uname.release}\nVersion: {system_uname.version}\nArchitecture: {system_arch}\nProcessor: {system_processor}"
+		nas_info = f"CPU Usage: {cpu_usage}\nMemory Usage: {memory_usage}\nSwap Usage: {swap_memory_usage}"
+		drive_info = f"{drive_usage}"
 
-	owner = await utils.discord_bot.fetch_user(utils.owner_id)
-	embed.set_footer(text=f"Owner: {owner} ({owner.id})")
-	
-	await interaction.followup.send(embed=embed)
+		embed = discord.Embed(title="Bot Info", colour=0xffffff)
+		embed.add_field(name="Discord Info", value=discord_info, inline=False)
+		embed.add_field(name="Code Info", value=code_info, inline=False)
+		embed.add_field(name="System Specs", value=system_info, inline=False)
+		embed.add_field(name="System Info", value=nas_info, inline=False)
+		embed.add_field(name="Drive Info", value=drive_info, inline=False)
+
+		owner = await utils.discord_bot.fetch_user(utils.owner_id)
+		embed.set_footer(text=f"Owner: {owner} ({owner.id})")
+
+		await interaction.followup.send(embed=embed)
+	except Exception as e:
+		print(f"Error getting device info: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting device info: {e}")
+		await interaction.followup.send(f"Error getting device info: {e}")
 
 @discord.app_commands.describe(
 	user_id="User ID to block from bot interactions"
@@ -158,10 +172,12 @@ async def block_user(interaction:discord.Interaction, user_id:discord.User):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Blocking user {user_id}")
 		database.block_user(user_id)
 		await interaction.followup.send(f"User {user_id} blocked")
 	except Exception as e:
 		print(f"Error blocking user: {e}")
+		logger.log(logger.LOG_INFO, f"Error blocking user: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -178,13 +194,15 @@ async def unblock_user(interaction:discord.Interaction, user_id:discord.User):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, f"Unblocking user {user_id}")
 		database.unblock_user(user_id)
-		await interaction.followup.send(f"User {user_id} unblockned")
+		await interaction.followup.send(f"User {user_id} unblocked")
 	except Exception as e:
-		print(f"Error unblockning user: {e}")
+		print(f"Error unblocking user: {e}")
+		logger.log(logger.LOG_INFO, f"Error unblocking user: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
-@utils.discord_bot.tree.command(description="[Owner] Get users blockned from certain bot interactions")
+@utils.discord_bot.tree.command(description="[Owner] Get users blocked from certain bot interactions")
 @discord.app_commands.default_permissions(administrator=True)
 @commands.owner_only()
 async def get_blocked_users(interaction:discord.Interaction):
@@ -195,10 +213,12 @@ async def get_blocked_users(interaction:discord.Interaction):
 		return
 
 	try:
-		blockned_users = database.get_all_blocked_users()
-		await interaction.followup.send(f"Blocked users: {blockned_users}")
+		logger.log(logger.LOG_EXTRA_DETAIL, "Getting blocked users")
+		blocked_users = database.get_all_blocked_users()
+		await interaction.followup.send(f"Blocked users: {blocked_users}")
 	except Exception as e:
-		print(f"Error getting blockned users: {e}")
+		print(f"Error getting blocked users: {e}")
+		logger.log(logger.LOG_INFO, f"Error getting blocked users: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @utils.discord_bot.tree.command(description="[Owner] Force trusted roles task")
@@ -212,10 +232,12 @@ async def force_trusted_roles(interaction:discord.Interaction):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Forcing trusted roles task")
 		await tasks.add_trusted_roles_task()
 		await interaction.followup.send("Forced trusted roles task")
 	except Exception as e:
 		print(f"Error forcing trusted roles: {e}")
+		logger.log(logger.LOG_INFO, f"Error forcing trusted roles: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @discord.app_commands.describe(
@@ -232,10 +254,12 @@ async def force_audit_log(interaction:discord.Interaction, days_to_check:int=1):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Forcing audit log task")
 		await tasks.audit_log_task(days_to_check)
 		await interaction.followup.send("Forced audit log task")
 	except Exception as e:
 		print(f"Error forcing audit log: {e}")
+		logger.log(logger.LOG_INFO, f"Error forcing audit log: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @utils.discord_bot.tree.command(description="[Owner] Reread train info html")
@@ -249,10 +273,12 @@ async def force_reread_train_info(interaction:discord.Interaction):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Forcing read train info task")
 		await tasks.read_train_info_task()
 		await interaction.followup.send("Finished rereading train info html and updating train sets")
 	except Exception as e:
 		print(f"Error forcing reread train info: {e}")
+		logger.log(logger.LOG_INFO, f"Error forcing reread train info: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 @utils.discord_bot.tree.command(description="[Owner] Run a test command")
@@ -266,10 +292,12 @@ async def run_test(interaction:discord.Interaction):
 		return
 
 	try:
+		logger.log(logger.LOG_EXTRA_DETAIL, "Running test command")
 		# Put test command here, so you don't have to restart discord every time to test a new function
 		await interaction.followup.send("Test command DONE")
 	except Exception as e:
 		print(f"Error running test: {e}")
+		logger.log(logger.LOG_INFO, f"Error running test command: {e}")
 		await interaction.followup.send(commands.something_went_wrong)
 
 commands.owner_commands_names.append("die")
