@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import psutil
 
@@ -20,6 +21,9 @@ from ..commands import train_game
  - on_ready
 '''
 
+last_terminator_presence = None
+presence_update_lock = asyncio.Lock()
+
 async def ready():
 	try:
 		logger.log(logger.LOG_SETUP, "Syncing discord bot tree")
@@ -37,3 +41,17 @@ async def ready():
 		await utils.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity("Skye-net is watching.", type=discord.ActivityType.watching))
 	except Exception as e:
 		logger.log(logger.LOG_INFO, f"Error in on_ready event: {e}")
+
+async def status_update(after:discord.Member):
+	activity = after.activity
+	if after._user.id != utils.terminator_id:
+		return
+
+	presence = (after.status, type(activity), str(activity), getattr(activity, "name", None), getattr(activity, "details", None))
+	global last_terminator_presence
+	async with presence_update_lock:
+		if presence == last_terminator_presence:
+			return		
+		last_terminator_presence = presence
+
+		logger.log(logger.LOG_SETUP, "Shutting down...")

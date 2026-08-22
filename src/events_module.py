@@ -74,3 +74,8 @@ async def on_guild_join(guild:discord.Guild):
 async def on_guild_remove(guild:discord.Guild):
 	logger.log(logger.LOG_DETAIL, event_triggered_log_string + f" in {guild.name}")
 	await guild_events.guild_remove(guild)
+
+@utils.discord_bot.event
+async def on_presence_update(before:discord.Member, after:discord.Member):
+	# Don't have a log for every event trigger, this one gets called a lot
+	await ready_events.status_update(after)

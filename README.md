@@ -6,6 +6,7 @@
 | TOKEN | Discord app token from discord developer portal |
 | CLIENT_ID | Discord app client-id from discord developer portal |
 | OWNER | Owner's discord id |
+| TERMINATOR | Terminator bot's discord id |
 | LOG_FILE_PATH | Relative filepath to log to |
 | HISTORY_LIMIT | How many messages for openai to use for context |
 | OPENAI_API_KEY | Key to connect to openai api |
@@ -35,10 +36,12 @@ Not all discord events are tracked, and those that are aren't really looked at t
  - on_member_remove
  - on_member_update
  - on_member_ban
- - guild_join
- - guild_remove
+ - on_guild_join
+ - on_guild_remove
+ - on_presence_update
 
 Most of these just log basic data upon an event, the only one that really has any depth is `on_message`.  
+`on_presence_update` is only used to check the Terminator bot's status updates, which are used so that Terminator can tell Skye-net when it's shutting it down, so Skye-net can add a log saying it's getting shut down.  
 
 On a message, the bot will check a few things:
  - are there any phrases that trigger a reaction?
@@ -187,7 +190,7 @@ Show different fun tidbits for different numbers.
  | Trusted Roles | 19:00 UTC Daily | Specific to GUILD_ID from .env. Add a 'trusted' role to new users as configured through .env variables |
  | Audit Log | 20:00 UTC Daily | Gather and display any new logs from the audit log from admins of the GUILD_ID |
  | Backup Logs | 00:00 UTC Daily | Backup the daily logs into dated directories |
- | Read Train Info | 21:00 UTC Daily | Re-grab the HTML data of NSW trains for train facts in the train game |
+ | Read Train Info | 21:00 UTC Sundays | Re-grab the HTML data of NSW trains for train facts in the train game |
 
  ## Logs
  When events or commands are triggered, a log entry is made. The logs show the datetime, log level, and log detail. Log levels are SETUP (0), INFO (1), DETAIL (2), and EXTRA_DETAIL (3).

@@ -28,8 +28,9 @@ def set_debug_level(level:int):
 	'''
 	logger.log(logger.LOG_INFO, f"Setting debug level to {level}")
 	if level < logger.LOG_SETUP or level > logger.LOG_EXTRA_DETAIL:
+		logger.log(logger.LOG_INFO, f"Invalid debug level {level}, setting to {logger.LOG_EXTRA_DETAIL}")
 		level = logger.LOG_EXTRA_DETAIL
-		logger.log(logger.LOG_INFO, f"Invalid debug level {level} set to {logger.LOG_EXTRA_DETAIL}")
 	utils.database_conn = duckdb.connect(utils.database_file)
 	utils.database_conn.execute("INSERT OR REPLACE INTO debug_level VALUES (?)", (level,))
 	utils.database_conn.close()
+	logger.set_debug_level(level)

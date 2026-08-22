@@ -24,6 +24,7 @@ current_prompt = ""
 token = str(os.getenv("TOKEN"))
 client_id = str(os.getenv("CLIENT_ID"))
 owner_id = int(os.getenv("OWNER"))
+terminator_id = int(os.getenv("TERMINATOR"))
 
 # File locations
 base_path = str(os.getenv("BASE_PATH"))

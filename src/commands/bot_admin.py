@@ -25,6 +25,8 @@ from ..handlers import machine as machine_handler
  - run_test [Owner]
 '''
 
+presence_change_num = 0
+
 @utils.discord_bot.tree.command(description="[Owner] Shutdown the bot")
 @discord.app_commands.default_permissions()
 @commands.owner_only()
@@ -294,6 +296,9 @@ async def run_test(interaction:discord.Interaction):
 	try:
 		logger.log(logger.LOG_EXTRA_DETAIL, "Running test command")
 		# Put test command here, so you don't have to restart discord every time to test a new function
+		global presence_change_num
+		presence_change_num += 1
+		await utils.discord_bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.CustomActivity(f"{presence_change_num}", type=discord.ActivityType.watching))
 		await interaction.followup.send("Test command DONE")
 	except Exception as e:
 		print(f"Error running test: {e}")
